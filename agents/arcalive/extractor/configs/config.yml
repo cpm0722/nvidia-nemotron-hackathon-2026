@@ -20,12 +20,16 @@ function_groups:
     _type: arcalive_scraper
     board: alpaca
     max_pages: 2
+  validator:
+    _type: validator_caller
+    url: http://localhost:10100
 
 workflow:
   _type: react_agent
   llm_name: primary_llm
   tool_names:
     - arcalive_scraper__search_posts
+    - validator__validate
   system_prompt: file://../prompts/system_prompt.txt
   verbose: true
   retry_agent_response_parsing_errors: true
