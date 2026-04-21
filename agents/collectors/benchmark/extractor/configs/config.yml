@@ -1,12 +1,14 @@
 general:
   front_end:
     _type: a2a
-    name: "Benchmark Collector Agent"
-    description: "Artificial Analysis / HuggingFace에서 LLM 벤치마크를 수집·검증하는 LLM-less 에이전트"
+    name: "Benchmark Extractor Agent"
+    description: "Artificial Analysis / HuggingFace에서 벤치마크를 scrape하고 validator A2A로 필터링하는 LLM-less extractor"
     host: 0.0.0.0
     port: 10012
 
 workflow:
-  _type: benchmark_collector
+  _type: benchmark_extractor
   limit: 10
   comment_limit: 3
+  validator_url: http://localhost:10022
+  validator_timeout_seconds: 120

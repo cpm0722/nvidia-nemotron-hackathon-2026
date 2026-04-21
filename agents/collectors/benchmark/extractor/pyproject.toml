@@ -6,11 +6,11 @@ requires = ["setuptools>=64"]
 where = ["src"]
 
 [project]
-name = "nat_collector_benchmark"
+name = "nat_extractor_benchmark"
 version = "0.1.0"
 requires-python = ">=3.11,<3.14"
-description = "NAT A2A benchmark collector — LLM-less scrape + keyword-filter service"
-keywords = ["ai", "agents", "scraper", "benchmark", "nat", "a2a", "collector"]
+description = "NAT A2A benchmark extractor — scrape + validator A2A call"
+keywords = ["ai", "agents", "scraper", "benchmark", "nat", "a2a", "extractor"]
 classifiers = ["Programming Language :: Python"]
 dependencies = [
     "nvidia-nat[a2a]",
@@ -21,10 +21,10 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-ari_core = { path = "../../../libs/ari-core", editable = true }
+ari_core = { path = "../../../../libs/ari-core", editable = true }
 
 [project.optional-dependencies]
 test = ["pytest>=8.0"]
 
 [project.entry-points."nat.components"]
-nat_collector_benchmark = "nat_collector_benchmark.register"
+nat_extractor_benchmark = "nat_extractor_benchmark.register"

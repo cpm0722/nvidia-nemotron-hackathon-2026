@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from ari_core import EvidenceItem, ScrapeInput, ScrapeResult, Timer
 
-from nat_collector_benchmark.scrapers.artificialanalysis import (
+from nat_extractor_benchmark.scrapers.artificialanalysis import (
     fetch_model_benchmarks as _fetch_aa,
 )
-from nat_collector_benchmark.scrapers.huggingface import (
+from nat_extractor_benchmark.scrapers.huggingface import (
     fetch_benchmarks_for_model as _fetch_hf_benchmarks,
     fetch_discussions as _fetch_hf_discussions,
 )
