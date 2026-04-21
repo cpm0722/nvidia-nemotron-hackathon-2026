@@ -44,3 +44,4 @@ class BenchmarkResult(BaseModel):
     benchmarks: list[BenchmarkItem]
     sources: list[str]
     hf_discussions: list[HFDiscussion] = []
+    hf_model_card: str = ""

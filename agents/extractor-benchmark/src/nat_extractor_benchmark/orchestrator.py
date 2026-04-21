@@ -54,7 +54,7 @@ def collect_benchmarks(
         print(f"[Benchmark] AA 데이터 없음: {model_name}")
 
     # --- HuggingFace ---
-    hf_bm, hf_name, hf_provider, hf_model_id = _hf_fetch(model_name)
+    hf_bm, hf_name, hf_provider, hf_model_id, hf_card = _hf_fetch(model_name)
     hf_items = [
         BenchmarkItem(
             name=b["name"],
@@ -120,4 +120,5 @@ def collect_benchmarks(
         benchmarks=combined,
         sources=sources,
         hf_discussions=discussions,
+        hf_model_card=hf_card,
     )

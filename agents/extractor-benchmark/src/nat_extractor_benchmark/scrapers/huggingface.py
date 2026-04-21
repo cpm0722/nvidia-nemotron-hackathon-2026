@@ -151,16 +151,17 @@ def _parse_html_tables(html: str, model_name: str = "") -> list[dict]:
     return results
 
 
-def fetch_benchmarks_for_model(model_name: str) -> tuple[list[dict], str, str, str]:
-    """모델명으로 HuggingFace를 검색해 모델 카드의 벤치마크를 반환한다.
+def fetch_benchmarks_for_model(model_name: str) -> tuple[list[dict], str, str, str, str]:
+    """모델명으로 HuggingFace를 검색해 모델 카드의 벤치마크와 원본 카드 텍스트를 반환한다.
 
     Args:
         model_name: 검색할 모델명 (e.g. "gemma 3", "claude opus 4.7").
 
     Returns:
-        (benchmarks, 매칭된_모델명, provider, model_id)
+        (benchmarks, 매칭된_모델명, provider, model_id, model_card)
         - benchmarks: [{"name", "score", "score_str"}]
-        - model_id: HF 토론 조회에 쓸 수 있는 "{org}/{name}" 형식 (벤치마크 없어도 반환 가능)
+        - model_id: HF 토론 조회에 쓸 수 있는 "{org}/{name}" 형식
+        - model_card: 모델 카드 README.md 원문 (없으면 빈 문자열)
     """
     try:
         r = httpx.get(
@@ -170,14 +171,14 @@ def fetch_benchmarks_for_model(model_name: str) -> tuple[list[dict], str, str, s
             timeout=TIMEOUT,
         )
         if r.status_code != 200:
-            return [], "", "", ""
+            return [], "", "", "", ""
         candidates = r.json()
     except Exception as e:
         print(f"[HuggingFace] 검색 실패 ({model_name}): {e}")
-        return [], "", "", ""
+        return [], "", "", "", ""
 
     if not candidates:
-        return [], "", "", ""
+        return [], "", "", "", ""
 
     query = _normalize(model_name)
 
@@ -193,7 +194,7 @@ def fetch_benchmarks_for_model(model_name: str) -> tuple[list[dict], str, str, s
             scored.append((score, mid))
 
     if not scored:
-        return [], "", "", ""
+        return [], "", "", "", ""
 
     scored.sort(key=lambda x: x[0], reverse=True)
 
@@ -209,10 +210,11 @@ def fetch_benchmarks_for_model(model_name: str) -> tuple[list[dict], str, str, s
         if not benchmarks:
             benchmarks = _parse_html_tables(card, model_display)
         if benchmarks:
-            return benchmarks, model_display, provider, best_id
+            return benchmarks, model_display, provider, best_id, card
 
     best_id = scored[0][1]
-    return [], best_id.split("/")[-1], best_id.split("/")[0], best_id
+    fallback_card = _fetch_model_card(best_id) or ""
+    return [], best_id.split("/")[-1], best_id.split("/")[0], best_id, fallback_card
 
 
 def _fetch_discussion_detail(model_id: str, num: int, comment_limit: int) -> tuple[str, list[dict]]:

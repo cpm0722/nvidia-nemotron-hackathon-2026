@@ -55,7 +55,8 @@ bash scripts/run.sh "claude opus 4.7"
       "body": "...",
       "comments": [{"author": "...", "text": "...", "created_at": "..."}]
     }
-  ]
+  ],
+  "hf_model_card": "# Model Card\n\n...<원본 README.md 전문>..."
 }
 ```
 
