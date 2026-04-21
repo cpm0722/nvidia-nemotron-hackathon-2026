@@ -185,6 +185,21 @@ def cmd_scrape_arxiv(args: argparse.Namespace) -> None:
 
 
 def cmd_scrape_reddit(args: argparse.Namespace) -> None:
+    # --cache-file: load pre-fetched JSON (for Brev/cloud IPs that Reddit 403s).
+    # File must match the scrape_reddit output shape: {"evidence":[...],"stats":{...}}.
+    # When set, --query/--subreddits/--limit/--since-days are ignored.
+    if args.cache_file:
+        from pathlib import Path
+        try:
+            raw = Path(args.cache_file).read_text(encoding="utf-8")
+            payload = json.loads(raw)
+        except (OSError, json.JSONDecodeError) as e:
+            _fail(f"cache-file read failed: {type(e).__name__}: {e}", code=3)
+        stats = payload.get("stats") or {}
+        stats.setdefault("source", "reddit")
+        stats["cache"] = {"file": args.cache_file, "hit": True}
+        _emit({"evidence": payload.get("evidence", []), "stats": stats})
+        return
     extra: dict[str, Any] = {}
     if args.subreddits:
         extra["subreddits"] = [s.strip() for s in args.subreddits.split(",") if s.strip()]
@@ -364,8 +379,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_scrape_arxiv)
 
     p = sub.add_parser("scrape_reddit")
-    _base_scrape_args(p)
+    _base_scrape_args(p, require_query=False)  # query optional so --cache-file alone works
     p.add_argument("--subreddits", help="Comma-separated list, e.g. 'LocalLLaMA,MachineLearning'")
+    p.add_argument(
+        "--cache-file",
+        help="Load pre-fetched evidence JSON from this path (bypasses HTTP; "
+        "for cloud IPs that Reddit 403s). See docs/cache/reddit-*.json.",
+    )
     p.set_defaults(func=cmd_scrape_reddit)
 
     p = sub.add_parser("scrape_hackernews")

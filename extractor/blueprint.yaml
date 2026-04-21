@@ -38,6 +38,11 @@ system_prompt: |
      - scrape_hf_papers (query=모델명)  — 커뮤니티 투표받은 논문
      - scrape_github (query=모델명 또는 관련 SDK)  — 실사용 이슈/PR
      - scrape_reddit (query=모델명, subreddits=LocalLLaMA,MachineLearning)  — 실사용 반응
+       ※ 클라우드 IP(Brev 등)에서는 Reddit이 HTTP 403을 반환한다(cloud range 차단).
+         사전 수집 스냅샷이 있는 타깃은 `cache_file` 인자로 로드한다:
+           - Claude Opus 4.7   → cache_file=docs/cache/reddit-claude-opus-4.7.json
+           - Nemotron-3 Super  → cache_file=docs/cache/reddit-nemotron-3-super.json
+         라이브 호출이 403이면 동일 cache_file로 재시도. 결과가 없으면 `stats.error`를 있는 그대로 보고하고 다음 소스로 진행.
      - scrape_hackernews (query=모델명)  — 기술 토론
      - scrape_rss (feed_key=anthropic|openai|deepmind|gary_marcus|geeknews 등)  — 공식/비판 블로그
      - get_benchmarks (model=모델명)  — 내부 LLM Benchmark API에서 수치 데이터 조회
