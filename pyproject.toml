@@ -16,4 +16,6 @@ members = [
     "agents/reddit/extractor",
     "agents/reddit/validator",
     "agents/query-generator",
+    "agents/reporter",
+    "agents/e2e",
 ]
