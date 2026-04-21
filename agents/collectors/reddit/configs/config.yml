@@ -1,0 +1,21 @@
+general:
+  front_end:
+    _type: a2a
+    name: "Reddit Collector Agent"
+    description: "Reddit 서브레딧에서 AI 프러덕트 사용자 반응을 수집·필터링하는 LLM-less 에이전트"
+    host: 0.0.0.0
+    port: 10016
+
+workflow:
+  _type: reddit_collector
+  subreddits:
+    - LocalLLaMA
+    - MachineLearning
+    - ClaudeAI
+    - singularity
+  limit: 10
+  max_text_chars: 8000
+  include_comments: true
+  max_comments_per_post: 5
+  max_comment_chars: 1500
+  comment_workers: 3

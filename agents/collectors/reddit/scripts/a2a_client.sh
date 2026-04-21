@@ -4,10 +4,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="$(dirname "$SCRIPT_DIR")"
 
-SERVER_URL="${NAT_A2A_URL:-http://localhost:10001}"
-PRODUCT_NAME="${1:-Claude Opus 4.7}"
+SERVER_URL="${NAT_A2A_URL:-http://localhost:10016}"
+PRODUCT_NAME="${1:-gemma4}"
 
-echo "=== extractor-reddit A2A client test ==="
+echo "=== collector/reddit A2A client test ==="
 echo "product: $PRODUCT_NAME"
 echo "server:  $SERVER_URL"
 echo ""

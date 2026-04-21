@@ -6,25 +6,25 @@ requires = ["setuptools>=64"]
 where = ["src"]
 
 [project]
-name = "nat_extractor_reddit"
+name = "nat_collector_reddit"
 version = "0.1.0"
 requires-python = ">=3.11,<3.14"
-description = "NAT A2A agent that collects community reactions to AI products from Reddit"
-keywords = ["ai", "agents", "scraper", "reddit", "nat", "a2a"]
+description = "NAT A2A reddit collector — LLM-less scrape + keyword-filter service"
+keywords = ["ai", "agents", "scraper", "reddit", "nat", "a2a", "collector"]
 classifiers = ["Programming Language :: Python"]
 dependencies = [
-    "nvidia-nat[a2a,langchain]",
+    "nvidia-nat[a2a]",
     "ari_core",
-    "validator_core",
     "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
 ]
 
 [tool.uv.sources]
 ari_core = { path = "../../../libs/ari-core", editable = true }
-validator_core = { path = "../../../libs/validator-core", editable = true }
 
 [project.optional-dependencies]
 test = ["pytest>=8.0"]
 
 [project.entry-points."nat.components"]
-nat_extractor_reddit = "nat_extractor_reddit.register"
+nat_collector_reddit = "nat_collector_reddit.register"
