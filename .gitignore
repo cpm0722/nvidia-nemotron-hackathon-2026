@@ -2,3 +2,5 @@
 .openclaw
 *.swp
 .DS_Store
+__pycache__/
+*.egg-info
