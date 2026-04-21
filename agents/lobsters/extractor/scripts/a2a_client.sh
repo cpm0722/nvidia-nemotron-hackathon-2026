@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="$(dirname "$SCRIPT_DIR")"
 
-SERVER_URL="${NAT_A2A_URL:-http://localhost:10004}"
+SERVER_URL="${NAT_A2A_URL:-http://localhost:10014}"
 KEYWORD="${1:-Claude}"
 
 echo "=== extractor-lobsters A2A client test ==="

@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="$(dirname "$SCRIPT_DIR")"
 
-SERVER_URL="${NAT_A2A_URL:-http://localhost:10000}"
+SERVER_URL="${NAT_A2A_URL:-http://localhost:10010}"
 PRODUCT_NAME="${1:-gemma4}"
 
 echo "=== extractor-arcalive A2A client test ==="

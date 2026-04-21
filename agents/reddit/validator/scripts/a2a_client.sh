@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="$(dirname "$SCRIPT_DIR")"
 
-SERVER_URL="${NAT_A2A_URL:-http://localhost:10101}"
+SERVER_URL="${NAT_A2A_URL:-http://localhost:10026}"
 MESSAGE="${1:-Product: gemma4
 
 Scraped data:

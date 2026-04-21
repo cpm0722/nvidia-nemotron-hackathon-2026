@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="$(dirname "$SCRIPT_DIR")"
 
-SERVER_URL="${NAT_A2A_URL:-http://localhost:10002}"
+SERVER_URL="${NAT_A2A_URL:-http://localhost:10011}"
 KEYWORD="${1:-nemotron}"
 
 echo "=== extractor-arxiv A2A client test ==="

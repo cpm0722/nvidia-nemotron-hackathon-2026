@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="$(dirname "$SCRIPT_DIR")"
 
-SERVER_URL="${NAT_A2A_URL:-http://localhost:10001}"
+SERVER_URL="${NAT_A2A_URL:-http://localhost:10012}"
 MODEL_NAME="${1:-claude opus 4.7}"
 
 echo "=== extractor-benchmark A2A client test ==="
