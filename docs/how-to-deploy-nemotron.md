@@ -1,9 +1,56 @@
-# Nemotron-3-Super NIM 배포 가이드 (H100 2GPU, FP8)
+g# Nemotron NIM 배포 가이드 (H100, FP8)
 
-NIM(NVIDIA Inference Microservice) 컨테이너를 사용해 Nemotron-3-Super-120B-A12B를
-H100 2장에서 FP8로 서빙하고 OpenAI 호환 API로 호출하는 방법을 설명합니다.
+NIM(NVIDIA Inference Microservice) 컨테이너를 사용해 Nemotron 모델을
+H100에서 FP8로 서빙하고 OpenAI 호환 API로 호출하는 방법을 설명합니다.
 
-## 모델 사양
+---
+
+## Nemotron-3-Nano-30B-A3B 배포 가이드 (H100 1GPU, FP8)
+
+### 모델 사양
+
+| 항목 | 내용 |
+|------|------|
+| 모델 | Nemotron-3-Nano-30B-A3B |
+| 총 파라미터 | 30B (MoE: 토큰당 3B 활성) |
+| 아키텍처 | LatentMoE + Mamba-2 Hybrid + MTP |
+| 최대 컨텍스트 | 1M tokens |
+| 권장 정밀도 (H100) | FP8 |
+
+### 3단계: NIM 컨테이너 실행
+
+```bash
+docker run -it --rm \
+  --gpus all \
+  --shm-size=16g \
+  -e NGC_API_KEY=$NGC_API_KEY \
+  -v ~/.cache/nim:/opt/nim/.cache \
+  -p 8000:8000 \
+  nvcr.io/nim/nvidia/nemotron-3-nano:latest
+```
+
+### 4단계: API 호출
+
+```bash
+curl http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "nemotron-3-nano-30b-a3b",
+    "messages": [
+      {"role": "user", "content": "Hello!"}
+    ],
+    "max_tokens": 256,
+    "temperature": 0.6
+  }'
+```
+
+> 1단계(NGC 인증), 2단계(캐시 디렉터리 생성), 플래그 설명, 트러블슈팅은 아래 Nemotron-3-Super 가이드와 동일합니다.
+
+---
+
+## Nemotron-3-Super-120B-A12B 배포 가이드 (H100 2GPU, FP8)
+
+### 모델 사양
 
 | 항목 | 내용 |
 |------|------|
@@ -13,7 +60,7 @@ H100 2장에서 FP8로 서빙하고 OpenAI 호환 API로 호출하는 방법을 
 | 최대 컨텍스트 | 1M tokens |
 | 권장 정밀도 (H100) | FP8 |
 
-## 전제 조건
+### 전제 조건
 
 - H100 GPU × 2 (각 80GB, 총 160GB)
 - Docker 설치
@@ -22,7 +69,7 @@ H100 2장에서 FP8로 서빙하고 OpenAI 호환 API로 호출하는 방법을 
 
 ---
 
-## 1단계: NGC 인증
+### 1단계: NGC 인증
 
 ```bash
 # NGC API Key 환경변수 설정
@@ -34,18 +81,22 @@ docker login nvcr.io -u '$oauthtoken' -p $NGC_API_KEY
 
 ---
 
-## 2단계: 모델 캐시 디렉터리 생성
+### 2단계: 모델 캐시 디렉터리 생성
 
 NIM 컨테이너는 최초 실행 시 모델 가중치를 자동으로 다운로드합니다.
 이후 실행에서는 캐시를 재사용하므로 로컬 경로를 마운트해 둡니다.
 
 ```bash
 mkdir -p ~/.cache/nim
+
+# NIM 컨테이너는 내부적으로 UID 1000으로 실행되므로 소유권을 맞춰줘야 합니다.
+# 이 단계를 빠뜨리면 컨테이너 실행 시 "Permission denied (os error 13)" 오류가 발생합니다.
+sudo chown -R 1000:1000 ~/.cache/nim
 ```
 
 ---
 
-## 3단계: NIM 컨테이너 실행
+### 3단계: NIM 컨테이너 실행
 
 ```bash
 docker run -it --rm \
@@ -67,12 +118,29 @@ docker run -it --rm \
 | `-v ~/.cache/nim:/opt/nim/.cache` | 모델 캐시 영속화 (재실행 시 재다운로드 방지) |
 | `-p 8000:8000` | OpenAI 호환 API 포트 노출 |
 
+### vLLM 추가 인자 전달 (`NIM_PASSTHROUGH_ARGS`)
+
+NIM 컨테이너 내부의 vLLM에 추가 옵션이 필요한 경우 `NIM_PASSTHROUGH_ARGS` 환경변수로 전달합니다.
+
+```bash
+docker run -it --rm \
+  --gpus all \
+  --shm-size=16g \
+  -e NGC_API_KEY=$NGC_API_KEY \
+  -e NIM_PASSTHROUGH_ARGS="--enable-auto-tool-choice --tool-call-parser qwen3_coder" \
+  -v ~/.cache/nim:/opt/nim/.cache \
+  -p 8000:8000 \
+  nvcr.io/nim/nvidia/nemotron-3-super-120b-a12b:latest
+```
+
+`NIM_PASSTHROUGH_ARGS`에는 `vllm serve`가 허용하는 모든 인자를 공백으로 구분해 전달할 수 있습니다.
+
 > **참고:** NIM 컨테이너는 H100을 감지하면 자동으로 FP8 최적화 엔진을 선택합니다.
 > 최초 실행 시 TRT-LLM 엔진 빌드가 수행되므로 서버 준비까지 수 분이 소요됩니다.
 
 ---
 
-## 4단계: API 호출
+### 4단계: API 호출
 
 서버 로그에 `Server ready` 메시지가 출력되면 아래와 같이 호출합니다.
 
@@ -130,7 +198,7 @@ print(response.choices[0].message.content)
 
 ---
 
-## 클라우드 API 사용 (GPU 없이 테스트)
+### 클라우드 API 사용 (GPU 없이 테스트)
 
 GPU 환경 없이 빠르게 API를 테스트하려면 NVIDIA Build API를 사용합니다.
 
@@ -157,7 +225,7 @@ print(response.choices[0].message.content)
 
 ---
 
-## 트러블슈팅
+### 트러블슈팅
 
 **컨테이너 pull 실패**
 ```bash
