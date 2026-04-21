@@ -1,0 +1,21 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=64"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "validator_core"
+version = "0.1.0"
+requires-python = ">=3.11,<3.14"
+description = "Shared validator_caller function group for NAT extractor agents"
+keywords = ["ai", "agents", "validator", "nat", "a2a"]
+classifiers = ["Programming Language :: Python"]
+dependencies = [
+    "nvidia-nat[a2a,langchain]",
+    "requests>=2.31",
+]
+
+[project.entry-points."nat.components"]
+validator_core = "validator_core.register"
