@@ -27,10 +27,11 @@ class SearchResultItem(BaseModel):
 
 
 class Post(BaseModel):
-    """Top-5에 선정된 게시글 한 건의 최종 데이터."""
+    """Top-N에 선정된 게시글 한 건의 최종 데이터."""
 
     rank: int
     title: str
+    url: str
     like: int
     dislike: int
     num_comments: int

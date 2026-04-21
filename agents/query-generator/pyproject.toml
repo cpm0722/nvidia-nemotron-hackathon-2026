@@ -1,0 +1,33 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=64"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "nat_query_generator"
+version = "0.1.0"
+requires-python = ">=3.11,<3.14"
+description = "NAT A2A agent that extracts AI product/model names from natural language queries"
+keywords = ["ai", "agents", "query-generator", "nat", "a2a"]
+classifiers = ["Programming Language :: Python"]
+dependencies = [
+    "nvidia-nat[a2a,langchain]",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["N999"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+include = ["src", "tests"]

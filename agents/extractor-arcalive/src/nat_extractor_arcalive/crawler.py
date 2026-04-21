@@ -29,25 +29,26 @@ HEADERS = {
 }
 
 
-def crawl(query: str, board: str, max_pages: int = 2) -> CrawlResult:
-    """주어진 쿼리로 arca.live 채널을 검색해 Top-5 게시글을 수집한다.
+def crawl(query: str, board: str, max_pages: int = 2, limit: int = 5) -> CrawlResult:
+    """주어진 쿼리로 arca.live 채널을 검색해 Top-N 게시글을 수집한다.
 
     검색 결과 1~max_pages 페이지를 순회하며 일반 게시글을 수집한 뒤,
-    댓글 수 → 추천 수 → 최신 순으로 정렬해 Top-5를 선택한다.
+    댓글 수 → 추천 수 → 최신 순으로 정렬해 Top-N을 선택한다.
     각 게시글 요청 사이에 2~3초 랜덤 딜레이를 둔다.
 
     Args:
         query: 검색어 (AI 프러덕트 이름, e.g. "GPT-5", "Claude 4")
         board: 검색할 arca.live 채널 슬러그 (e.g. "aiservice", "alpaca")
         max_pages: 검색 결과 최대 페이지 수 (기본 2)
+        limit: 반환할 최대 게시글 수 (기본 5)
     Returns:
-        CrawlResult (query + top-5 posts with comments)
+        CrawlResult (query + top-N posts with comments)
     """
     candidates = _collect_search_results(query, board, max_pages)
-    top5 = _select_top5(candidates, query)
+    topn = _select_topn(candidates, query, limit)
 
     posts: list[Post] = []
-    for rank, item in enumerate(top5, start=1):
+    for rank, item in enumerate(topn, start=1):
         html = _fetch(item.url, board)
         body, like, dislike, comments = parse_post(html)
 
@@ -55,6 +56,7 @@ def crawl(query: str, board: str, max_pages: int = 2) -> CrawlResult:
             Post(
                 rank=rank,
                 title=item.title,
+                url=item.url,
                 like=like,
                 dislike=dislike,
                 num_comments=item.num_comments,
@@ -64,7 +66,7 @@ def crawl(query: str, board: str, max_pages: int = 2) -> CrawlResult:
             )
         )
 
-        if rank < len(top5):
+        if rank < len(topn):
             time.sleep(random.uniform(2, 3))
 
     return CrawlResult(query=query, result=posts)
@@ -86,8 +88,8 @@ def _collect_search_results(query: str, board: str, max_pages: int) -> list[Sear
     return all_items
 
 
-def _select_top5(items: list[SearchResultItem], query: str) -> list[SearchResultItem]:
-    """query가 제목에 포함된 게시글만 추린 뒤, 댓글 수 → 추천 수 → 최신 순으로 Top-5를 반환한다.
+def _select_topn(items: list[SearchResultItem], query: str, limit: int) -> list[SearchResultItem]:
+    """query가 제목에 포함된 게시글만 추린 뒤, 댓글 수 → 추천 수 → 최신 순으로 Top-N을 반환한다.
 
     query·title 모두 공백·특수문자 제거 후 lowercase로 정규화해 비교한다.
     """
@@ -96,7 +98,7 @@ def _select_top5(items: list[SearchResultItem], query: str) -> list[SearchResult
     return sorted(
         matched,
         key=lambda p: (-p.num_comments, -p.like, -p.time.timestamp()),
-    )[:5]
+    )[:limit]
 
 
 def _normalize(text: str) -> str:

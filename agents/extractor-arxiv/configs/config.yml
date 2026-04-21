@@ -1,0 +1,32 @@
+general:
+  front_end:
+    _type: a2a
+    name: "arXiv Extractor Agent"
+    description: "Searches arXiv (export.arxiv.org) for research papers matching an AI model or technique keyword."
+    host: 0.0.0.0
+    port: 10002
+
+llms:
+  primary_llm:
+    _type: openai
+    model_name: nvidia/nemotron-3-super-120b-a12b
+    base_url: https://model-server-uya78rbya.brevlab.com/v1
+    api_key: empty
+    temperature: 0.0
+    max_tokens: 4096
+
+function_groups:
+  arxiv_scraper:
+    _type: arxiv_scraper
+    default_limit: 10
+    max_text_chars: 8000
+
+workflow:
+  _type: react_agent
+  llm_name: primary_llm
+  tool_names:
+    - arxiv_scraper__search_papers
+  system_prompt: file://../prompts/system_prompt.txt
+  verbose: true
+  retry_agent_response_parsing_errors: true
+  parse_agent_response_max_retries: 3

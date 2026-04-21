@@ -1,4 +1,4 @@
-# LLM APIs
+g# LLM APIs
 
 ## 1. Onpremise API (NVIDIA Nemotron-3)
 
@@ -10,7 +10,7 @@ Brev(NVIDIA computing resource)에서 GPU instance를 직접 할당받아 배포
 | Model | Base URL |
 |---|---|
 | `nvidia/nemotron-3-super-120b-a12b` | `https://model-server-uya78rbya.brevlab.com/v1` |
-| `nvidia/nemotron-3-nano-30b-a3b` | `https://model-server-4dfr8gv78.brevlab.com/v1` |
+| `nvidia/nemotron-3-nano` | `https://model-server-4dfr8gv78.brevlab.com/v1` |
 
 **사용 예시:**
 ```python

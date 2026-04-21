@@ -6,18 +6,17 @@ requires = ["setuptools>=64"]
 where = ["src"]
 
 [project]
-name = "nat_extractor_arcalive"
+name = "nat_extractor_arxiv"
 version = "0.1.0"
 requires-python = ">=3.11,<3.14"
-description = "NAT A2A agent that collects user reactions to AI products from arca.live"
-keywords = ["ai", "agents", "scraper", "arcalive", "nat", "a2a"]
+description = "NAT A2A agent that collects research papers from arXiv"
+keywords = ["ai", "agents", "scraper", "arxiv", "nat", "a2a"]
 classifiers = ["Programming Language :: Python"]
 dependencies = [
     "nvidia-nat[a2a,langchain]",
     "ari_core",
     "requests>=2.31",
-    "beautifulsoup4>=4.12",
-    "lxml>=5.0",
+    "feedparser>=6.0",
 ]
 
 [tool.uv.sources]
@@ -27,4 +26,4 @@ ari_core = { path = "../../libs/ari-core", editable = true }
 test = ["pytest>=8.0"]
 
 [project.entry-points."nat.components"]
-nat_extractor_arcalive = "nat_extractor_arcalive.register"
+nat_extractor_arxiv = "nat_extractor_arxiv.register"
