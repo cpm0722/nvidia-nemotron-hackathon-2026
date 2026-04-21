@@ -9,15 +9,22 @@ resolution-markers = [
 
 [manifest]
 members = [
-    "nat-collector-arcalive",
-    "nat-collector-arxiv",
-    "nat-collector-benchmark",
-    "nat-collector-geeknews",
-    "nat-collector-lobsters",
-    "nat-collector-openai",
-    "nat-collector-reddit",
+    "nat-arcalive-validator",
+    "nat-arxiv-validator",
+    "nat-benchmark-validator",
     "nat-e2e",
+    "nat-extractor-arcalive",
+    "nat-extractor-arxiv",
+    "nat-extractor-benchmark",
+    "nat-extractor-geeknews",
+    "nat-extractor-lobsters",
+    "nat-extractor-openai",
+    "nat-extractor-reddit",
+    "nat-geeknews-validator",
+    "nat-lobsters-validator",
+    "nat-openai-validator",
     "nat-query-generator",
+    "nat-reddit-validator",
     "nat-reporter",
     "validator-core",
 ]
@@ -1712,9 +1719,76 @@ wheels = [
 ]
 
 [[package]]
-name = "nat-collector-arcalive"
+name = "nat-arcalive-validator"
 version = "0.1.0"
-source = { editable = "agents/collectors/arcalive" }
+source = { editable = "agents/collectors/arcalive/validator" }
+dependencies = [
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "validator-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "validator-core", editable = "libs/validator-core" },
+]
+
+[[package]]
+name = "nat-arxiv-validator"
+version = "0.1.0"
+source = { editable = "agents/collectors/arxiv/validator" }
+dependencies = [
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "validator-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "validator-core", editable = "libs/validator-core" },
+]
+
+[[package]]
+name = "nat-benchmark-validator"
+version = "0.1.0"
+source = { editable = "agents/collectors/benchmark/validator" }
+dependencies = [
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "validator-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "validator-core", editable = "libs/validator-core" },
+]
+
+[[package]]
+name = "nat-e2e"
+version = "0.1.0"
+source = { editable = "agents/e2e" }
+dependencies = [
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "requests" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+    { name = "requests", specifier = ">=2.31" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "nat-extractor-arcalive"
+version = "0.1.0"
+source = { editable = "agents/collectors/arcalive/extractor" }
 dependencies = [
     { name = "ari-core" },
     { name = "beautifulsoup4" },
@@ -1740,9 +1814,9 @@ requires-dist = [
 provides-extras = ["test"]
 
 [[package]]
-name = "nat-collector-arxiv"
+name = "nat-extractor-arxiv"
 version = "0.1.0"
-source = { editable = "agents/collectors/arxiv" }
+source = { editable = "agents/collectors/arxiv/extractor" }
 dependencies = [
     { name = "ari-core" },
     { name = "feedparser" },
@@ -1766,9 +1840,9 @@ requires-dist = [
 provides-extras = ["test"]
 
 [[package]]
-name = "nat-collector-benchmark"
+name = "nat-extractor-benchmark"
 version = "0.1.0"
-source = { editable = "agents/collectors/benchmark" }
+source = { editable = "agents/collectors/benchmark/extractor" }
 dependencies = [
     { name = "ari-core" },
     { name = "beautifulsoup4" },
@@ -1794,9 +1868,9 @@ requires-dist = [
 provides-extras = ["test"]
 
 [[package]]
-name = "nat-collector-geeknews"
+name = "nat-extractor-geeknews"
 version = "0.1.0"
-source = { editable = "agents/collectors/geeknews" }
+source = { editable = "agents/collectors/geeknews/extractor" }
 dependencies = [
     { name = "ari-core" },
     { name = "feedparser" },
@@ -1820,9 +1894,9 @@ requires-dist = [
 provides-extras = ["test"]
 
 [[package]]
-name = "nat-collector-lobsters"
+name = "nat-extractor-lobsters"
 version = "0.1.0"
-source = { editable = "agents/collectors/lobsters" }
+source = { editable = "agents/collectors/lobsters/extractor" }
 dependencies = [
     { name = "ari-core" },
     { name = "feedparser" },
@@ -1846,9 +1920,9 @@ requires-dist = [
 provides-extras = ["test"]
 
 [[package]]
-name = "nat-collector-openai"
+name = "nat-extractor-openai"
 version = "0.1.0"
-source = { editable = "agents/collectors/openai" }
+source = { editable = "agents/collectors/openai/extractor" }
 dependencies = [
     { name = "ari-core" },
     { name = "feedparser" },
@@ -1872,9 +1946,9 @@ requires-dist = [
 provides-extras = ["test"]
 
 [[package]]
-name = "nat-collector-reddit"
+name = "nat-extractor-reddit"
 version = "0.1.0"
-source = { editable = "agents/collectors/reddit" }
+source = { editable = "agents/collectors/reddit/extractor" }
 dependencies = [
     { name = "ari-core" },
     { name = "nvidia-nat", extra = ["a2a"] },
@@ -1896,26 +1970,49 @@ requires-dist = [
 provides-extras = ["test"]
 
 [[package]]
-name = "nat-e2e"
+name = "nat-geeknews-validator"
 version = "0.1.0"
-source = { editable = "agents/e2e" }
+source = { editable = "agents/collectors/geeknews/validator" }
 dependencies = [
     { name = "nvidia-nat", extra = ["a2a", "langchain"] },
-    { name = "requests" },
-]
-
-[package.optional-dependencies]
-test = [
-    { name = "pytest" },
+    { name = "validator-core" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "nvidia-nat", extras = ["a2a", "langchain"] },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
-    { name = "requests", specifier = ">=2.31" },
+    { name = "validator-core", editable = "libs/validator-core" },
 ]
-provides-extras = ["test"]
+
+[[package]]
+name = "nat-lobsters-validator"
+version = "0.1.0"
+source = { editable = "agents/collectors/lobsters/validator" }
+dependencies = [
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "validator-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "validator-core", editable = "libs/validator-core" },
+]
+
+[[package]]
+name = "nat-openai-validator"
+version = "0.1.0"
+source = { editable = "agents/collectors/openai/validator" }
+dependencies = [
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "validator-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "validator-core", editable = "libs/validator-core" },
+]
 
 [[package]]
 name = "nat-query-generator"
@@ -1936,6 +2033,21 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
 ]
 provides-extras = ["test"]
+
+[[package]]
+name = "nat-reddit-validator"
+version = "0.1.0"
+source = { editable = "agents/collectors/reddit/validator" }
+dependencies = [
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "validator-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "validator-core", editable = "libs/validator-core" },
+]
 
 [[package]]
 name = "nat-reporter"
