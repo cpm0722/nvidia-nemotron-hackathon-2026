@@ -12,7 +12,7 @@ Backbone models: [Nemotron-3-Nano-30B-A3B](https://build.nvidia.com/nvidia/nemot
 Given a natural language query (Korean or English), the system:
 
 1. Extracts AI product/model names from the query (query-generator, LLM)
-2. Runs 7 **collectors** in parallel — each scrapes a data source and filters items with a deterministic keyword match (no LLM)
+2. Runs 7 **collectors** in parallel — each collector is a Python pipeline that scrapes a source (extractor) and forwards the raw items to an LLM-based validator A2A service for relevance filtering
 3. Reporter synthesizes all validated evidence into a structured markdown report (LLM)
 
 ---
@@ -27,11 +27,17 @@ query-generator  (nemotron-nano, port 10001)
     │  product name(s)
     ├──────┬──────┬──────┬──────┬──────┬──────┐
     ▼      ▼      ▼      ▼      ▼      ▼      ▼   parallel collectors
-arcalive arxiv bench geeknews lobsters openai reddit
-(10010) (10011)(10012) (10013) (10014) (10015)(10016)
+┌──────────────────────────────── collector (one per source) ────────────────────────────┐
+│  extractor  (LLM-less A2A workflow, ports 10010–10016)                                 │
+│      │                                                                                 │
+│      │  scrape → A2A(message/send) → validator                                         │
+│      ▼                                                                                 │
+│  validator  (chat_completion LLM A2A, ports 10020–10026)                               │
+│      │  filtered ScrapeResult                                                          │
+│      ▼                                                                                 │
+│  extractor returns filtered ScrapeResult JSON                                          │
+└────────────────────────────────────────────────────────────────────────────────────────┘
     │      │      │      │       │       │      │
-    │ each collector: scrape → keyword-filter (LLM-less)
-    │
     └──────┴──────┴──────┴───────┴───────┴──────┘
                                │
                                ▼
@@ -41,41 +47,44 @@ arcalive arxiv bench geeknews lobsters openai reddit
                     structured markdown report
 ```
 
-The **e2e agent** (port 10000) orchestrates the entire flow above via three tools:
-`generate_queries` → `collect_evidence` → `generate_report`.
+The **e2e agent** (port 10000) is itself an LLM-less sequential workflow that calls
+`query-generator → extractor×N (parallel) → reporter` in fixed order.
 
-Each **collector** is a single LLM-less A2A service that internally runs
-`extractor.py` (source-specific scraper) → `validator.py` (alnum-normalized
-substring match against `title + text`) and returns a `ScrapeResult` JSON.
+Each **collector** = one extractor A2A service + one validator A2A service. The
+extractor orchestrates the per-source pipeline in plain Python (no ReAct): it
+scrapes, then HTTP-calls the paired validator with the scraped items, then
+returns the filtered result. Only the validator (and the reporter / query-generator)
+use an LLM — the extractor and e2e layers are deterministic.
 
 ### Data Sources
 
-| Source | Type | Collector Port |
-|---|---|---|
-| ArcaLive | Korean community discussion | 10010 |
-| arXiv | Research papers | 10011 |
-| Benchmark (AA + HuggingFace) | Leaderboard / eval results | 10012 |
-| GeekNews | Korean tech news | 10013 |
-| Lobsters | Tech community discussion | 10014 |
-| OpenAI Blog | Official announcements | 10015 |
-| Reddit | English community discussion | 10016 |
+| Source | Type | Extractor Port | Validator Port |
+|---|---|---|---|
+| ArcaLive | Korean community discussion | 10010 | 10020 |
+| arXiv | Research papers | 10011 | 10021 |
+| Benchmark (AA + HuggingFace) | Leaderboard / eval results | 10012 | 10022 |
+| GeekNews | Korean tech news | 10013 | 10023 |
+| Lobsters | Tech community discussion | 10014 | 10024 |
+| OpenAI Blog | Official announcements | 10015 | 10025 |
+| Reddit | English community discussion | 10016 | 10026 |
 
 ### Agent Port Map
 
 | Agent | Port | Uses LLM? |
 |---|---|---|
-| e2e | 10000 | nemotron-nano (ReAct) |
+| e2e | 10000 | no (sequential Python) |
 | query-generator | 10001 | nemotron-nano |
 | reporter | 10002 | nemotron-super |
-| collectors (arcalive–reddit) | 10010–10016 | **no — deterministic** |
+| extractors (arcalive–reddit) | 10010–10016 | no (scrape + A2A call) |
+| validators (arcalive–reddit) | 10020–10026 | nemotron-super (chat_completion) |
 
 ### Model Assignment
 
 | Role | Model |
 |---|---|
-| query-generator, e2e | `nvidia/nemotron-3-nano-30b-a3b` |
-| reporter | `nvidia/nemotron-3-super-120b-a12b` |
-| collectors | none (LLM-less scrape + keyword filter) |
+| query-generator | `nvidia/nemotron-3-nano-30b-a3b` |
+| validators, reporter | `nvidia/nemotron-3-super-120b-a12b` |
+| extractors, e2e | none (LLM-less Python orchestration) |
 
 ---
 
@@ -109,15 +118,19 @@ Start all agents (each in a separate terminal), then call the e2e agent:
 # Terminal 1 — query-generator
 cd agents/query-generator && ./scripts/a2a_server.sh
 
-# Terminal 2–8 — collectors (one per source)
-cd agents/collectors/arcalive && ./scripts/a2a_server.sh
-cd agents/collectors/arxiv    && ./scripts/a2a_server.sh
+# Terminal 2–8 — extractors (one per source)
+cd agents/collectors/arcalive/extractor && ./scripts/a2a_server.sh
+cd agents/collectors/arxiv/extractor    && ./scripts/a2a_server.sh
 # ... repeat for benchmark, geeknews, lobsters, openai, reddit
 
-# Terminal 9 — reporter
+# Terminal 9–15 — validators (one per source)
+cd agents/collectors/arcalive/validator && ./scripts/a2a_server.sh
+# ... repeat for the other 6
+
+# Terminal 16 — reporter
 cd agents/reporter && ./scripts/a2a_server.sh
 
-# Terminal 10 — e2e orchestrator
+# Terminal 17 — e2e orchestrator
 cd agents/e2e && ./scripts/a2a_server.sh
 
 # Send a query
@@ -126,16 +139,18 @@ cd agents/e2e && ./scripts/a2a_client.sh "GPT5와 Gemma4 비교해줘"
 
 ### Scaled test (arcalive + geeknews only)
 
-Use `configs/config_test.yml` when running e2e with only a subset of collectors:
+Use `configs/config_test.yml` when running e2e with only a subset of extractors:
 
 ```bash
 cd agents/e2e && uv run nat a2a serve --config_file configs/config_test.yml
 ```
 
-### Run a single collector directly
+(Requires just arcalive + geeknews extractors + validators + query-generator + reporter running.)
+
+### Run a single extractor directly
 
 ```bash
-cd agents/collectors/reddit
+cd agents/collectors/reddit/extractor
 ./scripts/run.sh "GPT-5"
 ```
 
@@ -145,24 +160,29 @@ cd agents/collectors/reddit
 
 ### Running an individual agent
 
-Every agent under `agents/` follows the same script interface:
+Every agent follows the same script interface:
 
 ```bash
-cd agents/{collectors/<source>|query-generator|reporter|e2e}
+# Extractors and validators are both under agents/collectors/{source}/
+cd agents/collectors/{source}/{extractor|validator}
 
-# Direct run (development)
-./scripts/run.sh "<input>"
+# Or the orchestrator / supporting agents
+cd agents/{query-generator|reporter|e2e}
 
 # A2A server mode
 ./scripts/a2a_server.sh
 
 # Test client (requires server running)
 ./scripts/a2a_client.sh "<input>"
+
+# Direct run (development — extractors, query-generator, reporter, e2e only)
+./scripts/run.sh "<input>"
 ```
 
 ### Configuration
 
-Each collector's behavior is controlled by `configs/config.yml`. Collectors have **no `llms:` section** — only the scraper tunables and A2A front-end settings:
+Extractor's `configs/config.yml` has no `llms:` section — it's a pure
+Python workflow that hits the paired validator over A2A:
 
 ```yaml
 general:
@@ -171,23 +191,28 @@ general:
     port: 10010
 
 workflow:
-  _type: arcalive_collector
+  _type: arcalive_extractor
   board: alpaca
   max_pages: 2
   limit: 5
+  validator_url: http://localhost:10020
+  validator_timeout_seconds: 120
 ```
 
-The e2e agent's `config.yml` lists all collector URLs — update them if you deploy agents on different hosts:
+The validator keeps the original chat_completion workflow and prompt; its
+`config.yml` carries the LLM definition and `file://` prompt reference.
+
+The e2e agent's `config.yml` lists all extractor URLs:
 
 ```yaml
-function_groups:
-  pipeline:
-    query_generator_url: http://localhost:10001
-    collector_urls:
-      - http://localhost:10010   # arcalive
-      - http://localhost:10011   # arxiv
-      # ...
-    reporter_url: http://localhost:10002
+workflow:
+  _type: e2e_pipeline
+  query_generator_url: http://localhost:10001
+  collector_urls:
+    - http://localhost:10010   # arcalive extractor
+    - http://localhost:10011   # arxiv extractor
+    # ...
+  reporter_url: http://localhost:10002
 ```
 
 ---
@@ -197,35 +222,42 @@ function_groups:
 ```
 nvidia-nemotron-hackathon-2026/
 ├── agents/
-│   ├── e2e/                              # Full pipeline orchestrator (port 10000)
+│   ├── e2e/                                    # Full pipeline orchestrator (port 10000)
 │   │   ├── configs/
-│   │   │   ├── config.yml                # all 7 collectors
-│   │   │   └── config_test.yml           # arcalive + geeknews only
+│   │   │   ├── config.yml                      # all 7 extractors
+│   │   │   └── config_test.yml                 # arcalive + geeknews only
 │   │   ├── scripts/
-│   │   └── src/nat_e2e/register.py       # generate_queries / collect_evidence / generate_report
-│   ├── query-generator/                  # Product name extractor (port 10001)
-│   ├── reporter/                         # Evidence synthesizer → markdown report (port 10002)
-│   └── collectors/                       # 7 LLM-less collectors (scrape + keyword filter)
-│       ├── arcalive/                     # port 10010
-│       │   ├── configs/config.yml
-│       │   ├── scripts/{a2a_server,a2a_client,run}.sh
-│       │   ├── src/nat_collector_arcalive/
-│       │   │   ├── extractor.py          # scraper logic
-│       │   │   ├── validator.py          # alnum-normalized keyword match
-│       │   │   ├── register.py           # @register_function collect()
-│       │   │   └── (crawler.py, parser.py, models.py — source-specific)
-│       │   └── pyproject.toml
-│       ├── arxiv/                        # port 10011
-│       ├── benchmark/                    # port 10012
-│       ├── geeknews/                     # port 10013
-│       ├── lobsters/                     # port 10014
-│       ├── openai/                       # port 10015
-│       └── reddit/                       # port 10016
+│   │   └── src/nat_e2e/register.py             # LLM-less sequential pipeline
+│   ├── query-generator/                        # Product name extractor (port 10001)
+│   ├── reporter/                               # Evidence synthesizer → markdown report (port 10002)
+│   └── collectors/                             # per-source extractor + validator pairs
+│       ├── arcalive/
+│       │   ├── extractor/                      # port 10010 (no LLM)
+│       │   │   ├── configs/config.yml
+│       │   │   ├── scripts/{a2a_server,a2a_client,run}.sh
+│       │   │   ├── src/nat_extractor_arcalive/
+│       │   │   │   ├── extractor.py            # scraper
+│       │   │   │   ├── register.py             # @register_function scrape → validator A2A
+│       │   │   │   └── (crawler.py, parser.py, models.py)
+│       │   │   ├── tests/
+│       │   │   └── pyproject.toml
+│       │   └── validator/                      # port 10020 (chat_completion LLM)
+│       │       ├── configs/config.yml
+│       │       ├── prompts/system_prompt.txt
+│       │       ├── scripts/{a2a_server,a2a_client}.sh
+│       │       ├── src/nat_arcalive_validator/
+│       │       └── pyproject.toml
+│       ├── arxiv/     { extractor/, validator/ }    # ports 10011 / 10021
+│       ├── benchmark/ { extractor/, validator/ }    # ports 10012 / 10022
+│       ├── geeknews/  { extractor/, validator/ }    # ports 10013 / 10023
+│       ├── lobsters/  { extractor/, validator/ }    # ports 10014 / 10024
+│       ├── openai/    { extractor/, validator/ }    # ports 10015 / 10025
+│       └── reddit/    { extractor/, validator/ }    # ports 10016 / 10026
 ├── libs/
-│   ├── ari-core/                         # Shared scraper schemas (EvidenceItem, ScrapeResult)
-│   └── validator-core/                   # (legacy — no longer used by collectors)
-├── docs/                                 # Internal reference documents
-├── task-histories/                       # Branch plans and completion reports
-├── pyproject.toml                        # uv workspace root
-└── CLAUDE.md                             # Project instructions for Claude Code
+│   ├── ari-core/                               # Shared scraper schemas (EvidenceItem, ScrapeResult)
+│   └── validator-core/                         # Shared legacy validator_caller (kept for workspace refs)
+├── docs/                                       # Internal reference documents
+├── task-histories/                             # Branch plans and completion reports
+├── pyproject.toml                              # uv workspace root (14 collector subpackages + e2e/qgen/reporter)
+└── CLAUDE.md                                   # Project instructions for Claude Code
 ```
