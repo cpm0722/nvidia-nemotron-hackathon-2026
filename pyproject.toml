@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "ari-agent"
 version = "0.2.0"
 description = "AI Release Intelligence Agent — Nemotron + OpenClaw/NemoClaw"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.10,<3.14"
 dependencies = [
     "requests>=2.31",
     "feedparser>=6.0",

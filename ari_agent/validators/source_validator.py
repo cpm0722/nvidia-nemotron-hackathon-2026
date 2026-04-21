@@ -16,6 +16,8 @@ author affiliations) that don't fit a pure rule-based pass.
 Aggregate score = mean(axes), clipped to [0.0, 5.0].
 """
 
+from __future__ import annotations
+
 import re
 from dataclasses import dataclass, field
 from urllib.parse import urlparse
