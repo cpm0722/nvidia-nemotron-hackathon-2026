@@ -13,8 +13,8 @@ from urllib.parse import urlencode
 
 import requests
 
-from nat_extractor_arcalive.models import CrawlResult, Post, SearchResultItem
-from nat_extractor_arcalive.parser import parse_post, parse_search_results
+from nat_collector_arcalive.models import CrawlResult, Post, SearchResultItem
+from nat_collector_arcalive.parser import parse_post, parse_search_results
 
 BASE_URL = "https://arca.live"
 

@@ -1,7 +1,7 @@
 """arca.live scraper: wraps the HTML crawler and normalizes to EvidenceItem/ScrapeResult."""
 
 from ari_core import EvidenceItem, ScrapeInput, ScrapeResult, Timer, iso
-from nat_extractor_arcalive.crawler import crawl
+from nat_collector_arcalive.crawler import crawl
 
 SOURCE = "arcalive"
 

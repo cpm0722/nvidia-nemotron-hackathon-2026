@@ -1,8 +1,7 @@
 [tool.uv.workspace]
 members = [
     "libs/validator-core",
-    "agents/arcalive/extractor",
-    "agents/arcalive/validator",
+    "agents/collectors/arcalive",
     "agents/arxiv/extractor",
     "agents/arxiv/validator",
     "agents/benchmark/extractor",

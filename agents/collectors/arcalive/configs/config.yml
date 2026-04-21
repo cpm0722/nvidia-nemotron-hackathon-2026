@@ -1,0 +1,13 @@
+general:
+  front_end:
+    _type: a2a
+    name: "Arcalive Collector Agent"
+    description: "아카라이브(arca.live)에서 AI 프러덕트에 대한 한국 사용자 반응을 수집·검증하는 LLM-less 에이전트"
+    host: 0.0.0.0
+    port: 10010
+
+workflow:
+  _type: arcalive_collector
+  board: alpaca
+  max_pages: 2
+  limit: 5

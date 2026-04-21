@@ -9,7 +9,7 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup, Tag
 
-from nat_extractor_arcalive.models import Comment, SearchResultItem
+from nat_collector_arcalive.models import Comment, SearchResultItem
 
 BASE_URL = "https://arca.live"
 

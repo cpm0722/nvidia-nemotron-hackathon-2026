@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from nat_extractor_arcalive.models import Comment
-from nat_extractor_arcalive.parser import parse_post
+from nat_collector_arcalive.models import Comment
+from nat_collector_arcalive.parser import parse_post
 
 FIXTURE_DIR = Path(__file__).parent.parent / "fixtures" / "arca_live"
 
