@@ -9,9 +9,17 @@ resolution-markers = [
 
 [manifest]
 members = [
-    "nat-extractor-arcalive",
-    "nat-extractor-benchmark",
+    "nat-collector-arcalive",
+    "nat-collector-arxiv",
+    "nat-collector-benchmark",
+    "nat-collector-geeknews",
+    "nat-collector-lobsters",
+    "nat-collector-openai",
+    "nat-collector-reddit",
+    "nat-e2e",
     "nat-query-generator",
+    "nat-reporter",
+    "validator-core",
 ]
 
 [[package]]
@@ -600,6 +608,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/bc/17/354d04951ce114bf4afc78e27a18cfbd6ee319ab1829c2d5fb5e94063ac6/fastuuid-0.14.0-cp313-cp313-musllinux_1_1_x86_64.whl", hash = "sha256:1383fff584fa249b16329a059c68ad45d030d5a4b70fb7c73a08d98fd53bcdab", size = 450921, upload-time = "2025-10-19T22:31:02.151Z" },
     { url = "https://files.pythonhosted.org/packages/fb/be/d7be8670151d16d88f15bb121c5b66cdb5ea6a0c2a362d0dcf30276ade53/fastuuid-0.14.0-cp313-cp313-win32.whl", hash = "sha256:a0809f8cc5731c066c909047f9a314d5f536c871a7a22e815cc4967c110ac9ad", size = 154559, upload-time = "2025-10-19T22:36:36.011Z" },
     { url = "https://files.pythonhosted.org/packages/22/1d/5573ef3624ceb7abf4a46073d3554e37191c868abc3aecd5289a72f9810a/fastuuid-0.14.0-cp313-cp313-win_amd64.whl", hash = "sha256:0df14e92e7ad3276327631c9e7cec09e32572ce82089c55cb1bb8df71cf394ed", size = 156539, upload-time = "2025-10-19T22:33:35.898Z" },
+]
+
+[[package]]
+name = "feedparser"
+version = "6.0.12"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "sgmllib3k" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dc/79/db7edb5e77d6dfbc54d7d9df72828be4318275b2e580549ff45a962f6461/feedparser-6.0.12.tar.gz", hash = "sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228", size = 286579, upload-time = "2025-09-10T13:33:59.486Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/eb/c96d64137e29ae17d83ad2552470bafe3a7a915e85434d9942077d7fd011/feedparser-6.0.12-py3-none-any.whl", hash = "sha256:6bbff10f5a52662c00a2e3f86a38928c37c48f77b3c511aedcd51de933549324", size = 81480, upload-time = "2025-09-10T13:33:58.022Z" },
 ]
 
 [[package]]
@@ -1692,14 +1712,14 @@ wheels = [
 ]
 
 [[package]]
-name = "nat-extractor-arcalive"
+name = "nat-collector-arcalive"
 version = "0.1.0"
-source = { editable = "agents/extractor-arcalive" }
+source = { editable = "agents/collectors/arcalive" }
 dependencies = [
     { name = "ari-core" },
     { name = "beautifulsoup4" },
     { name = "lxml" },
-    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "nvidia-nat", extra = ["a2a"] },
     { name = "requests" },
 ]
 
@@ -1713,22 +1733,48 @@ requires-dist = [
     { name = "ari-core", editable = "libs/ari-core" },
     { name = "beautifulsoup4", specifier = ">=4.12" },
     { name = "lxml", specifier = ">=5.0" },
-    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "nvidia-nat", extras = ["a2a"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "requests", specifier = ">=2.31" },
 ]
 provides-extras = ["test"]
 
 [[package]]
-name = "nat-extractor-benchmark"
+name = "nat-collector-arxiv"
 version = "0.1.0"
-source = { editable = "agents/extractor-benchmark" }
+source = { editable = "agents/collectors/arxiv" }
+dependencies = [
+    { name = "ari-core" },
+    { name = "feedparser" },
+    { name = "nvidia-nat", extra = ["a2a"] },
+    { name = "requests" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ari-core", editable = "libs/ari-core" },
+    { name = "feedparser", specifier = ">=6.0" },
+    { name = "nvidia-nat", extras = ["a2a"] },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+    { name = "requests", specifier = ">=2.31" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "nat-collector-benchmark"
+version = "0.1.0"
+source = { editable = "agents/collectors/benchmark" }
 dependencies = [
     { name = "ari-core" },
     { name = "beautifulsoup4" },
     { name = "httpx" },
     { name = "lxml" },
-    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "nvidia-nat", extra = ["a2a"] },
 ]
 
 [package.optional-dependencies]
@@ -1742,8 +1788,132 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.12" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "lxml", specifier = ">=5.0" },
+    { name = "nvidia-nat", extras = ["a2a"] },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "nat-collector-geeknews"
+version = "0.1.0"
+source = { editable = "agents/collectors/geeknews" }
+dependencies = [
+    { name = "ari-core" },
+    { name = "feedparser" },
+    { name = "nvidia-nat", extra = ["a2a"] },
+    { name = "requests" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ari-core", editable = "libs/ari-core" },
+    { name = "feedparser", specifier = ">=6.0" },
+    { name = "nvidia-nat", extras = ["a2a"] },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+    { name = "requests", specifier = ">=2.31" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "nat-collector-lobsters"
+version = "0.1.0"
+source = { editable = "agents/collectors/lobsters" }
+dependencies = [
+    { name = "ari-core" },
+    { name = "feedparser" },
+    { name = "nvidia-nat", extra = ["a2a"] },
+    { name = "requests" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ari-core", editable = "libs/ari-core" },
+    { name = "feedparser", specifier = ">=6.0" },
+    { name = "nvidia-nat", extras = ["a2a"] },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+    { name = "requests", specifier = ">=2.31" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "nat-collector-openai"
+version = "0.1.0"
+source = { editable = "agents/collectors/openai" }
+dependencies = [
+    { name = "ari-core" },
+    { name = "feedparser" },
+    { name = "nvidia-nat", extra = ["a2a"] },
+    { name = "requests" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ari-core", editable = "libs/ari-core" },
+    { name = "feedparser", specifier = ">=6.0" },
+    { name = "nvidia-nat", extras = ["a2a"] },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+    { name = "requests", specifier = ">=2.31" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "nat-collector-reddit"
+version = "0.1.0"
+source = { editable = "agents/collectors/reddit" }
+dependencies = [
+    { name = "ari-core" },
+    { name = "nvidia-nat", extra = ["a2a"] },
+    { name = "requests" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ari-core", editable = "libs/ari-core" },
+    { name = "nvidia-nat", extras = ["a2a"] },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+    { name = "requests", specifier = ">=2.31" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "nat-e2e"
+version = "0.1.0"
+source = { editable = "agents/e2e" }
+dependencies = [
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "requests" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
     { name = "nvidia-nat", extras = ["a2a", "langchain"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+    { name = "requests", specifier = ">=2.31" },
 ]
 provides-extras = ["test"]
 
@@ -1751,6 +1921,26 @@ provides-extras = ["test"]
 name = "nat-query-generator"
 version = "0.1.0"
 source = { editable = "agents/query-generator" }
+dependencies = [
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "nat-reporter"
+version = "0.1.0"
+source = { editable = "agents/reporter" }
 dependencies = [
     { name = "nvidia-nat", extra = ["a2a", "langchain"] },
 ]
@@ -2935,6 +3125,12 @@ wheels = [
 ]
 
 [[package]]
+name = "sgmllib3k"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9e/bd/3704a8c3e0942d711c1299ebf7b9091930adae6675d7c8f476a7ce48653c/sgmllib3k-1.0.0.tar.gz", hash = "sha256:7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9", size = 5750, upload-time = "2010-08-24T14:33:52.445Z" }
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3264,6 +3460,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/15/c0/0be24758891ef825f2065cd5db8741aaddabe3e248ee6acc5e8a80f04005/uvloop-0.22.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0530a5fbad9c9e4ee3f2b33b148c6a64d47bbad8000ea63704fa8260f4cf728e", size = 4366890, upload-time = "2025-10-16T22:16:40.547Z" },
     { url = "https://files.pythonhosted.org/packages/d2/53/8369e5219a5855869bcee5f4d317f6da0e2c669aecf0ef7d371e3d084449/uvloop-0.22.1-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:bc5ef13bbc10b5335792360623cc378d52d7e62c2de64660616478c32cd0598e", size = 4119472, upload-time = "2025-10-16T22:16:41.694Z" },
     { url = "https://files.pythonhosted.org/packages/f8/ba/d69adbe699b768f6b29a5eec7b47dd610bd17a69de51b251126a801369ea/uvloop-0.22.1-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:1f38ec5e3f18c8a10ded09742f7fb8de0108796eb673f30ce7762ce1b8550cad", size = 4239051, upload-time = "2025-10-16T22:16:43.224Z" },
+]
+
+[[package]]
+name = "validator-core"
+version = "0.1.0"
+source = { editable = "libs/validator-core" }
+dependencies = [
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "requests" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "requests", specifier = ">=2.31" },
 ]
 
 [[package]]

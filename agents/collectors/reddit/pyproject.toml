@@ -16,8 +16,6 @@ dependencies = [
     "nvidia-nat[a2a]",
     "ari_core",
     "requests>=2.31",
-    "beautifulsoup4>=4.12",
-    "lxml>=5.0",
 ]
 
 [tool.uv.sources]
