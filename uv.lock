@@ -10,6 +10,7 @@ resolution-markers = [
 [manifest]
 members = [
     "nat-extractor-arcalive",
+    "nat-query-generator",
 ]
 
 [[package]]
@@ -1697,6 +1698,26 @@ requires-dist = [
     { name = "nvidia-nat", extras = ["a2a", "langchain"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "requests", specifier = ">=2.31" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "nat-query-generator"
+version = "0.1.0"
+source = { editable = "agents/query-generator" }
+dependencies = [
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
 ]
 provides-extras = ["test"]
 
