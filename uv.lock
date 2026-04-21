@@ -1677,7 +1677,7 @@ wheels = [
 [[package]]
 name = "nat-extractor-arcalive"
 version = "0.1.0"
-source = { editable = "extractor-arcalive" }
+source = { editable = "agents/extractor-arcalive" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "lxml" },
