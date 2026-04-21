@@ -1,0 +1,12 @@
+general:
+  front_end:
+    _type: a2a
+    name: "arXiv Collector Agent"
+    description: "arXiv(export.arxiv.org)에서 AI 논문을 수집·필터링하는 LLM-less 에이전트"
+    host: 0.0.0.0
+    port: 10011
+
+workflow:
+  _type: arxiv_collector
+  limit: 10
+  max_text_chars: 8000
