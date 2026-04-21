@@ -6,11 +6,9 @@ import uuid
 from typing import Any
 
 import requests
-from nvidia.nat.components.function_groups import (
-    FunctionGroup,
-    FunctionGroupBaseConfig,
-    register_function_group,
-)
+from nat.builder.function import FunctionGroup
+from nat.cli.register_workflow import register_function_group
+from nat.data_models.function import FunctionGroupBaseConfig
 from pydantic import Field
 
 
@@ -27,26 +25,33 @@ class ValidatorCallerConfig(FunctionGroupBaseConfig, name="validator_caller"):
 
 
 def _a2a_send(url: str, message: str, timeout: int) -> str:
-    """Send a message to an A2A server and return the text response."""
+    """Send a message to an A2A server via message/send and return the text response.
+
+    Handles both Task-shaped responses (with artifacts[]) and Message-shaped responses
+    (with parts[] directly). Wire format uses camelCase per A2A v0.3 spec.
+    """
     payload = {
         "jsonrpc": "2.0",
-        "id": 1,
-        "method": "tasks/send",
+        "id": str(uuid.uuid4()),
+        "method": "message/send",
         "params": {
-            "id": str(uuid.uuid4()),
             "message": {
+                "kind": "message",
+                "messageId": str(uuid.uuid4()),
                 "role": "user",
-                "parts": [{"type": "text", "text": message}],
+                "parts": [{"kind": "text", "text": message}],
             },
         },
     }
     resp = requests.post(url, json=payload, timeout=timeout)
     resp.raise_for_status()
     data = resp.json()
-    artifacts = data.get("result", {}).get("artifacts", [])
-    if not artifacts:
-        return ""
-    parts = artifacts[0].get("parts", [])
+    result = data.get("result", {})
+    artifacts = result.get("artifacts", [])
+    if artifacts:
+        parts = artifacts[0].get("parts", [])
+        return parts[0].get("text", "") if parts else ""
+    parts = result.get("parts", [])
     return parts[0].get("text", "") if parts else ""
 
 
