@@ -1,5 +1,6 @@
 [tool.uv.workspace]
 members = [
     "agents/extractor-arcalive",
+    "agents/extractor-benchmark",
     "agents/query-generator",
 ]

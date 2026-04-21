@@ -10,6 +10,7 @@ resolution-markers = [
 [manifest]
 members = [
     "nat-extractor-arcalive",
+    "nat-extractor-benchmark",
     "nat-query-generator",
 ]
 
@@ -1715,6 +1716,34 @@ requires-dist = [
     { name = "nvidia-nat", extras = ["a2a", "langchain"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "requests", specifier = ">=2.31" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "nat-extractor-benchmark"
+version = "0.1.0"
+source = { editable = "agents/extractor-benchmark" }
+dependencies = [
+    { name = "ari-core" },
+    { name = "beautifulsoup4" },
+    { name = "httpx" },
+    { name = "lxml" },
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ari-core", editable = "libs/ari-core" },
+    { name = "beautifulsoup4", specifier = ">=4.12" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "lxml", specifier = ">=5.0" },
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
 ]
 provides-extras = ["test"]
 
