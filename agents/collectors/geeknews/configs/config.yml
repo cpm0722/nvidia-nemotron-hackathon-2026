@@ -1,0 +1,17 @@
+general:
+  front_end:
+    _type: a2a
+    name: "GeekNews Collector Agent"
+    description: "GeekNews(news.hada.io)에서 한국 테크 커뮤니티 반응을 수집·필터링하는 LLM-less 에이전트"
+    host: 0.0.0.0
+    port: 10013
+
+workflow:
+  _type: geeknews_collector
+  limit: 10
+  max_text_chars: 8000
+  enrich_html: true
+  include_comments: true
+  max_comments_per_topic: 10
+  max_comment_chars: 1500
+  html_workers: 4
