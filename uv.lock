@@ -226,6 +226,21 @@ wheels = [
 ]
 
 [[package]]
+name = "ari-core"
+version = "0.1.0"
+source = { editable = "libs/ari-core" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "requests" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pydantic", specifier = ">=2.0" },
+    { name = "requests", specifier = ">=2.31" },
+]
+
+[[package]]
 name = "attrs"
 version = "26.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1680,6 +1695,7 @@ name = "nat-extractor-arcalive"
 version = "0.1.0"
 source = { editable = "agents/extractor-arcalive" }
 dependencies = [
+    { name = "ari-core" },
     { name = "beautifulsoup4" },
     { name = "lxml" },
     { name = "nvidia-nat", extra = ["a2a", "langchain"] },
@@ -1693,6 +1709,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ari-core", editable = "libs/ari-core" },
     { name = "beautifulsoup4", specifier = ">=4.12" },
     { name = "lxml", specifier = ">=5.0" },
     { name = "nvidia-nat", extras = ["a2a", "langchain"] },
