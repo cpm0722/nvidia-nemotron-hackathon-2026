@@ -1,0 +1,8 @@
+Source: arca.live (Korean community board)
+
+Validation rules for arca.live posts:
+- The post title or body must directly discuss the queried AI product — not just mention it incidentally (e.g., comparing many models in passing).
+- Meaningful content: the post must contain actual user opinion, experience, benchmark result, or factual claim about the product. Memes, off-topic chat, or single-line posts with no substance should be removed.
+- Language: Korean posts are expected and valid. Do not remove items solely because they are in Korean.
+- Comments count: posts with at least one comment are generally more informative, but a post with zero comments can still be valid if the body is substantive.
+- Remove items where the body is empty or contains only image/link placeholders with no text.

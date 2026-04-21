@@ -2,4 +2,5 @@
 members = [
     "agents/extractor-arcalive",
     "agents/query-generator",
+    "agents/validator",
 ]

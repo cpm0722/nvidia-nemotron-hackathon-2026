@@ -1,0 +1,8 @@
+Source: arXiv (academic paper repository)
+
+Validation rules for arXiv papers:
+- The paper must be directly about the queried AI product, model, or technique — not merely cite or mention it as background.
+- Meaningful content: the abstract must describe experiments, evaluations, or analysis involving the queried subject. Pure theory papers unrelated to the queried product should be removed.
+- Relevance check: if the queried term appears only in the related-work section or as a brief comparison baseline, the paper is likely not a primary source and should be removed.
+- Recency: prefer papers from the last 12 months, but do not remove older foundational papers if they are directly about the queried subject.
+- Remove items with empty or near-empty abstracts.
