@@ -1,0 +1,15 @@
+general:
+  front_end:
+    _type: a2a
+    name: "Arcalive Extractor Agent"
+    description: "아카라이브(arca.live) scrape + validator A2A 호출을 sequential로 수행하는 LLM-less collector의 extractor 파트"
+    host: 0.0.0.0
+    port: 10010
+
+workflow:
+  _type: arcalive_extractor
+  board: alpaca
+  max_pages: 2
+  limit: 5
+  validator_url: http://localhost:10020
+  validator_timeout_seconds: 120
