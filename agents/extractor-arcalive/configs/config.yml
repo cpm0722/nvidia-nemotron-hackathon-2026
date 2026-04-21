@@ -18,7 +18,7 @@ llms:
 function_groups:
   arcalive_scraper:
     _type: arcalive_scraper
-    board: aiservice
+    board: alpaca
     max_pages: 2
 
 workflow:

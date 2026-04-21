@@ -23,7 +23,7 @@ class ArcaliveScraperConfig(FunctionGroupBaseConfig, name="arcalive_scraper"):
         include: NAT에 노출할 함수 이름 목록.
     """
 
-    board: str = Field(default="aiservice", description="Arcalive channel slug to search")
+    board: str = Field(default="alpaca", description="Arcalive channel slug to search")
     max_pages: int = Field(default=2, description="Maximum search result pages to crawl")
     include: list[str] = Field(default_factory=lambda: ["search_posts"])
 
