@@ -14,20 +14,24 @@ Skills가 어떻게 동작하는지가 아니라, **이 워크스페이스의 �
 
 **환경변수 스위치 (`llm_client.py`):**
 ```bash
-export ARI_LLM_PROVIDER=brev       # brev | build | local-nim
-export NEMOTRON_BASE_URL=https://model-server-uya78rbya.brevlab.com/v1/
-export NVIDIA_API_KEY=unused-but-required    # build provider일 때만 nvapi- 키
+export ARI_LLM_PROVIDER=brev       # brev | build | local-nim | friendli
+# 선택적 override
+export NEMOTRON_SUPER_BASE_URL=https://model-server-uya78rbya.brevlab.com/v1
+export NEMOTRON_NANO_BASE_URL=https://model-server-4dfr8gv78.brevlab.com/v1
+export NVIDIA_API_KEY=nvapi-...              # build provider
+export FRIENDLI_API_KEY=...  FRIENDLI_TEAM_ID=...   # friendli provider
 ```
 
-## Nemotron 엔드포인트 3경로
+## Nemotron / LLM 엔드포인트 4경로
 
-| Provider | Base URL | 인증 | 참고 |
-|---|---|---|---|
-| `brev` (기본) | `https://model-server-uya78rbya.brevlab.com/v1/` | 없음 | 팀원 호스팅 vLLM, 검증된 기본 경로 |
-| `build` | `https://integrate.api.nvidia.com/v1` | `nvapi-` 키 | GPU 불필요, rate limit 존재 |
-| `local-nim` | `http://localhost:8000/v1` | 없음 | Brev H100에서 NIM 컨테이너 직접 운영 시 |
+| Provider | Super Base URL | Nano Base URL | 인증 | 참고 |
+|---|---|---|---|---|
+| `brev` (기본) | `https://model-server-uya78rbya.brevlab.com/v1` | `https://model-server-4dfr8gv78.brevlab.com/v1` | `api_key="empty"` | 팀원 호스팅 vLLM. **Nano 모델 id는 짧은 `nvidia/nemotron-3-nano`** (Super와 다름) |
+| `build` | `https://integrate.api.nvidia.com/v1` | 동일 | `NVIDIA_API_KEY`(nvapi-) | GPU 불필요, rate limit |
+| `local-nim` | `http://localhost:8000/v1` | 동일 | 없음 | Brev H100에서 NIM 컨테이너 운영 시, Super/Nano 각각 별도 포트 필요하면 `NEMOTRON_*_BASE_URL` override |
+| `friendli` | `https://api.friendli.ai/serverless/v1` | 동일 | `FRIENDLI_API_KEY` + `FRIENDLI_TEAM_ID` 헤더 | Nemotron 미호스팅 → 기본 매핑 Super=`Qwen/Qwen3-235B-A22B-Instruct-2507`, Nano=`meta-llama-3.3-70b-instruct` (대체/백업용) |
 
-**Thinking mode 스위치 (중요):** Brev(vLLM)는 `extra_body={"chat_template_kwargs": {"enable_thinking": False}}`, NIM은 생략 기본. `llm_client.py`가 provider별로 자동 분기.
+**Thinking mode 스위치 (중요):** Brev(vLLM)는 `extra_body={"chat_template_kwargs": {"enable_thinking": False}}`, 나머지는 생략 기본. `llm_client.py`가 provider별로 자동 분기.
 
 ## OpenClaw workspace 파일
 

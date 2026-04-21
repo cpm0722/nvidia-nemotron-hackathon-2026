@@ -93,11 +93,14 @@ openclaw agent --agent validator --local \
   -m "위 evidence + 공식 URL(https://www.anthropic.com/news/claude-opus-4-7)으로 한국어 리포트 생성"
 ```
 
-### 3. Nemotron provider 스위치
+### 3. LLM provider 스위치 (4경로)
 
 ```bash
-# (A) 팀원 Brev endpoint — 기본, 무인증
+# (A) 팀원 Brev endpoint — 기본, 무인증. Super/Nano 각각 별도 엔드포인트.
 export ARI_LLM_PROVIDER=brev
+# 자동 라우팅:
+#   tier=super → https://model-server-uya78rbya.brevlab.com/v1
+#   tier=nano  → https://model-server-4dfr8gv78.brevlab.com/v1 (모델 id: nvidia/nemotron-3-nano)
 
 # (B) NVIDIA Build API — nvapi- 키 필요, GPU 불필요
 export ARI_LLM_PROVIDER=build
@@ -108,6 +111,11 @@ docker run --gpus all --shm-size=16g -e NGC_API_KEY=$NGC_API_KEY \
   -v ~/.cache/nim:/opt/nim/.cache -p 8000:8000 \
   nvcr.io/nim/nvidia/nemotron-3-super-120b-a12b:latest
 export ARI_LLM_PROVIDER=local-nim
+
+# (D) Friendli 대체 LLM (Nemotron 미호스팅, 백업·비교용)
+export ARI_LLM_PROVIDER=friendli
+export FRIENDLI_API_KEY=...  FRIENDLI_TEAM_ID=...
+# 기본 매핑: Super=Qwen3-235B-A22B-Instruct-2507, Nano=llama-3.3-70b-instruct
 ```
 
 ## 디렉토리
