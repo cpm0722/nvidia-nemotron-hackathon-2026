@@ -1,0 +1,12 @@
+general:
+  front_end:
+    _type: a2a
+    name: "OpenAI Blog Collector Agent"
+    description: "OpenAI 공식 블로그(openai.com/news)에서 공지/포스트를 수집·필터링하는 LLM-less 에이전트"
+    host: 0.0.0.0
+    port: 10015
+
+workflow:
+  _type: openai_collector
+  limit: 10
+  max_text_chars: 8000
