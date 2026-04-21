@@ -14,10 +14,14 @@ keywords = ["ai", "agents", "benchmark", "huggingface", "artificial-analysis", "
 classifiers = ["Programming Language :: Python"]
 dependencies = [
     "nvidia-nat[a2a,langchain]",
+    "ari_core",
     "httpx>=0.27",
     "beautifulsoup4>=4.12",
     "lxml>=5.0",
 ]
+
+[tool.uv.sources]
+ari_core = { path = "../../libs/ari-core", editable = true }
 
 [project.optional-dependencies]
 test = ["pytest>=8.0"]

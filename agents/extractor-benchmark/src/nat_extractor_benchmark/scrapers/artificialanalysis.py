@@ -135,27 +135,28 @@ def _extract_benchmarks_from_model(model: dict) -> list[dict]:
     return benchmarks
 
 
-def fetch_model_benchmarks(model_name: str) -> tuple[list[dict], str, str]:
+def fetch_model_benchmarks(model_name: str) -> tuple[list[dict], str, str, str]:
     """모델명으로 AA 전체 모델 목록을 검색해 벤치마크를 반환한다.
 
     Args:
         model_name: 검색할 모델명.
 
     Returns:
-        (benchmarks, 매칭된_모델명, provider)
+        (benchmarks, 매칭된_모델명, provider, slug)
+        - slug: artificialanalysis.ai/models/{slug} URL 구성용 (없으면 빈 문자열)
     """
     try:
         r = httpx.get(f"{BASE_URL}/models", headers=HEADERS, timeout=TIMEOUT, follow_redirects=True)
         if r.status_code != 200:
             print(f"[ArtificialAnalysis] HTTP {r.status_code}")
-            return [], "", ""
+            return [], "", "", ""
     except Exception as e:
         print(f"[ArtificialAnalysis] 요청 실패: {e}")
-        return [], "", ""
+        return [], "", "", ""
 
     models = _parse_rsc_chunks(r.text)
     if not models:
-        return [], "", ""
+        return [], "", "", ""
 
     query = _normalize(model_name)
     best_model: Optional[dict] = None
@@ -182,9 +183,10 @@ def fetch_model_benchmarks(model_name: str) -> tuple[list[dict], str, str]:
             best_model = m
 
     if not best_model or best_score <= 0:
-        return [], "", ""
+        return [], "", "", ""
 
     creator = best_model.get("model_creators") or {}
     provider = creator.get("name", "") if isinstance(creator, dict) else ""
-    model_display = best_model.get("name") or best_model.get("slug") or model_name
-    return _extract_benchmarks_from_model(best_model), model_display, provider
+    slug = best_model.get("slug") or ""
+    model_display = best_model.get("name") or slug or model_name
+    return _extract_benchmarks_from_model(best_model), model_display, provider, slug
