@@ -1,6 +1,6 @@
 """NAT function group: E2E pipeline orchestrator.
 
-query-generator → extractors[7] (병렬) → reporter 순서로 A2A 호출을 조율하며
+query-generator → collectors[N] (병렬) → reporter 순서로 A2A 호출을 조율하며
 generate_queries / collect_evidence / generate_report 세 툴을 노출한다.
 """
 
@@ -23,14 +23,14 @@ class E2EPipelineConfig(FunctionGroupBaseConfig, name="e2e_pipeline"):
 
     Args:
         query_generator_url: query-generator A2A 서버 URL.
-        extractor_urls: extractor A2A 서버 URL 목록 (병렬 호출).
+        collector_urls: collector A2A 서버 URL 목록 (병렬 호출).
         reporter_url: reporter A2A 서버 URL.
         timeout_seconds: 각 A2A 호출당 타임아웃(초).
         include: NAT에 노출할 함수 이름 목록.
     """
 
     query_generator_url: str = Field(default="http://localhost:10001")
-    extractor_urls: list[str] = Field(
+    collector_urls: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:10010",
             "http://localhost:10011",
@@ -49,26 +49,29 @@ class E2EPipelineConfig(FunctionGroupBaseConfig, name="e2e_pipeline"):
 
 
 def _a2a_send(url: str, message: str, timeout: int) -> str:
-    """A2A 서버에 message를 보내고 응답 텍스트를 반환한다."""
+    """A2A v0.3 message/send 호출. Task/Message 양쪽 응답 모두 처리한다."""
     payload = {
         "jsonrpc": "2.0",
-        "id": 1,
-        "method": "tasks/send",
+        "id": str(uuid.uuid4()),
+        "method": "message/send",
         "params": {
-            "id": str(uuid.uuid4()),
             "message": {
+                "kind": "message",
+                "messageId": str(uuid.uuid4()),
                 "role": "user",
-                "parts": [{"type": "text", "text": message}],
+                "parts": [{"kind": "text", "text": message}],
             },
         },
     }
     resp = requests.post(url, json=payload, timeout=timeout)
     resp.raise_for_status()
     data = resp.json()
-    artifacts = data.get("result", {}).get("artifacts", [])
-    if not artifacts:
-        return ""
-    parts = artifacts[0].get("parts", [])
+    result = data.get("result", {})
+    artifacts = result.get("artifacts", [])
+    if artifacts:
+        parts = artifacts[0].get("parts", [])
+        return parts[0].get("text", "") if parts else ""
+    parts = result.get("parts", [])
     return parts[0].get("text", "") if parts else ""
 
 
@@ -80,7 +83,7 @@ async def e2e_pipeline_group(
 
     generate_queries / collect_evidence / generate_report 세 툴을 노출하며,
     각 툴은 내부적으로 A2A 호출로 위임한다. collect_evidence는 asyncio.gather로
-    모든 extractor를 병렬 실행한다.
+    모든 collector를 병렬 실행한다.
 
     Args:
         config: 파이프라인 설정 (URL 목록, 타임아웃).
@@ -109,8 +112,8 @@ async def e2e_pipeline_group(
         )
         return result
 
-    async def _call_extractor(url: str, product_name: str, timeout: int) -> dict:
-        """단일 extractor A2A 서버를 호출하고 ScrapeResult dict를 반환한다.
+    async def _call_collector(url: str, product_name: str, timeout: int) -> dict:
+        """단일 collector A2A 서버를 호출하고 ScrapeResult dict를 반환한다.
 
         실패 시 ok=False인 빈 ScrapeResult dict를 반환해 전체 파이프라인을 중단시키지 않는다.
         """
@@ -121,9 +124,9 @@ async def e2e_pipeline_group(
             return {"source": url, "ok": False, "items": [], "error": str(exc)}
 
     async def collect_evidence(product_name: str) -> str:
-        """7개 extractor에서 병렬로 evidence를 수집한다.
+        """설정된 collector들에서 병렬로 evidence를 수집한다.
 
-        각 extractor A2A 서버를 asyncio.gather로 동시에 호출하며, 개별 실패는
+        각 collector A2A 서버를 asyncio.gather로 동시에 호출하며, 개별 실패는
         ok=False 항목으로 기록하고 나머지 결과를 반환한다.
 
         Args:
@@ -134,8 +137,8 @@ async def e2e_pipeline_group(
             각 원소는 {source, ok, items[], error, latency_ms} 형태.
         """
         tasks = [
-            _call_extractor(url, product_name, config.timeout_seconds)
-            for url in config.extractor_urls
+            _call_collector(url, product_name, config.timeout_seconds)
+            for url in config.collector_urls
         ]
         results = await asyncio.gather(*tasks)
         return json.dumps(list(results), ensure_ascii=False, indent=2, default=str)
