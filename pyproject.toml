@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ari-agent"
+version = "0.2.0"
+description = "AI Release Intelligence Agent — Nemotron + OpenClaw/NemoClaw"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "requests>=2.31",
+    "feedparser>=6.0",
+    "pydantic>=2.0",
+    "openai>=1.40",
+    "trafilatura>=1.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+ui = ["gradio>=4.0"]
+
+[project.scripts]
+ari-agent = "ari_agent.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["ari_agent*"]
