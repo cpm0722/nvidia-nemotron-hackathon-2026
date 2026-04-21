@@ -10,4 +10,4 @@ echo "config: $CONFIG_FILE"
 echo ""
 
 cd "$AGENT_DIR"
-uv run nat serve --config_file "$CONFIG_FILE"
+uv run nat a2a serve --config_file "$CONFIG_FILE"
