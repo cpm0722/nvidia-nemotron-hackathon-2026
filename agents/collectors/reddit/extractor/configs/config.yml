@@ -1,13 +1,13 @@
 general:
   front_end:
     _type: a2a
-    name: "Reddit Collector Agent"
-    description: "Reddit 서브레딧에서 AI 프러덕트 사용자 반응을 수집·필터링하는 LLM-less 에이전트"
+    name: "Reddit Extractor Agent"
+    description: "Reddit 서브레딧에서 포스트를 scrape하고 validator A2A로 필터링하는 LLM-less extractor"
     host: 0.0.0.0
     port: 10016
 
 workflow:
-  _type: reddit_collector
+  _type: reddit_extractor
   subreddits:
     - LocalLLaMA
     - MachineLearning
@@ -19,3 +19,5 @@ workflow:
   max_comments_per_post: 5
   max_comment_chars: 1500
   comment_workers: 3
+  validator_url: http://localhost:10026
+  validator_timeout_seconds: 120
