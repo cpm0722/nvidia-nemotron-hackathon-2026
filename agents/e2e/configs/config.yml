@@ -2,41 +2,20 @@ general:
   front_end:
     _type: a2a
     name: "E2E Pipeline Agent"
-    description: "사용자 자연어 쿼리를 받아 query-generator → extractors × 7 → reporter 전체 파이프라인을 실행하는 오케스트레이터"
+    description: "사용자 자연어 쿼리를 받아 query-generator → collectors × 7 → reporter 전체 파이프라인을 LLM-less로 실행하는 오케스트레이터"
     host: 0.0.0.0
     port: 10000
 
-llms:
-  primary_llm:
-    _type: openai
-    model_name: nvidia/nemotron-3-nano
-    base_url: https://model-server-4dfr8gv78.brevlab.com/v1
-    api_key: empty
-    temperature: 0.0
-    max_tokens: 4096
-
-function_groups:
-  pipeline:
-    _type: e2e_pipeline
-    query_generator_url: http://localhost:10001
-    extractor_urls:
-      - http://localhost:10010
-      - http://localhost:10011
-      - http://localhost:10012
-      - http://localhost:10013
-      - http://localhost:10014
-      - http://localhost:10015
-      - http://localhost:10016
-    reporter_url: http://localhost:10002
-
 workflow:
-  _type: react_agent
-  llm_name: primary_llm
-  tool_names:
-    - pipeline__generate_queries
-    - pipeline__collect_evidence
-    - pipeline__generate_report
-  system_prompt: file://../prompts/system_prompt.txt
-  verbose: true
-  retry_agent_response_parsing_errors: true
-  parse_agent_response_max_retries: 3
+  _type: e2e_pipeline
+  query_generator_url: http://localhost:10001
+  collector_urls:
+    - http://localhost:10010
+    - http://localhost:10011
+    - http://localhost:10012
+    - http://localhost:10013
+    - http://localhost:10014
+    - http://localhost:10015
+    - http://localhost:10016
+  reporter_url: http://localhost:10002
+  timeout_seconds: 180

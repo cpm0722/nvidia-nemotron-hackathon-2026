@@ -1,0 +1,16 @@
+general:
+  front_end:
+    _type: a2a
+    name: "E2E Pipeline Agent (test)"
+    description: "arcalive + geeknews 2개 collector만 사용하는 e2e 테스트용 설정"
+    host: 0.0.0.0
+    port: 10000
+
+workflow:
+  _type: e2e_pipeline
+  query_generator_url: http://localhost:10001
+  collector_urls:
+    - http://localhost:10010
+    - http://localhost:10013
+  reporter_url: http://localhost:10002
+  timeout_seconds: 180

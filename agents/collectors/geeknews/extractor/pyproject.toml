@@ -1,0 +1,29 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=64"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "nat_extractor_geeknews"
+version = "0.1.0"
+requires-python = ">=3.11,<3.14"
+description = "NAT A2A geeknews extractor — scrape + validator A2A call"
+keywords = ["ai", "agents", "scraper", "geeknews", "nat", "a2a", "extractor"]
+classifiers = ["Programming Language :: Python"]
+dependencies = [
+    "nvidia-nat[a2a]",
+    "ari_core",
+    "requests>=2.31",
+    "feedparser>=6.0",
+]
+
+[tool.uv.sources]
+ari_core = { path = "../../../../libs/ari-core", editable = true }
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[project.entry-points."nat.components"]
+nat_extractor_geeknews = "nat_extractor_geeknews.register"

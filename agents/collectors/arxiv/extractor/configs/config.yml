@@ -1,0 +1,14 @@
+general:
+  front_end:
+    _type: a2a
+    name: "arXiv Extractor Agent"
+    description: "arXiv(export.arxiv.org)에서 논문을 scrape하고 validator A2A로 필터링하는 LLM-less extractor"
+    host: 0.0.0.0
+    port: 10011
+
+workflow:
+  _type: arxiv_extractor
+  limit: 10
+  max_text_chars: 8000
+  validator_url: http://localhost:10021
+  validator_timeout_seconds: 120
