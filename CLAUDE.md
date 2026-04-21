@@ -17,3 +17,36 @@
     - HuggingFace
 
 - Validator: 수집한 정보를 검증/필터링하는 Agent
+
+---
+
+### Current Implementation (2026-04-21, branch `feat/openclaw-migration`)
+
+OpenClaw workspace + Python 비즈니스 로직 하이브리드:
+
+| 레이어 | 경로 | 역할 |
+|---|---|---|
+| Agent | `extractor/blueprint.yaml`, `validator/blueprint.yaml` | OpenClaw 에이전트 2개 (skill 7 + 3) |
+| Skill | `extractor/skills/*/`, `validator/skills/*/` | JS ESM, `_lib/ari_cli.mjs`로 Python subprocess 호출 |
+| CLI | `ari_agent/cli.py` (argparse, 10 subcommands) | 모든 skill이 공통 진입점으로 사용 |
+| LLM | `ari_agent/llm_client.py` (3-provider 스위치) | brev (default) / build / local-nim |
+| Scrapers/Enricher/Validator | `ari_agent/scrapers|enrichers|validators/` | framework-agnostic 순수 Python |
+
+**핵심 명령어:**
+```bash
+python -m ari_agent.cli health                     # provider 확인
+python -m ari_agent.cli scrape_rss --feed-key simon_willison --limit 3
+openclaw agent --agent extractor --local -m "..."  # Brev에서
+```
+
+**관련 문서:**
+- `README.md` — 전체 구동 가이드
+- `TOOLS.md` — 실행 환경·provider 스위치·서브커맨드 참조
+- `SOUL.md` — 분석 에이전트 페르소나/금지선
+- `docs/` — NemoClaw / NAT / NIM 배포 공식 가이드
+
+### 세션 진입 시
+
+1. 새 요청이 들어오면 `README.md` 또는 `TOOLS.md` 먼저 확인 (런타임 상태 파악).
+2. "다음 할 일" 질문이면 부모 디렉토리 `../NEXT_TASKS.md` 참조.
+3. skill 추가/수정 시 반드시 `ari_agent/cli.py`의 서브커맨드 매핑도 동기화.

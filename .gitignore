@@ -1,3 +1,20 @@
 .env
 .openclaw
 *.swp
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+.venv-*/
+
+# OS
+.DS_Store
+
+# OMC session state
+.omc/
