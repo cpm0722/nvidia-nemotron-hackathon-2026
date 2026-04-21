@@ -25,12 +25,17 @@ function_groups:
     max_comments_per_topic: 10
     max_comment_chars: 1500
     html_workers: 4
+  validator:
+    _type: validator_caller
+    url: http://localhost:10010
+    system_prompt_file: prompts/validator_system_prompt.txt
 
 workflow:
   _type: react_agent
   llm_name: primary_llm
   tool_names:
     - geeknews_scraper__search_posts
+    - validator__validate
   system_prompt: file://../prompts/system_prompt.txt
   verbose: true
   retry_agent_response_parsing_errors: true
