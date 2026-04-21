@@ -1,0 +1,18 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=64"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "ari_core"
+version = "0.1.0"
+requires-python = ">=3.11,<3.14"
+description = "Shared schemas, HTTP helpers, and async runner for ARI extractor agents"
+keywords = ["ari", "extractor", "schemas", "nat"]
+classifiers = ["Programming Language :: Python"]
+dependencies = [
+    "pydantic>=2.0",
+    "requests>=2.31",
+]
