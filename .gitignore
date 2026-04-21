@@ -1,3 +1,4 @@
 .env
 .openclaw
 *.swp
+.DS_Store
