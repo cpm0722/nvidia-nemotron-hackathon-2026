@@ -4,7 +4,7 @@ general:
     name: "Reddit Extractor Agent"
     description: "Collects community reactions to AI products from Reddit (LocalLLaMA, MachineLearning, ClaudeAI, singularity)."
     host: 0.0.0.0
-    port: 10001
+    port: 10016
 
 llms:
   primary_llm:
@@ -30,7 +30,7 @@ function_groups:
     max_comment_chars: 1500
   validator:
     _type: validator_caller
-    url: http://localhost:10101
+    url: http://localhost:10026
 
 workflow:
   _type: react_agent

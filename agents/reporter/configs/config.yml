@@ -1,10 +1,10 @@
 general:
   front_end:
     _type: a2a
-    name: "Benchmark Validator Agent"
-    description: "LLM 벤치마크 수집 결과의 관련성을 검증하고 필터링하는 에이전트"
+    name: "Reporter Agent"
+    description: "여러 출처에서 수집·검증된 evidence를 종합해 AI 프러덕트 분석 보고서를 생성하는 에이전트"
     host: 0.0.0.0
-    port: 10022
+    port: 10002
 
 llms:
   primary_llm:

@@ -4,7 +4,7 @@ general:
     name: "GeekNews Extractor Agent"
     description: "Collects Korean tech-community reactions from GeekNews (news.hada.io) — RSS feed plus HTML enrichment for upvote / comment counts and comment bodies."
     host: 0.0.0.0
-    port: 10005
+    port: 10013
 
 llms:
   primary_llm:
@@ -27,7 +27,7 @@ function_groups:
     html_workers: 4
   validator:
     _type: validator_caller
-    url: http://localhost:10105
+    url: http://localhost:10023
 
 workflow:
   _type: react_agent

@@ -9,12 +9,11 @@ Backbone models: [Nemotron-3-Nano-30B-A3B](https://build.nvidia.com/nvidia/nemot
 
 ## Description
 
-Given an AI product name, the system:
+Given a natural language query (Korean or English), the system:
 
-1. Generates structured search queries tailored to each data source
-2. Runs extractors in parallel across 8 sources (community forums, benchmarks, papers, social media)
-3. Validates and filters collected documents per source
-4. Aggregates all results into a structured summary of official performance and user sentiment
+1. Extracts AI product/model names from the query
+2. Runs 7 extractors in parallel — each scrapes a data source and validates results
+3. Reporter synthesizes all validated evidence into a structured markdown report
 
 ---
 
@@ -24,46 +23,57 @@ Given an AI product name, the system:
 user query
     │
     ▼
-query-generator  (nemotron-nano)
-    │
-    ├──────────────────────────────────────────────────────────────────┐
-    │  parallel                                                        │
-    ▼                                                                  ▼
-extractor-reddit          extractor-arcalive      extractor-rss      ...
-    │                          │                       │
-    ▼                          ▼                       ▼
-validator-reddit          validator-arcalive      validator-rss      ...
-    │                          │                       │
-    └──────────────────────────┴───────────────────────┘
+query-generator  (nemotron-nano, port 10001)
+    │  product name(s)
+    ├──────┬──────┬──────┬──────┬──────┬──────┐
+    ▼      ▼      ▼      ▼      ▼      ▼      ▼   parallel
+arcalive arxiv bench geeknews lobsters openai reddit
+(10010) (10011)(10012) (10013) (10014) (10015)(10016)
+    │      │      │      │       │       │      │
+    ▼      ▼      ▼      ▼       ▼       ▼      ▼
+validator validator ...  (each extractor calls its own validator internally)
+(10020) (10021)(10022) (10023) (10024) (10025)(10026)
+    │      │      │      │       │       │      │
+    └──────┴──────┴──────┴───────┴───────┴──────┘
                                │
                                ▼
-                          aggregator  (nemotron-super)
+                         reporter  (nemotron-super, port 10002)
                                │
                                ▼
-                     structured summary
+                    structured markdown report
 ```
+
+The **e2e agent** (port 10000) orchestrates the entire flow above via three tools:
+`generate_queries` → `collect_evidence` → `generate_report`.
 
 ### Data Sources
 
-| Source | Type |
-|---|---|
-| Reddit | Community discussion |
-| ArcaLive | Korean community discussion |
-| RSS | Official blog / news feed |
-| HuggingFace Community | Developer discussion |
-| HuggingFace Benchmark | Leaderboard / eval results |
-| GeekNews | Tech news aggregator |
-| arxiv | Research papers |
-| X (Twitter) | Social media reactions |
+| Source | Type | Extractor Port | Validator Port |
+|---|---|---|---|
+| ArcaLive | Korean community discussion | 10010 | 10020 |
+| arXiv | Research papers | 10011 | 10021 |
+| Benchmark (AA + HuggingFace) | Leaderboard / eval results | 10012 | 10022 |
+| GeekNews | Korean tech news | 10013 | 10023 |
+| Lobsters | Tech community discussion | 10014 | 10024 |
+| OpenAI Blog | Official announcements | 10015 | 10025 |
+| Reddit | English community discussion | 10016 | 10026 |
+
+### Agent Port Map
+
+| Agent | Port | Model |
+|---|---|---|
+| e2e | 10000 | nemotron-nano |
+| query-generator | 10001 | nemotron-nano |
+| reporter | 10002 | nemotron-super |
+| extractor (arcalive–reddit) | 10010–10016 | nemotron-nano |
+| validator (arcalive–reddit) | 10020–10026 | nemotron-super |
 
 ### Model Assignment
 
-| Agent | Model |
+| Role | Model |
 |---|---|
-| query-generator | `nvidia/nemotron-3-nano-30b-a3b` |
-| extractor | `nvidia/nemotron-3-nano-30b-a3b` |
-| validator | `nvidia/nemotron-3-super-120b-a12b` |
-| aggregator | `nvidia/nemotron-3-super-120b-a12b` |
+| query-generator, extractors, e2e | `nvidia/nemotron-3-nano-30b-a3b` |
+| validators, reporter | `nvidia/nemotron-3-super-120b-a12b` |
 
 ---
 
@@ -72,7 +82,6 @@ validator-reddit          validator-arcalive      validator-rss      ...
 **Requirements:** Python 3.11–3.13, [uv](https://docs.astral.sh/uv/)
 
 ```bash
-# Clone and install all workspace members
 git clone https://github.com/cpm0722/nvidia-nemotron-hackathon-2026
 cd nvidia-nemotron-hackathon-2026
 uv sync
@@ -90,37 +99,50 @@ No API key is required — set `api_key: empty` in `config.yml`.
 
 ## Quick Start
 
-Run the ArcaLive extractor directly against a product name:
+### Run the full e2e pipeline
+
+Start all agents (each in a separate terminal), then call the e2e agent:
 
 ```bash
-cd agents/extractor-arcalive
+# Terminal 1 — query-generator
+cd agents/query-generator && ./scripts/a2a_server.sh
+
+# Terminal 2–8 — extractors (one per source)
+cd agents/arcalive/extractor && ./scripts/a2a_server.sh
+cd agents/arxiv/extractor    && ./scripts/a2a_server.sh
+# ... repeat for benchmark, geeknews, lobsters, openai, reddit
+
+# Terminal 9–15 — validators (one per source)
+cd agents/arcalive/validator && ./scripts/a2a_server.sh
+# ... repeat for the other 6
+
+# Terminal 16 — reporter
+cd agents/reporter && ./scripts/a2a_server.sh
+
+# Terminal 17 — e2e orchestrator
+cd agents/e2e && ./scripts/a2a_server.sh
+
+# Send a query
+cd agents/e2e && ./scripts/a2a_client.sh "GPT5와 Gemma4 비교해줘"
+```
+
+### Run a single extractor directly
+
+```bash
+cd agents/reddit/extractor
 ./scripts/run.sh "GPT-5"
-```
-
-Start the extractor as an A2A server:
-
-```bash
-cd agents/extractor-arcalive
-./scripts/a2a_server.sh
-```
-
-Send a request to the running server from another terminal:
-
-```bash
-cd agents/extractor-arcalive
-./scripts/a2a_client.sh "GPT-5"
 ```
 
 ---
 
 ## Usage
 
-### Running an individual extractor
+### Running an individual agent
 
-Each extractor under `agents/` can be run independently:
+Every agent under `agents/` follows the same script interface:
 
 ```bash
-cd agents/{extractor-name}
+cd agents/{source}/{extractor|validator}
 
 # Direct run (development)
 ./scripts/run.sh "<product name>"
@@ -148,9 +170,18 @@ function_groups:
     max_pages: 2
 ```
 
-### Adding a new extractor
+The e2e agent's `config.yml` lists all extractor URLs — update them if you deploy agents on different hosts:
 
-See [`agents/README.md`](agents/README.md) for the standard directory structure and step-by-step guide.
+```yaml
+function_groups:
+  pipeline:
+    query_generator_url: http://localhost:10001
+    extractor_urls:
+      - http://localhost:10010   # arcalive
+      - http://localhost:10011   # arxiv
+      # ...
+    reporter_url: http://localhost:10002
+```
 
 ---
 
@@ -158,35 +189,40 @@ See [`agents/README.md`](agents/README.md) for the standard directory structure 
 
 ```
 nvidia-nemotron-hackathon-2026/
-├── agents/                         # All extractor agents (uv workspace members)
-│   ├── README.md                   # Standard agent structure & conventions
-│   └── extractor-arcalive/         # ArcaLive extractor (reference implementation)
-│       ├── configs/
-│       │   └── config.yml          # NAT config: LLM, tools, workflow
-│       ├── prompts/
-│       │   └── system_prompt.txt   # ReAct agent system prompt
-│       ├── scripts/
-│       │   ├── a2a_server.sh       # Start A2A server
-│       │   ├── a2a_client.sh       # Send test request
-│       │   └── run.sh              # Direct run (dev)
-│       ├── src/
-│       │   └── nat_extractor_arcalive/
-│       │       ├── crawler.py      # Scraping logic
-│       │       ├── models.py       # Pydantic I/O models
-│       │       ├── parser.py       # HTML parsing
-│       │       └── register.py     # NAT FunctionGroup entry point
-│       ├── tests/
-│       │   ├── fixtures/           # Static HTML snapshots
-│       │   ├── unit/
-│       │   └── integration/
-│       └── pyproject.toml
+├── agents/
+│   ├── e2e/                        # Full pipeline orchestrator (port 10000)
+│   │   ├── configs/config.yml
+│   │   ├── prompts/system_prompt.txt
+│   │   ├── scripts/
+│   │   └── src/nat_e2e/register.py  # FunctionGroup: generate_queries/collect_evidence/generate_report
+│   ├── query-generator/            # Product name extractor (port 10001)
+│   ├── reporter/                   # Evidence synthesizer → markdown report (port 10002)
+│   ├── arcalive/
+│   │   ├── extractor/              # port 10010
+│   │   └── validator/              # port 10020
+│   ├── arxiv/
+│   │   ├── extractor/              # port 10011
+│   │   └── validator/              # port 10021
+│   ├── benchmark/
+│   │   ├── extractor/              # port 10012
+│   │   └── validator/              # port 10022
+│   ├── geeknews/
+│   │   ├── extractor/              # port 10013
+│   │   └── validator/              # port 10023
+│   ├── lobsters/
+│   │   ├── extractor/              # port 10014
+│   │   └── validator/              # port 10024
+│   ├── openai/
+│   │   ├── extractor/              # port 10015
+│   │   └── validator/              # port 10025
+│   └── reddit/
+│       ├── extractor/              # port 10016
+│       └── validator/              # port 10026
+├── libs/
+│   ├── ari-core/                   # Shared scraper schemas (EvidenceItem, ScrapeResult)
+│   └── validator-core/             # ValidatorCallerConfig — forwards to validator A2A
 ├── docs/                           # Internal reference documents
-│   ├── nemoclaw_guide.md           # NemoClaw setup & usage
-│   ├── nemo_agent_toolkit_guide.md # NAT (NeMo Agent Toolkit) guide
-│   ├── llm_apis.md                 # Model endpoints & API reference
-│   └── how-to-deploy-nemotron.md  # Nemotron deployment guide
 ├── task-histories/                 # Branch plans and completion reports
 ├── pyproject.toml                  # uv workspace root
-├── uv.lock                         # Pinned dependency lockfile
 └── CLAUDE.md                       # Project instructions for Claude Code
 ```
