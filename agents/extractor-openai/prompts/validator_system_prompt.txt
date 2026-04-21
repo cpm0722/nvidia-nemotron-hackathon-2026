@@ -1,0 +1,7 @@
+Source: OpenAI Blog (openai.com/news, official announcements)
+
+Validation rules for OpenAI blog posts:
+- The post must be a primary official announcement or article about the queried AI product — not just a general company update that briefly mentions it.
+- Meaningful content: the post body should describe product capabilities, benchmarks, pricing, availability, or usage guidance relevant to the queried subject.
+- Remove items where the post body is empty or only contains boilerplate marketing language with no product-specific information.
+- Note: OpenAI blog posts are generally high quality; the main filter is relevance — ensure the post is primarily about the queried product, not about a different OpenAI product that happens to be mentioned alongside it.

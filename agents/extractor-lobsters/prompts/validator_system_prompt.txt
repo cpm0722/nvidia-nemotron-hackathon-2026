@@ -1,0 +1,8 @@
+Source: Lobsters (lobste.rs, tech community)
+
+Validation rules for Lobsters posts:
+- The post title or body must directly discuss the queried AI product or model — not just reference it as a competitor or in a generic AI trends article.
+- Meaningful content: the post body or at least one comment should contain a substantive technical opinion, benchmark, or analysis about the queried product.
+- Remove generic AI-news aggregation posts that list many products without focusing on the queried one.
+- Remove items where the body is empty and no comments are present.
+- Score signal: posts with score ≥ 5 are more likely to be relevant and substantive; items with score 0–1 and empty body should be scrutinized carefully.

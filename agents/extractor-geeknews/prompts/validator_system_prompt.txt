@@ -1,0 +1,8 @@
+Source: GeekNews (news.hada.io, Korean tech community)
+
+Validation rules for GeekNews posts:
+- The post title or summary must directly relate to the queried AI product or model — not just mention it as one of many tools in a generic roundup.
+- Meaningful content: the post should link to a primary source (announcement, paper, blog post) AND/OR contain community comments with substantive opinions.
+- Language: Korean posts are expected and valid.
+- Remove items where the summary is empty or the post body contains no information beyond the URL.
+- Remove items that are clearly off-topic advertisements or unrelated tech news that happen to mention the product name in passing.

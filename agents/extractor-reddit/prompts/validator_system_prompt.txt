@@ -1,0 +1,8 @@
+Source: Reddit (subreddits: LocalLLaMA, MachineLearning, ClaudeAI, singularity)
+
+Validation rules for Reddit posts:
+- The post title or selftext must directly discuss the queried AI product — not just mention it incidentally in a comparison or as a background reference.
+- Meaningful content: the post should contain a user's actual experience, benchmark result, opinion, or question about the product. Low-effort posts (e.g., "anyone tried X?") with no follow-up are borderline; keep only if they have substantive comments.
+- Upvote signal: posts with score ≥ 10 are generally community-validated as relevant. Posts with score < 5 and a short/empty body should be removed unless comments add substantial value.
+- Remove items where selftext is empty and the title alone contains no useful information (e.g., pure link posts with no discussion).
+- Subreddit context: r/LocalLLaMA and r/MachineLearning tend to be more technical; r/singularity more general. Adjust relevance expectations accordingly.
