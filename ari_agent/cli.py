@@ -218,9 +218,16 @@ def cmd_enrich_bodies(args: argparse.Namespace) -> None:
     except Exception as e:  # noqa: BLE001
         _fail(f"stdin.evidence[*] does not match EvidenceItem: {e}", code=2)
     enriched, stats = enrich_many(items, max_workers=args.workers)
+    # EnrichStats is a @dataclass(slots=True); json cannot serialize it directly.
     _emit({
         "evidence": [it.model_dump() for it in enriched],
-        "stats": stats,
+        "stats": {
+            "total": stats.total,
+            "enriched": stats.enriched,
+            "skipped": stats.skipped,
+            "errors": stats.errors,
+            "latency_ms": stats.latency_ms,
+        },
     })
 
 

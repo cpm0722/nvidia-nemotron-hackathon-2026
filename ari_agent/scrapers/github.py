@@ -39,10 +39,19 @@ def _search_issues(query: str, limit: int) -> list[dict[str, Any]]:
 
 
 def scrape(input_: ScrapeInput) -> ScrapeResult:
-    """Search GitHub issues/PRs matching the query."""
+    """Search GitHub issues/PRs matching the query.
+
+    Honors `extra.repo` (e.g. "anthropics/anthropic-sdk-python") by injecting
+    `repo:<owner>/<name>` into the search qualifier — otherwise GitHub's global
+    search returns unrelated repos that happen to mention the free-text query.
+    """
+    query = input_.query
+    repo = (input_.extra or {}).get("repo")
+    if repo:
+        query = f"{query} repo:{repo}"
     with Timer() as t:
         try:
-            raw = _search_issues(input_.query, input_.limit)
+            raw = _search_issues(query, input_.limit)
             items = [
                 EvidenceItem(
                     source="github",
