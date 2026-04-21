@@ -20,12 +20,17 @@ function_groups:
     _type: arxiv_scraper
     default_limit: 10
     max_text_chars: 8000
+  validator:
+    _type: validator_caller
+    url: http://localhost:10010
+    system_prompt_file: prompts/validator_system_prompt.txt
 
 workflow:
   _type: react_agent
   llm_name: primary_llm
   tool_names:
     - arxiv_scraper__search_papers
+    - validator__validate
   system_prompt: file://../prompts/system_prompt.txt
   verbose: true
   retry_agent_response_parsing_errors: true
