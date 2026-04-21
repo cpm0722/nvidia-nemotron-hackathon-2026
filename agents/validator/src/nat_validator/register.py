@@ -89,19 +89,28 @@ async def validator_caller_group(
     """
     group = FunctionGroup(config=config)
 
-    async def validate(product_name: str, scraped_json: str) -> str:
+    async def validate(combined: str) -> str:
         """수집된 결과를 validator A2A 에이전트로 검증·필터링한다.
 
         소스별 validation criteria와 scraped_json을 validator에 전달해
         관련성 없는 항목을 제거한 ScrapeResult JSON을 반환한다.
 
         Args:
-            product_name: 검색한 AI 프러덕트 이름 (e.g. "GPT-5", "Claude 4").
-            scraped_json: 검증할 ScrapeResult JSON 문자열.
+            combined: "<product_name>|||<scraped_json>" 형식의 문자열.
+                      구분자 없을 시 전체를 scraped_json으로 취급.
 
         Returns:
-            필터링된 ScrapeResult JSON 문자열.
+            필터링된 ScrapeResult JSON 문자열. 실패 시 원본 반환.
         """
+        # |||로 product_name과 scraped_json을 분리 (중첩 JSON 인코딩 회피)
+        if "|||" in combined:
+            product_name, scraped_json = combined.split("|||", 1)
+            product_name = product_name.strip()
+            scraped_json = scraped_json.strip()
+        else:
+            product_name = ""
+            scraped_json = combined.strip()
+
         criteria_path = Path(config.system_prompt_file)
         criteria = criteria_path.read_text(encoding="utf-8") if criteria_path.exists() else ""
 
