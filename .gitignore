@@ -3,6 +3,8 @@
 *.swp
 .DS_Store
 __pycache__/
-*.egg-info
+*.pyc
+*.egg-info/
+.venv/
 *.plan.md
 *.report.md
