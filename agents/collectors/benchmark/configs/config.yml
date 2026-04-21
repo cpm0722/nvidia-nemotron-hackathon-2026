@@ -1,0 +1,12 @@
+general:
+  front_end:
+    _type: a2a
+    name: "Benchmark Collector Agent"
+    description: "Artificial Analysis / HuggingFace에서 LLM 벤치마크를 수집·검증하는 LLM-less 에이전트"
+    host: 0.0.0.0
+    port: 10012
+
+workflow:
+  _type: benchmark_collector
+  limit: 10
+  comment_limit: 3

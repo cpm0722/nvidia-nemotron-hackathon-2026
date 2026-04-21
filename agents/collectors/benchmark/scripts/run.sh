@@ -5,12 +5,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="$(dirname "$SCRIPT_DIR")"
 CONFIG_FILE="$AGENT_DIR/configs/config.yml"
 
-MODEL_NAME="${1:-claude opus 4.7}"
+PRODUCT_NAME="${1:-gemma4}"
 
-echo "=== extractor-benchmark direct run ==="
-echo "model:  $MODEL_NAME"
-echo "config: $CONFIG_FILE"
+echo "=== collector/benchmark direct run ==="
+echo "product: $PRODUCT_NAME"
+echo "config:  $CONFIG_FILE"
 echo ""
 
 cd "$AGENT_DIR"
-uv run nat run --config_file "$CONFIG_FILE" --input "$MODEL_NAME"
+uv run nat run --config_file "$CONFIG_FILE" --input "$PRODUCT_NAME"

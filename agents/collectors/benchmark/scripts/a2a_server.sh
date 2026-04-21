@@ -5,9 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="$(dirname "$SCRIPT_DIR")"
 CONFIG_FILE="$AGENT_DIR/configs/config.yml"
 
-echo "=== benchmark/validator A2A server ==="
+echo "=== collector/benchmark A2A server ==="
 echo "config: $CONFIG_FILE"
 echo ""
 
 cd "$AGENT_DIR"
-uv run nat serve --config_file "$CONFIG_FILE"
+uv run nat a2a serve --config_file "$CONFIG_FILE"
