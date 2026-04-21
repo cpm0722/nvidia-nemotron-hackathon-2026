@@ -49,26 +49,33 @@ class E2EPipelineConfig(FunctionGroupBaseConfig, name="e2e_pipeline"):
 
 
 def _a2a_send(url: str, message: str, timeout: int) -> str:
-    """A2A 서버에 message를 보내고 응답 텍스트를 반환한다."""
+    """A2A 서버에 message/send로 메시지를 보내고 응답 텍스트를 반환한다.
+
+    A2A v0.3 규격을 따르며, Task 응답(artifacts[])과 Message 응답(parts[]) 모두 처리한다.
+    와이어 포맷은 camelCase (messageId 등) 사용.
+    """
     payload = {
         "jsonrpc": "2.0",
-        "id": 1,
-        "method": "tasks/send",
+        "id": str(uuid.uuid4()),
+        "method": "message/send",
         "params": {
-            "id": str(uuid.uuid4()),
             "message": {
+                "kind": "message",
+                "messageId": str(uuid.uuid4()),
                 "role": "user",
-                "parts": [{"type": "text", "text": message}],
+                "parts": [{"kind": "text", "text": message}],
             },
         },
     }
     resp = requests.post(url, json=payload, timeout=timeout)
     resp.raise_for_status()
     data = resp.json()
-    artifacts = data.get("result", {}).get("artifacts", [])
-    if not artifacts:
-        return ""
-    parts = artifacts[0].get("parts", [])
+    result = data.get("result", {})
+    artifacts = result.get("artifacts", [])
+    if artifacts:
+        parts = artifacts[0].get("parts", [])
+        return parts[0].get("text", "") if parts else ""
+    parts = result.get("parts", [])
     return parts[0].get("text", "") if parts else ""
 
 
