@@ -1,13 +1,13 @@
 general:
   front_end:
     _type: a2a
-    name: "Lobsters Collector Agent"
-    description: "Lobsters(lobste.rs)에서 테크 토론을 수집·필터링하는 LLM-less 에이전트"
+    name: "Lobsters Extractor Agent"
+    description: "Lobsters(lobste.rs)에서 토론을 scrape하고 validator A2A로 필터링하는 LLM-less extractor"
     host: 0.0.0.0
     port: 10014
 
 workflow:
-  _type: lobsters_collector
+  _type: lobsters_extractor
   limit: 10
   max_text_chars: 8000
   enrich_json: true
@@ -15,3 +15,5 @@ workflow:
   max_comments_per_story: 10
   max_comment_chars: 1500
   workers: 4
+  validator_url: http://localhost:10024
+  validator_timeout_seconds: 120
