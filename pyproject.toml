@@ -1,6 +1,19 @@
 [tool.uv.workspace]
 members = [
-    "agents/extractor-arcalive",
-    "agents/extractor-benchmark",
+    "libs/validator-core",
+    "agents/arcalive/extractor",
+    "agents/arcalive/validator",
+    "agents/arxiv/extractor",
+    "agents/arxiv/validator",
+    "agents/benchmark/extractor",
+    "agents/benchmark/validator",
+    "agents/geeknews/extractor",
+    "agents/geeknews/validator",
+    "agents/lobsters/extractor",
+    "agents/lobsters/validator",
+    "agents/openai/extractor",
+    "agents/openai/validator",
+    "agents/reddit/extractor",
+    "agents/reddit/validator",
     "agents/query-generator",
 ]
