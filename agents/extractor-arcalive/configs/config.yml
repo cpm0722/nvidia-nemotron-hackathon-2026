@@ -9,7 +9,7 @@ general:
 llms:
   primary_llm:
     _type: openai
-    model_name: nvidia/nemotron-3-super-120b-a12b
+    model_name: nvidia/nemotron-3-nano
     base_url: https://model-server-uya78rbya.brevlab.com/v1
     api_key: empty
     temperature: 0.0

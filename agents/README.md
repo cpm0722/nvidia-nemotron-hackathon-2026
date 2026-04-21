@@ -1,21 +1,19 @@
 # Agents
 
-This directory contains all extractor agents. Each agent is an independent A2A service that collects data from a specific source and is managed as a member of the root-level uv workspace.
+This directory contains all agents in the pipeline. Each agent is an independent A2A service managed as a member of the root-level uv workspace.
 
-## Pipeline Position
+## Pipeline
 
 ```
 user query → query-generator → [extractor + validator] × N (parallel) → aggregator
 ```
-
-Each agent in this directory implements the **extractor** role for one data source. Every extractor is paired with a dedicated validator that filters and verifies the collected data.
 
 ## Standard Directory Structure
 
 Every agent must follow this layout:
 
 ```
-agents/{source-name}/
+agents/{agent-name}/
 ├── configs/
 │   └── config.yml          # NAT agent config: LLM, function groups, workflow
 ├── prompts/
@@ -27,13 +25,12 @@ agents/{source-name}/
 ├── src/
 │   └── {package_name}/
 │       ├── __init__.py
-│       ├── crawler.py      # Source-specific scraping/fetching logic
-│       ├── models.py       # Pydantic models for crawl input/output
-│       ├── parser.py       # HTML/JSON/text parsing logic
-│       └── register.py     # NAT FunctionGroup registration (entry point)
+│       ├── models.py       # Pydantic I/O models
+│       ├── register.py     # NAT FunctionGroup registration (entry point)
+│       └── ...             # Agent-specific implementation modules
 ├── tests/
 │   ├── __init__.py
-│   ├── fixtures/           # Static HTML/JSON snapshots for unit tests
+│   ├── fixtures/           # Static snapshots for unit tests
 │   ├── unit/               # Unit tests (no external calls)
 │   └── integration/        # Integration tests (marked, opt-in)
 └── pyproject.toml
@@ -43,16 +40,16 @@ agents/{source-name}/
 
 ```toml
 [project]
-name = "nat_extractor_{source}"          # e.g. nat_extractor_arcalive
+name = "nat_{agent_name}"               # e.g. nat_extractor_arcalive
 version = "0.1.0"
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "nvidia-nat[a2a,langchain]",
-    # source-specific deps...
+    # agent-specific deps...
 ]
 
 [project.entry-points."nat.components"]
-nat_extractor_{source} = "nat_extractor_{source}.register"
+nat_{agent_name} = "nat_{agent_name}.register"
 ```
 
 The `nat.components` entry point is required for NAT to discover and load the agent's `FunctionGroup`.
@@ -96,15 +93,15 @@ workflow:
 
 | Agent type | Model |
 |---|---|
-| query-generator | `nvidia/nemotron-3-nano-30b-a3b` |
-| extractor | `nvidia/nemotron-3-nano-30b-a3b` |
+| query-generator | `nvidia/nemotron-3-nano` |
+| extractor | `nvidia/nemotron-3-nano` |
 | validator | `nvidia/nemotron-3-super-120b-a12b` |
 | aggregator | `nvidia/nemotron-3-super-120b-a12b` |
 
 ## Adding a New Agent
 
-1. Create `agents/{source-name}/` following the structure above.
-2. Implement `crawler.py`, `models.py`, `parser.py`, and `register.py` under `src/nat_extractor_{source}/`.
+1. Create `agents/{agent-name}/` following the structure above.
+2. Implement `models.py`, `register.py`, and any agent-specific modules under `src/nat_{agent_name}/`.
 3. Write `configs/config.yml` and `prompts/system_prompt.txt`.
 4. Add shell scripts under `scripts/`.
 5. Register the new member in the root `pyproject.toml`:
@@ -112,7 +109,7 @@ workflow:
    [tool.uv.workspace]
    members = [
        "agents/extractor-arcalive",
-       "agents/extractor-{source}",   # add here
+       "agents/{agent-name}",   # add here
    ]
    ```
 6. Run `uv sync` at the project root to update `uv.lock`.
@@ -133,6 +130,6 @@ workflow:
 
 ## Existing Agents
 
-| Agent | Source | Port |
-|---|---|---|
-| `extractor-arcalive` | [arca.live](https://arca.live) — Korean community | 10000 |
+| Agent | Role | Source | Port |
+|---|---|---|---|
+| `extractor-arcalive` | extractor | [arca.live](https://arca.live) — Korean community | 10000 |
