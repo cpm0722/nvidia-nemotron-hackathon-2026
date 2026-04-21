@@ -4,7 +4,7 @@ general:
     name: "arXiv Extractor Agent"
     description: "Searches arXiv (export.arxiv.org) for research papers matching an AI model or technique keyword."
     host: 0.0.0.0
-    port: 10002
+    port: 10011
 
 llms:
   primary_llm:
@@ -22,7 +22,7 @@ function_groups:
     max_text_chars: 8000
   validator:
     _type: validator_caller
-    url: http://localhost:10102
+    url: http://localhost:10021
 
 workflow:
   _type: react_agent

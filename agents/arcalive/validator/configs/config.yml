@@ -4,7 +4,7 @@ general:
     name: "Arcalive Validator Agent"
     description: "아카라이브 수집 결과의 관련성을 검증하고 필터링하는 에이전트"
     host: 0.0.0.0
-    port: 10100
+    port: 10020
 
 llms:
   primary_llm:

@@ -4,7 +4,7 @@ general:
     name: "Benchmark Extractor Agent"
     description: "Artificial Analysis와 HuggingFace에서 LLM 벤치마크 점수와 사용자 토론을 수집하는 에이전트"
     host: 0.0.0.0
-    port: 10006
+    port: 10012
 
 llms:
   primary_llm:
@@ -22,7 +22,7 @@ function_groups:
     comment_limit: 3
   validator:
     _type: validator_caller
-    url: http://localhost:10106
+    url: http://localhost:10022
 
 workflow:
   _type: react_agent

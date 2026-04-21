@@ -4,7 +4,7 @@ general:
     name: "OpenAI Blog Extractor Agent"
     description: "Collects OpenAI official announcements and posts from openai.com/news (RSS)."
     host: 0.0.0.0
-    port: 10003
+    port: 10015
 
 llms:
   primary_llm:
@@ -22,7 +22,7 @@ function_groups:
     max_text_chars: 8000
   validator:
     _type: validator_caller
-    url: http://localhost:10103
+    url: http://localhost:10025
 
 workflow:
   _type: react_agent

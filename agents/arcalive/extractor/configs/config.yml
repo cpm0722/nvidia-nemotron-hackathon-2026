@@ -4,7 +4,7 @@ general:
     name: "Arcalive Extractor Agent"
     description: "아카라이브(arca.live)에서 AI 프러덕트에 대한 한국 사용자 반응을 수집하는 에이전트"
     host: 0.0.0.0
-    port: 10000
+    port: 10010
 
 llms:
   primary_llm:
@@ -22,7 +22,7 @@ function_groups:
     max_pages: 2
   validator:
     _type: validator_caller
-    url: http://localhost:10100
+    url: http://localhost:10020
 
 workflow:
   _type: react_agent

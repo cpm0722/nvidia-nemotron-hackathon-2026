@@ -4,7 +4,7 @@ general:
     name: "Lobsters Extractor Agent"
     description: "Collects tech discussion posts from Lobsters (lobste.rs) via RSS + per-story JSON API (body + comments)."
     host: 0.0.0.0
-    port: 10004
+    port: 10014
 
 llms:
   primary_llm:
@@ -26,7 +26,7 @@ function_groups:
     max_comment_chars: 1500
   validator:
     _type: validator_caller
-    url: http://localhost:10104
+    url: http://localhost:10024
 
 workflow:
   _type: react_agent
