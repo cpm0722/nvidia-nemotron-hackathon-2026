@@ -1,0 +1,26 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=64"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "nat_extractor_benchmark"
+version = "0.1.0"
+requires-python = ">=3.11,<3.14"
+description = "NAT A2A agent that collects LLM benchmark scores from Artificial Analysis and HuggingFace"
+keywords = ["ai", "agents", "benchmark", "huggingface", "artificial-analysis", "nat", "a2a"]
+classifiers = ["Programming Language :: Python"]
+dependencies = [
+    "nvidia-nat[a2a,langchain]",
+    "httpx>=0.27",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[project.entry-points."nat.components"]
+nat_extractor_benchmark = "nat_extractor_benchmark.register"
