@@ -1,11 +1,15 @@
-"""NAT function group: E2E pipeline orchestrator.
+"""NAT workflow: E2E pipeline — query-generator → collectors (parallel) → reporter.
 
-query-generator → collectors[N] (병렬) → reporter 순서로 A2A 호출을 조율하며
-generate_queries / collect_evidence / generate_report 세 툴을 노출한다.
+Runs deterministically without an LLM-driven agent: each call executes
+generate_queries → collect_evidence (per product, parallel across sources) →
+generate_report in fixed order.
 """
+
+from __future__ import annotations
 
 import asyncio
 import json
+import re
 import uuid
 from collections.abc import AsyncGenerator
 
@@ -13,20 +17,19 @@ import requests
 from pydantic import Field
 
 from nat.builder.builder import Builder
-from nat.builder.function import FunctionGroup
-from nat.cli.register_workflow import register_function_group
-from nat.data_models.function import FunctionGroupBaseConfig
+from nat.builder.function_info import FunctionInfo
+from nat.cli.register_workflow import register_function
+from nat.data_models.function import FunctionBaseConfig
 
 
-class E2EPipelineConfig(FunctionGroupBaseConfig, name="e2e_pipeline"):
-    """E2E pipeline orchestrator function group 설정.
+class E2EPipelineConfig(FunctionBaseConfig, name="e2e_pipeline"):
+    """E2E pipeline 설정 (query-generator → collectors[N] → reporter 순차 실행).
 
     Args:
         query_generator_url: query-generator A2A 서버 URL.
-        collector_urls: collector A2A 서버 URL 목록 (병렬 호출).
+        collector_urls: collector A2A 서버 URL 목록 (각 product마다 병렬 호출).
         reporter_url: reporter A2A 서버 URL.
         timeout_seconds: 각 A2A 호출당 타임아웃(초).
-        include: NAT에 노출할 함수 이름 목록.
     """
 
     query_generator_url: str = Field(default="http://localhost:10001")
@@ -43,9 +46,32 @@ class E2EPipelineConfig(FunctionGroupBaseConfig, name="e2e_pipeline"):
     )
     reporter_url: str = Field(default="http://localhost:10002")
     timeout_seconds: int = Field(default=180, ge=30, le=600)
-    include: list[str] = Field(
-        default_factory=lambda: ["generate_queries", "collect_evidence", "generate_report"]
-    )
+
+
+def _parse_product_list(raw: str) -> list[str] | None:
+    """Extract a JSON list of product names from an LLM response.
+
+    Handles reasoning-prefixed outputs like '<think>...</think>\\n["Gemma4"]' by
+    stripping thinking blocks and grabbing the last top-level JSON array.
+    """
+    cleaned = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+    try:
+        value = json.loads(cleaned)
+        if isinstance(value, list):
+            return [str(x) for x in value]
+    except json.JSONDecodeError:
+        pass
+    match = None
+    for m in re.finditer(r"\[[^\[\]]*\]", cleaned, flags=re.DOTALL):
+        match = m
+    if match:
+        try:
+            value = json.loads(match.group(0))
+            if isinstance(value, list):
+                return [str(x) for x in value]
+        except json.JSONDecodeError:
+            return None
+    return None
 
 
 def _a2a_send(url: str, message: str, timeout: int) -> str:
@@ -75,106 +101,74 @@ def _a2a_send(url: str, message: str, timeout: int) -> str:
     return parts[0].get("text", "") if parts else ""
 
 
-@register_function_group(config_type=E2EPipelineConfig)
-async def e2e_pipeline_group(
+@register_function(config_type=E2EPipelineConfig)
+async def e2e_pipeline(
     config: E2EPipelineConfig, _builder: Builder
-) -> AsyncGenerator[FunctionGroup, None]:
-    """E2E pipeline function group을 생성·등록한다.
+) -> AsyncGenerator[FunctionInfo, None]:
+    """Single-function LLM-less workflow orchestrating the 3-step pipeline."""
 
-    generate_queries / collect_evidence / generate_report 세 툴을 노출하며,
-    각 툴은 내부적으로 A2A 호출로 위임한다. collect_evidence는 asyncio.gather로
-    모든 collector를 병렬 실행한다.
-
-    Args:
-        config: 파이프라인 설정 (URL 목록, 타임아웃).
-        _builder: 워크플로우 빌더 (미사용).
-
-    Yields:
-        FunctionGroup containing the three pipeline tools.
-    """
-    group = FunctionGroup(config=config)
-
-    async def generate_queries(user_query: str) -> str:
-        """사용자 자연어 쿼리에서 AI 제품명 목록을 추출한다.
-
-        query-generator A2A 서버를 호출해 검색 가능한 영어 제품명 배열을 반환한다.
-
-        Args:
-            user_query: 한국어 또는 영어 자연어 쿼리
-                        (예: "GPT5와 Gemma4 비교해줘").
-
-        Returns:
-            JSON 배열 문자열 (예: '["GPT 5", "Gemma 4"]').
-            파싱 실패 시 원본 응답 문자열 그대로 반환.
-        """
-        result = await asyncio.to_thread(
-            _a2a_send, config.query_generator_url, user_query, config.timeout_seconds
-        )
-        return result
-
-    async def _call_collector(url: str, product_name: str, timeout: int) -> dict:
-        """단일 collector A2A 서버를 호출하고 ScrapeResult dict를 반환한다.
-
-        실패 시 ok=False인 빈 ScrapeResult dict를 반환해 전체 파이프라인을 중단시키지 않는다.
-        """
+    async def _call_collector(url: str, product_name: str) -> dict:
+        """Call one collector; return its ScrapeResult dict (ok=False on failure)."""
         try:
-            raw = await asyncio.to_thread(_a2a_send, url, product_name, timeout)
+            raw = await asyncio.to_thread(
+                _a2a_send, url, product_name, config.timeout_seconds
+            )
             return json.loads(raw)
         except Exception as exc:
             return {"source": url, "ok": False, "items": [], "error": str(exc)}
 
-    async def collect_evidence(product_name: str) -> str:
-        """설정된 collector들에서 병렬로 evidence를 수집한다.
+    async def _collect_for_product(product_name: str) -> list[dict]:
+        tasks = [_call_collector(url, product_name) for url in config.collector_urls]
+        return await asyncio.gather(*tasks)
 
-        각 collector A2A 서버를 asyncio.gather로 동시에 호출하며, 개별 실패는
-        ok=False 항목으로 기록하고 나머지 결과를 반환한다.
-
-        Args:
-            product_name: 검색할 AI 제품명 (예: "GPT 5", "Gemma 4").
-
-        Returns:
-            ScrapeResult 객체 배열의 JSON 문자열.
-            각 원소는 {source, ok, items[], error, latency_ms} 형태.
-        """
-        tasks = [
-            _call_collector(url, product_name, config.timeout_seconds)
-            for url in config.collector_urls
-        ]
-        results = await asyncio.gather(*tasks)
-        return json.dumps(list(results), ensure_ascii=False, indent=2, default=str)
-
-    async def generate_report(evidence_input: str) -> str:
-        """수집된 evidence를 reporter에 전달해 최종 보고서를 생성한다.
+    async def run(user_query: str) -> str:
+        """End-to-end pipeline: user_query → product names → evidence → report.
 
         Args:
-            evidence_input: "Product: <name>\\n\\nEvidence:\\n<JSON>" 형식 문자열.
-                            collect_evidence 결과를 포함해야 한다.
+            user_query: natural-language query (Korean or English), e.g.
+                        "gemma4는 성능이 어때?" / "GPT5와 Gemma4 비교해줘".
 
         Returns:
-            구조화된 마크다운 보고서 문자열.
-            reporter 호출 실패 시 오류 메시지 반환.
+            Final markdown report from the reporter agent.
         """
-        try:
-            result = await asyncio.to_thread(
-                _a2a_send, config.reporter_url, evidence_input, config.timeout_seconds
+        qgen_raw = await asyncio.to_thread(
+            _a2a_send, config.query_generator_url, user_query, config.timeout_seconds
+        )
+        products = _parse_product_list(qgen_raw)
+        if products is None:
+            return f"Failed to parse product names from query-generator: {qgen_raw}"
+
+        if not products:
+            return "No AI product names could be extracted from the query."
+
+        evidence_per_product: dict[str, list[dict]] = {}
+        for product in products:
+            evidence_per_product[product] = await _collect_for_product(product)
+
+        if len(products) == 1:
+            product = products[0]
+            report_input = (
+                f"Product: {product}\n\nEvidence:\n"
+                f"{json.dumps(evidence_per_product[product], ensure_ascii=False, indent=2, default=str)}"
             )
-            return result
+        else:
+            report_input = "Products and evidence:\n" + json.dumps(
+                evidence_per_product, ensure_ascii=False, indent=2, default=str
+            )
+
+        try:
+            report = await asyncio.to_thread(
+                _a2a_send, config.reporter_url, report_input, config.timeout_seconds
+            )
         except Exception as exc:
             return f"Reporter error: {exc}"
+        return report
 
-    group.add_function(
-        name="generate_queries",
-        fn=generate_queries,
-        description=generate_queries.__doc__,
+    yield FunctionInfo.from_fn(
+        fn=run,
+        description=(
+            "Run the full AI product feedback pipeline: extract product names via "
+            "query-generator, collect evidence from all configured collectors in "
+            "parallel, then synthesize a markdown report via the reporter."
+        ),
     )
-    group.add_function(
-        name="collect_evidence",
-        fn=collect_evidence,
-        description=collect_evidence.__doc__,
-    )
-    group.add_function(
-        name="generate_report",
-        fn=generate_report,
-        description=generate_report.__doc__,
-    )
-    yield group
