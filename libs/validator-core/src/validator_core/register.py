@@ -6,11 +6,9 @@ import uuid
 from typing import Any
 
 import requests
-from nvidia.nat.components.function_groups import (
-    FunctionGroup,
-    FunctionGroupBaseConfig,
-    register_function_group,
-)
+from nat.builder.function import FunctionGroup
+from nat.cli.register_workflow import register_function_group
+from nat.data_models.function import FunctionGroupBaseConfig
 from pydantic import Field
 
 

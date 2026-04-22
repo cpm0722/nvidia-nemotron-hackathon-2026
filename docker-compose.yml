@@ -1,0 +1,237 @@
+# docker-compose.yml — ARI (AI Research Intelligence) agent stack
+#
+# 16 NAT A2A services from one shared image (docker/Dockerfile). Each service
+# picks its agent via CONFIG_FILE. Inter-agent URLs are injected as env vars
+# (${VALIDATOR_URL}, ${QUERY_GENERATOR_URL}, etc.) that the configs reference
+# through ${VAR:-default} interpolation.
+#
+# Dependency layers:
+#   L1: validators × 7, query-generator, reporter (talk to Brev NIM only)
+#   L2: extractors × 7 (depend on their own validator)
+#   L3: e2e (depends on all of L1 + L2 except validators)
+#
+# Model endpoints come from .env (SUPER_MODEL_BASE_URL / NANO_MODEL_BASE_URL).
+
+x-agent-base: &agent-base
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  image: ari/nat-agent:latest
+  restart: unless-stopped
+  networks:
+    - ari-net
+
+x-super-llm-env: &super-llm-env
+  SUPER_MODEL_BASE_URL: ${SUPER_MODEL_BASE_URL:-https://model-server-uya78rbya.brevlab.com/v1}
+  SUPER_MODEL_API_KEY: ${SUPER_MODEL_API_KEY:-empty}
+
+x-nano-llm-env: &nano-llm-env
+  NANO_MODEL_BASE_URL: ${NANO_MODEL_BASE_URL:-https://model-server-4dfr8gv78.brevlab.com/v1}
+  NANO_MODEL_API_KEY: ${NANO_MODEL_API_KEY:-empty}
+
+x-healthcheck: &agent-healthcheck
+  # Wait for NAT's A2A agent-card endpoint to become reachable. start_period
+  # gives uv-built-in-venv + plugin registration time to finish on first boot.
+  # $$ escapes compose-time interpolation so the shell inside the container
+  # reads HEALTHCHECK_PORT from its own environment (not the host's).
+  test: ["CMD-SHELL", "curl -fsS http://localhost:$${HEALTHCHECK_PORT}/.well-known/agent-card.json > /dev/null"]
+  interval: 5s
+  timeout: 3s
+  retries: 12
+  start_period: 20s
+
+networks:
+  ari-net:
+    driver: bridge
+
+services:
+  # ────────────────────────── L1: validators ──────────────────────────
+  arcalive-validator:
+    <<: *agent-base
+    container_name: ari-arcalive-validator
+    environment:
+      <<: *super-llm-env
+      CONFIG_FILE: /app/agents/collectors/arcalive/validator/configs/config.yml
+      HEALTHCHECK_PORT: "10020"
+    healthcheck: *agent-healthcheck
+
+  arxiv-validator:
+    <<: *agent-base
+    container_name: ari-arxiv-validator
+    environment:
+      <<: *super-llm-env
+      CONFIG_FILE: /app/agents/collectors/arxiv/validator/configs/config.yml
+      HEALTHCHECK_PORT: "10021"
+    healthcheck: *agent-healthcheck
+
+  benchmark-validator:
+    <<: *agent-base
+    container_name: ari-benchmark-validator
+    environment:
+      <<: *super-llm-env
+      CONFIG_FILE: /app/agents/collectors/benchmark/validator/configs/config.yml
+      HEALTHCHECK_PORT: "10022"
+    healthcheck: *agent-healthcheck
+
+  geeknews-validator:
+    <<: *agent-base
+    container_name: ari-geeknews-validator
+    environment:
+      <<: *super-llm-env
+      CONFIG_FILE: /app/agents/collectors/geeknews/validator/configs/config.yml
+      HEALTHCHECK_PORT: "10023"
+    healthcheck: *agent-healthcheck
+
+  lobsters-validator:
+    <<: *agent-base
+    container_name: ari-lobsters-validator
+    environment:
+      <<: *super-llm-env
+      CONFIG_FILE: /app/agents/collectors/lobsters/validator/configs/config.yml
+      HEALTHCHECK_PORT: "10024"
+    healthcheck: *agent-healthcheck
+
+  openai-validator:
+    <<: *agent-base
+    container_name: ari-openai-validator
+    environment:
+      <<: *super-llm-env
+      CONFIG_FILE: /app/agents/collectors/openai/validator/configs/config.yml
+      HEALTHCHECK_PORT: "10025"
+    healthcheck: *agent-healthcheck
+
+  reddit-validator:
+    <<: *agent-base
+    container_name: ari-reddit-validator
+    environment:
+      <<: *super-llm-env
+      CONFIG_FILE: /app/agents/collectors/reddit/validator/configs/config.yml
+      HEALTHCHECK_PORT: "10026"
+    healthcheck: *agent-healthcheck
+
+  # ──────────────────── L1: query-generator + reporter ────────────────────
+  query-generator:
+    <<: *agent-base
+    container_name: ari-query-generator
+    environment:
+      <<: *nano-llm-env
+      CONFIG_FILE: /app/agents/query-generator/configs/config.yml
+      HEALTHCHECK_PORT: "10001"
+    healthcheck: *agent-healthcheck
+
+  reporter:
+    <<: *agent-base
+    container_name: ari-reporter
+    environment:
+      <<: *super-llm-env
+      CONFIG_FILE: /app/agents/reporter/configs/config.yml
+      HEALTHCHECK_PORT: "10002"
+    healthcheck: *agent-healthcheck
+
+  # ────────────────────────── L2: extractors ──────────────────────────
+  arcalive-extractor:
+    <<: *agent-base
+    container_name: ari-arcalive-extractor
+    depends_on:
+      arcalive-validator: { condition: service_healthy }
+    environment:
+      CONFIG_FILE: /app/agents/collectors/arcalive/extractor/configs/config.yml
+      VALIDATOR_URL: http://arcalive-validator:10020
+      HEALTHCHECK_PORT: "10010"
+    healthcheck: *agent-healthcheck
+
+  arxiv-extractor:
+    <<: *agent-base
+    container_name: ari-arxiv-extractor
+    depends_on:
+      arxiv-validator: { condition: service_healthy }
+    environment:
+      CONFIG_FILE: /app/agents/collectors/arxiv/extractor/configs/config.yml
+      VALIDATOR_URL: http://arxiv-validator:10021
+      HEALTHCHECK_PORT: "10011"
+    healthcheck: *agent-healthcheck
+
+  benchmark-extractor:
+    <<: *agent-base
+    container_name: ari-benchmark-extractor
+    depends_on:
+      benchmark-validator: { condition: service_healthy }
+    environment:
+      CONFIG_FILE: /app/agents/collectors/benchmark/extractor/configs/config.yml
+      VALIDATOR_URL: http://benchmark-validator:10022
+      HEALTHCHECK_PORT: "10012"
+    healthcheck: *agent-healthcheck
+
+  geeknews-extractor:
+    <<: *agent-base
+    container_name: ari-geeknews-extractor
+    depends_on:
+      geeknews-validator: { condition: service_healthy }
+    environment:
+      CONFIG_FILE: /app/agents/collectors/geeknews/extractor/configs/config.yml
+      VALIDATOR_URL: http://geeknews-validator:10023
+      HEALTHCHECK_PORT: "10013"
+    healthcheck: *agent-healthcheck
+
+  lobsters-extractor:
+    <<: *agent-base
+    container_name: ari-lobsters-extractor
+    depends_on:
+      lobsters-validator: { condition: service_healthy }
+    environment:
+      CONFIG_FILE: /app/agents/collectors/lobsters/extractor/configs/config.yml
+      VALIDATOR_URL: http://lobsters-validator:10024
+      HEALTHCHECK_PORT: "10014"
+    healthcheck: *agent-healthcheck
+
+  openai-extractor:
+    <<: *agent-base
+    container_name: ari-openai-extractor
+    depends_on:
+      openai-validator: { condition: service_healthy }
+    environment:
+      CONFIG_FILE: /app/agents/collectors/openai/extractor/configs/config.yml
+      VALIDATOR_URL: http://openai-validator:10025
+      HEALTHCHECK_PORT: "10015"
+    healthcheck: *agent-healthcheck
+
+  reddit-extractor:
+    <<: *agent-base
+    container_name: ari-reddit-extractor
+    depends_on:
+      reddit-validator: { condition: service_healthy }
+    environment:
+      CONFIG_FILE: /app/agents/collectors/reddit/extractor/configs/config.yml
+      VALIDATOR_URL: http://reddit-validator:10026
+      HEALTHCHECK_PORT: "10016"
+    healthcheck: *agent-healthcheck
+
+  # ────────────────────────── L3: e2e orchestrator ──────────────────────────
+  e2e:
+    <<: *agent-base
+    container_name: ari-e2e
+    depends_on:
+      query-generator: { condition: service_healthy }
+      reporter: { condition: service_healthy }
+      arcalive-extractor: { condition: service_healthy }
+      arxiv-extractor: { condition: service_healthy }
+      benchmark-extractor: { condition: service_healthy }
+      geeknews-extractor: { condition: service_healthy }
+      lobsters-extractor: { condition: service_healthy }
+      openai-extractor: { condition: service_healthy }
+      reddit-extractor: { condition: service_healthy }
+    environment:
+      CONFIG_FILE: /app/agents/e2e/configs/config.yml
+      QUERY_GENERATOR_URL: http://query-generator:10001
+      REPORTER_URL: http://reporter:10002
+      ARCALIVE_EXTRACTOR_URL: http://arcalive-extractor:10010
+      ARXIV_EXTRACTOR_URL: http://arxiv-extractor:10011
+      BENCHMARK_EXTRACTOR_URL: http://benchmark-extractor:10012
+      GEEKNEWS_EXTRACTOR_URL: http://geeknews-extractor:10013
+      LOBSTERS_EXTRACTOR_URL: http://lobsters-extractor:10014
+      OPENAI_EXTRACTOR_URL: http://openai-extractor:10015
+      REDDIT_EXTRACTOR_URL: http://reddit-extractor:10016
+      HEALTHCHECK_PORT: "10000"
+    ports:
+      - "${E2E_HOST_PORT:-10000}:10000"
+    healthcheck: *agent-healthcheck

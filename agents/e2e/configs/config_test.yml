@@ -13,4 +13,4 @@ workflow:
     - http://localhost:10010
     - http://localhost:10013
   reporter_url: http://localhost:10002
-  timeout_seconds: 180
+  timeout_seconds: 300

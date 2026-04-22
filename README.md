@@ -110,7 +110,31 @@ No API key is required — set `api_key: empty` in `config.yml`.
 
 ## Quick Start
 
-### Run the full e2e pipeline
+### Run via `docker compose` (recommended)
+
+Brings up all 17 A2A agents (7 extractors + 7 validators + query-generator + reporter + e2e) in the correct dependency order from a single shared image.
+
+```bash
+cp .env.example .env             # edit model endpoints if yours differ
+docker compose up -d --build     # first run builds the shared image
+docker compose ps                # wait until every service is 'healthy'
+curl http://localhost:10000/.well-known/agent-card.json  # e2e is up
+
+# send a query
+cd agents/e2e && ./scripts/a2a_client.sh "GPT5와 Gemma4 비교해줘"
+```
+
+Startup order is enforced by `depends_on: condition: service_healthy`:
+
+```
+L1: 7 validators + query-generator + reporter   (talk to Brev NIM only)
+L2: 7 extractors                                  (each depends on its own validator)
+L3: e2e                                           (depends on every L1/L2 service)
+```
+
+Only the e2e front-end (port `10000`) is published to the host. Intra-stack traffic stays on the `ari-net` bridge via compose DNS (`http://arcalive-validator:10020`, etc.). Override the host port with `E2E_HOST_PORT` in `.env`.
+
+### Run the full e2e pipeline manually
 
 Start all agents (each in a separate terminal), then call the e2e agent:
 
@@ -256,6 +280,11 @@ nvidia-nemotron-hackathon-2026/
 ├── libs/
 │   ├── ari-core/                               # Shared scraper schemas (EvidenceItem, ScrapeResult)
 │   └── validator-core/                         # Shared legacy validator_caller (kept for workspace refs)
+├── docker/                                     # Shared image for all 17 A2A agents
+│   ├── Dockerfile                              # uv-workspace install; entrypoint reads CONFIG_FILE
+│   └── entrypoint.sh                           # cd to agent dir + `nat a2a serve`
+├── docker-compose.yml                          # 17 services, 3-layer depends_on graph, healthchecks
+├── .env.example                                # Brev model endpoints + E2E_HOST_PORT template
 ├── docs/                                       # Internal reference documents
 ├── task-histories/                             # Branch plans and completion reports
 ├── pyproject.toml                              # uv workspace root (14 collector subpackages + e2e/qgen/reporter)

@@ -13,4 +13,4 @@ echo "server: $SERVER_URL"
 echo ""
 
 cd "$AGENT_DIR"
-uv run nat a2a client call --url "$SERVER_URL" --message "$QUERY"
+uv run nat a2a client call --url "$SERVER_URL" --message "$QUERY" --timeout 300
