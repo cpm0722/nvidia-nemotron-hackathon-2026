@@ -32,7 +32,9 @@ x-nano-llm-env: &nano-llm-env
 x-healthcheck: &agent-healthcheck
   # Wait for NAT's A2A agent-card endpoint to become reachable. start_period
   # gives uv-built-in-venv + plugin registration time to finish on first boot.
-  test: ["CMD-SHELL", "curl -fsS http://localhost:${HEALTHCHECK_PORT}/.well-known/agent-card.json > /dev/null"]
+  # $$ escapes compose-time interpolation so the shell inside the container
+  # reads HEALTHCHECK_PORT from its own environment (not the host's).
+  test: ["CMD-SHELL", "curl -fsS http://localhost:$${HEALTHCHECK_PORT}/.well-known/agent-card.json > /dev/null"]
   interval: 5s
   timeout: 3s
   retries: 12
