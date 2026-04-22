@@ -1,0 +1,133 @@
+{
+  "product": "Nemotron 3 Super",
+  "summary": "NVIDIA Nemotron 3 Super is a 120B‑parameter LatentMixture‑of‑Experts language model with 12B active parameters, designed for agentic workflows, long‑context reasoning, and high‑volume workloads such as IT ticket automation[^1][^2]. Official benchmarks show strong performance on reasoning and coding tasks, including an MMLU‑Pro score of 83.73 and a GPQA (no tools) score of 79.23[^1][^2]. Community discussions highlight both enthusiasm for its reasoning capabilities and concerns about deployment practicalities, such as inference speed on VLLM versus alternative backends[^3][^4]. Some users report tool‑call parsing errors and hardware compatibility issues with FP8/NVFP4 quantizations on older GPUs[^5][^6]. Overall, the model delivers cutting‑edge accuracy but requires careful consideration of serving infrastructure and quantization choices.",
+  "official_performance": {
+    "text": "According to Artificial Analysis, Nemotron 3 Super achieves an Intelligence Index of 35.97, a Coding Index of 31.19, and an Agentic Index of 40.18, with notable results on GPQA Diamond (80.0%) and TAU‑2 (67.8%)[^1]. The model card reports MMLU‑Pro at 83.73, HMMT Feb25 (with tools) at 94.73, and GPQA (no tools) at 79.23, alongside strong LiveCodeBench scores of 78.69 (v6) and 81.19 (v5)[^2]. Additional metrics include SciCode (subtask) 42.05, HLE (no tools) 18.26, and Terminal Bench (hard subset) 25.78[^2]. The model supports up to 1M token context length and is licensed under the NVIDIA Nemotron Open Model License for commercial use[^2]. Compared to prior Nemotron 3 variants, the Super version adds Multi‑Token Prediction layers and NVFP4 quantization to improve throughput and quality[^2]. While these benchmarks place it among the top open models, absolute rankings vary across leaderboards, and some community members note that real‑world throughput can diverge from synthetic scores depending on the serving stack[^3].",
+    "citations": [
+      1,
+      2,
+      3
+    ]
+  },
+  "community_reactions": {
+    "text": "Reddit users discuss the practical performance of Nemotron 3 Super when deployed with different inference engines, noting that VLLM implementations often yield lower tokens‑per‑second than llama.cpp‑based setups; one user reported ~15 t/s with the Nano NVFP4 variant in VLLM versus ~30 t/s using Unsloth’s MXFP4 version in LM Studio[^3]. Another thread highlights the long‑context strength of the model, describing successful ingestion of large markdown files but warning that prompt processing remains hardware‑bound and can take several minutes per document without faster compute[^4]. Conversations also mention the model’s multi‑token prediction capability as a way to narrow the gap between VLLM and llama.cpp inference speeds when properly configured[^3]. Despite the lack of activity on ArcaLive, GeekNews, and Lobsters in the collected evidence, the Reddit discourse reflects both excitement about the model’s reasoning and agentic features and frustration over deployment complexity and hardware requirements[^3][^4]. Users further point out that documentation sometimes overstates GPU compatibility, citing FP8/NVFP4 quantizations that require Hopper‑class (CC 89+) GPUs rather than the advertised A100 support[^5][^6]. Overall, community sentiment is cautiously optimistic, praising the model’s capabilities while urging potential adopters to benchmark their specific serving environment before committing to production workloads.",
+    "citations": [
+      3,
+      4,
+      5,
+      6
+    ]
+  },
+  "key_takeaways": [
+    "Validate the model’s throughput on your chosen serving stack (VLLM, SGLang, or TRT‑LLM) before assuming peak benchmark scores translate to real‑world latency.",
+    "Confirm GPU compatibility for FP8/NVFP4 quantizations; these require Hopper‑or‑later (CC 89+) devices, not older Ampere cards like the A100.",
+    "Leverage the model’s 1M‑token context and Multi‑Token Prediction for agentic workflows such as IT ticket automation or long‑context RAG, where reasoning depth matters more than raw speed.",
+    "Watch for tool‑call XML parsing issues in multi‑turn reasoning; consider applying the proposed chat_template.jinja patch or disabling reasoning until a fix is upstream.",
+    "Monitor community patches and documentation updates, as active discussions on HuggingFace indicate ongoing improvements to reasoning_effort handling and hardware compatibility notes.",
+    "If deploying on Blackwell GPUs, enable expert parallelism and tensor parallelism as recommended in the model’s quick‑start guides to maximize throughput.",
+    "For multilingual applications, note that the model supports English, French, German, Italian, Japanese, Spanish, and Chinese, but benchmark scores for non‑English variants are lower than the English‑only MMLU‑Pro."
+  ],
+  "disagreements": [
+    {
+      "topic": "GPU compatibility for FP8/NVFP4 quantization",
+      "claim_a": {
+        "text": "The model card lists the minimum GPU requirement as “2× H100-80GB” for the FP8/NVFP4 version, suggesting compatibility with H100 (Hopper) GPUs[^2].",
+        "stance": "pro",
+        "citations": [
+          2
+        ]
+      },
+      "claim_b": {
+        "text": "Users report that attempting to run FP8/NVFP4 quantizations on an A100 (CC 80) fails with an error stating CC 89+ is required, indicating the quantizations need Hopper‑class hardware[^5][^6].",
+        "stance": "con",
+        "citations": [
+          5,
+          6
+        ]
+      },
+      "takeaway": "While the base model may run on H100s, the specific FP8/NVFP4 quantizations distributed via HuggingFace are not functional on Ampere GPUs; users should verify their GPU architecture before selecting these quantizations."
+    },
+    {
+      "topic": "Tool‑call XML label hallucination in multi‑turn reasoning",
+      "claim_a": {
+        "text": "Official documentation highlights strong agentic and tool‑use capabilities, citing LiveCodeBench and TauBench scores as evidence of reliable tool interaction[^2].",
+        "stance": "pro",
+        "citations": [
+          2
+        ]
+      },
+      "claim_b": {
+        "text": "A HuggingFace discussion shows the model frequently outputs malformed `<function=parameter=code>` tags instead of the expected nested XML, breaking standard parsers and causing execution failures in automated pipelines[^7].",
+        "stance": "con",
+        "citations": [
+          7
+        ]
+      },
+      "takeaway": "The issue appears in the default chat template; applying the community‑suggested patch that maps OpenAI’s `reasoning_effort` to the template’s `low_effort` and `enable_thinking` flags resolves the hallucination, or users can disable reasoning until the fix is merged."
+    }
+  ],
+  "sources_used": [
+    "benchmark",
+    "reddit"
+  ],
+  "items_analyzed": 4,
+  "citations": [
+    {
+      "id": 1,
+      "source": "benchmark",
+      "url": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+      "title": "NVIDIA Nemotron 3 Super 120B A12B (Reasoning)",
+      "quote": "NVIDIA Nemotron 3 Super 120B A12B (Reasoning) benchmarks from Artificial Analysis: Intelligence Index=35.97, Coding Index=31.19, Agentic Index=40.18, Omniscience=-42.07, GPQA Diamond=80.0%, HLE=19.2%, SciCode=36.0%, TAU-2=67.8%, IFBench=71.5%, LCR=60.0%",
+      "timestamp": null
+    },
+    {
+      "id": 2,
+      "source": "benchmark",
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8",
+      "title": "NVIDIA-Nemotron-3-Super-120B-A12B-FP8",
+      "quote": "MMLU-Pro=83.73, HMMT Feb25 (with tools)=94.73, GPQA (no tools)=79.23, LiveCodeBench (v6 2024-08↔2025-05)=78.69, LiveCodeBench (v5 2024-07↔2024-12)=81.19, SciCode (subtask)=42.05, HLE (no tools)=18.26, Terminal Bench (hard subset)=25.78",
+      "timestamp": null
+    },
+    {
+      "id": 3,
+      "source": "reddit",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1soz8en/should_i_be_seeing_more_of_a_performance_leap/",
+      "title": "Should I be seeing more of a performance leap when using NVFP4, INT4, FP8 with VLLM over MXFP4, Q4, and Q8 with llama.cpp based inference on Blackwell based GPUs?",
+      "quote": "I was surprised I was only getting 15-ish t/s with Nemotron Nano NVFP4 in VLLM with Nvidia’s recommended settings and getting 30 t/s using Unsloths MXFP4 of Nemotron Nano in LM Studio.",
+      "timestamp": "2026-04-18T14:33:27Z"
+    },
+    {
+      "id": 4,
+      "source": "reddit",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1sopb70/how_to_optimize_quantized_llm_model_to_read_very/",
+      "title": "How to optimize quantized LLM model to read very long texts?",
+      "quote": "I am currently run Nemotron-3-Nano-4B-RotorQuant-GGUF-Q4_K_M model ... it takes very long time only to process 1 doc!",
+      "timestamp": "2026-04-18T05:58:45Z"
+    },
+    {
+      "id": 5,
+      "source": "benchmark",
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8/discussions/12",
+      "title": "chat_template.jinja should honor OpenAI-standard `reasoning_effort` field",
+      "quote": "The chat template does not read the OpenAI-standard `reasoning_effort` field, causing `reasoning_effort: \"low\"` to be a no‑op and `reasoning_effort: \"none\"` to hide full‑thinking generation.",
+      "timestamp": "2026-04-11T16:50:09Z"
+    },
+    {
+      "id": 6,
+      "source": "benchmark",
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8/discussions/10",
+      "title": "Update Documentation to remove A100 support",
+      "quote": "I’m trying to run the FP8/NVFP4 quants using vLLM on an A100 (Compute Capability 80), but I'm hitting an error stating that CC 89+ is required.",
+      "timestamp": "2026-03-25T13:27:57Z"
+    },
+    {
+      "id": 7,
+      "source": "benchmark",
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8/discussions/6",
+      "title": "Bug Report: Tool Call XML Label Hallucination in Multi-turn Reasoning (Nemotron-3 Super 120B)",
+      "quote": "Instead of the canonical format... the model frequently outputs: `<function=parameter=code>{python_code}</parameter></function>`",
+      "timestamp": "2026-03-14T07:59:31Z"
+    }
+  ],
+  "run_id": "20260422-044313-7e460e34"
+}

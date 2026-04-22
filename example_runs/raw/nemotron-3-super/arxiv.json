@@ -1,0 +1,189 @@
+{
+  "source": "arxiv",
+  "ok": true,
+  "items": [
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19742v1",
+      "author": "Zhiyuan Peng, Wei Tao, Xin Yin, Chenhao Ying, Yuan Luo, Yiwen Guo",
+      "title": "PlayCoder: Making LLM-Generated GUI Code Playable",
+      "text": "Large language models (LLMs) have achieved strong results in code generation, but their ability to generate GUI applications, especially games, remains insufficiently studied. Existing benchmarks mainly evaluate correctness through test cases, which are inadequate for GUI applications because these systems are interactive, event-driven, and require correct state transitions across sequences of user actions. Their evaluation therefore should consider interaction flows and UI logic rather than only pass/fail outcomes. To study this problem, we introduce PlayEval, a repository-aware benchmark built from 43 multilingual GUI applications in Python, TypeScript, and JavaScript. Unlike prior GUI benchmarks that are difficult to adapt to desktop environments, PlayEval covers six major GUI application categories and directly supports code-generation evaluation. We further propose Play@k, a metric that measures whether at least one of *k* generated candidates can be played end-to-end without logical errors. To support reliable evaluation, we develop PlayTester, an LLM-based agent that performs task-oriented GUI playthroughs and detects logic violations automatically. Experiments on 10 state-of-the-art code LLMs show that, despite high compilation rates, they achieve near-zero Play@3, revealing major weaknesses in generating logically correct GUI applications. To address this limitation, we present PlayCoder, a multi-agent, repository-aware framework that generates, evaluates, and iteratively repairs GUI application code in a closed loop. PlayCoder substantially improves both functional correctness and semantic alignment for open-source and closed-source models, reaching up to 38.1% Exec@3 and 20.3% Play@3. Case studies further show that it can uncover silent logic bugs missed by traditional metrics and fix them through targeted edits.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:59:16Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19742v1",
+        "categories": [
+          "cs.SE"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19739v1",
+      "author": "Hugo Aimar, Ivana Gómez, Joaquín Toledo",
+      "title": "Boundedness properties of the bilinear fractional integral operators induced by hypermetrics of third order",
+      "text": "We introduce a natural bilinear fractional integral type operator induced by a third order hypermetric on Ahlfors regular quasi-metric spaces. Given a quasi-metric space $(X,d)$ the function $ρ(x,y,z)$, defined as the distance, in $X^3$, of $(x,y,z)$ to the diagonal $\\bigtriangleup_3=\\{(x,x,x)\\in X^3:x\\in X\\}$ is said to be a third order hypermetric in $X$. When $(X,d)$ is a Euclidean space or, more generally, when $(X,d,μ)$ is $η$-Ahlfors regular for some $η$ positive, the function $ρ(x,y,z)$ generates kernels for bilinear operators of the type $T^γ(f,g)(x)=\\iint_{X\\times X}ρ(x,y,z)^{-γ}f(y)g(z)dμ(y)dμ(z)$, for a given positive $γ$. In the setting of $η$-Ahlfors regular space, the power $-γ=-2η$ of $ρ(x,\\cdot,\\cdot)$ provides the natural singularity for this family of kernels. In this paper we consider the fractional integral rank $0<γ<2η$. We prove boundedness properties of the type $\\|T^γ(f,g)\\|_{p_3}\\leq C\\|f\\|_{p_1}\\|g\\|_{p_2}$ for adequate values of the exponents $p_1,p_2$ and $p_3$. The proof is based on three upper bounds for $T^γ(f,g)$ in terms of the classical linear fractional Riesz operators $I_{η-\\fracγ{2}}$, using the linear Hardy-Littlewood-Sobolev inequality.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:58:49Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19739v1",
+        "categories": [
+          "math.CA"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19735v1",
+      "author": "Sahil Khan, Sayam Sethi, Kaavya Sahay, Yingjia Lin, Jude Alnas, Suhas Kurapati, Abhinav Anand, Jonathan M. Baker, Kenneth R. Brown",
+      "title": "Architecting Early Fault Tolerant Neutral Atoms Systems with Quantum Advantage",
+      "text": "Recent advancements in neutral atom platforms have enabled exploration of early fault-tolerant (FT) architectures for applications with quantum advantage, such as quantum dynamics simulations. An efficient fault-tolerant architecture has both spatially efficient quantum error correction codes (low qubit overhead), and efficient methodologies (transversal based gates, extractor based gates, etc.) for logical computation, to minimize overall execution time. Achieving the right balance between space and time can be critical for enabling early FT demonstrations of quantum advantage.\n  In this work, we identify bottlenecks in existing spatially efficient schemes, which tend to be very serial, and do not take advantage of unutilized space. We introduce a teleportation-based scheme that leverages the reconfigurable connectivity of neutral atoms to parallelize logical operations. Our approach achieves up to \\textbf{$\\mathbf{\\sim 3 \\times}$ speedup} over extractor architectures at no extra space cost and achieves the best spacetime performance among other viable architectures before accounting for external \\textit{resource-states}. To rigorously evaluate performance, we construct explicit quantum advantage benchmarks and \\textit{simulate} compilation to a fault-tolerant instruction set, including low-level gate scheduling and shuttling patterns, and resource-state nondeterminism. We find that our speedups still apply and report exact space-time cost along with success probabilities, identifying architectures capable of achieving quantum advantage \\textbf{with as little as $\\mathbf{11,495}$ atoms and a runtime of $\\mathbf{\\sim 15}$ hours}.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:57:43Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19735v1",
+        "categories": [
+          "quant-ph"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19727v1",
+      "author": "Bo Ning",
+      "title": "On Scott's odd induced subgraph conjecture and a related problem",
+      "text": "For a graph $G$, let $f_o(G)$ denote the maximum order of an induced subgraph of $G$ all of whose vertices have odd degree, and let $χ(G)$ denote the chromatic number of $G$. Scott (CPC, 1992) proved that $f_o(G) \\ge |V(G)|/(2χ(G))$ for every graph without isolated vertices, and conjectured that the factor $2$ can be removed. Wang and Wu (JGT, 2024) showed that this conjecture fails for bipartite graphs, but holds for line graphs. In this article, we confirm Scott's conjecture for claw-free graphs without isolated vertices, thereby strengthening the result of Wang and Wu. We also construct $K_{1,r}$-free graphs of arbitrarily large order to show that the conjecture fails for this broader class, for every integer $r \\ge 4$.\n  Wang and Wu also asked whether $f_o(L(G)) \\ge n/2$ holds for every connected regular graph $G$ of order $n \\ge 3$. We show that $C_5$ is the smallest counterexample to this problem. On the positive side, we prove that if $G$ is a connected $k$-regular $C_5$-free graph on $n$ vertices with $k \\ge 2$, then $f_o(L(G)) \\ge n/2$.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:51:49Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19727v1",
+        "categories": [
+          "math.CO"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19715v1",
+      "author": "Houchao Gan",
+      "title": "A Network-Aware Evaluation of Distributed Energy Resource Control in Smart Distribution Systems",
+      "text": "Distribution networks with high penetration of Distributed Energy Resources (DERs) increasingly rely on communication networks to coordinate grid-interactive control. While many distributed control schemes have been proposed, they are often evaluated under idealized communication assumptions, making it difficult to assess their performance under realistic network conditions. This work presents an implementation-driven evaluation of a representative virtual power plant (VPP) dispatch algorithm using a co-simulation framework that couples a linearized distribution-system model with packet-level downlink emulation in ns-3. The study considers a modified IEEE~37-node feeder with high photovoltaic penetration and a primal--dual VPP dispatch that simultaneously targets feeder-head active power tracking and voltage regulation. Communication effects are introduced only on the downlink path carrying dual-variable updates, where per-DER packet delays and a hold-last-value strategy are modeled. Results show that, under ideal communication, the dispatch achieves close tracking of the feeder-head power reference while maintaining voltages within the prescribed limits at selected buses. When realistic downlink delay is introduced, the same controller exhibits large oscillations in feeder-head power and more frequent voltage limit violations. These findings highlight that distributed DER control performance can be strongly influenced by communication behavior and motivate evaluation frameworks that explicitly incorporate network dynamics into the assessment of grid-interactive control schemes.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:40:36Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19715v1",
+        "categories": [
+          "cs.CV",
+          "eess.SY"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19712v1",
+      "author": "Mihailo Stojnic",
+      "title": "Ultrametric OGP - parametric RDT \\emph{symmetric} binary perceptron connection",
+      "text": "In [97,99,100], an fl-RDT framework is introduced to characterize \\emph{statistical computational gaps} (SCGs). Studying \\emph{symmetric binary perceptrons} (SBPs), [100] obtained an \\emph{algorithmic} threshold estimate $α_a\\approx α_c^{(7)}\\approx 1.6093$ at the 7th lifting level (for $κ=1$ margin), closely approaching $1.58$ local entropy (LE) prediction [18].\n  In this paper, we further connect parametric RDT to overlap gap properties (OGPs), another key geometric feature of the solution space. Specifically, for any positive integer $s$, we consider $s$-level ultrametric OGPs ($ult_s$-OGPs) and rigorously upper-bound the associated constraint densities $α_{ult_s}$. To achieve this, we develop an analytical union-bounding program consisting of combinatorial and probabilistic components. By casting the combinatorial part as a convex problem and the probabilistic part as a nested integration, we conduct numerical evaluations and obtain that the tightest bounds at the first two levels, $\\barα_{ult_1} \\approx 1.6578$ and $\\barα_{ult_2} \\approx 1.6219$, closely approach the 3rd and 4th lifting level parametric RDT estimates, $α_c^{(3)} \\approx 1.6576$ and $α_c^{(4)} \\approx 1.6218$. We also observe excellent agreement across other key parameters, including overlap values and the relative sizes of ultrametric clusters.\n  Based on these observations, we propose several conjectures linking $ult$-OGP and parametric RDT. Specifically, we conjecture that algorithmic threshold $α_a=\\lim_{s\\rightarrow\\infty} α_{ult_s} = \\lim_{s\\rightarrow\\infty} \\barα{ult_s} = \\lim_{r\\rightarrow\\infty} α_{c}^{(r)}$, and $α_{ult_s} \\leq α_{c}^{(s+2)}$ (with possible equality for some (maybe even all) $s$). Finally, we discuss the potential existence of a full isomorphism connecting all key parameters of $ult$-OGP and parametric RDT.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:36:33Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19712v1",
+        "categories": [
+          "cs.LG",
+          "cond-mat.dis-nn",
+          "cs.IT",
+          "math.PR",
+          "stat.ML"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19703v1",
+      "author": "Leon Haag-Fank, Andreas Mielke",
+      "title": "The bosonic Hubbard model on a three dimensional flat band lattice",
+      "text": "The lowest eigenstates of the hopping matrix on the line graph of a cubic lattice with periodic boundary conditions are highly degenerate, they form a lowest flat band. Further, these states are localized. If one considers a repulsive bosonic Hubbard model on this lattice it is possible to construct exact multi-particle ground states simply by putting particles in the localized single particle ground states such that they avoid each other. This can be done up to a certain critical particle number $N_c$. We prove that at this particle number the ground state entropy is subextensive $\\propto N_c^{2/3}$. For lower densities the entropy is extensive. We further show that the problem is related to the number of 4-cycle decompositions of the cubic lattice with periodic boundary conditions.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:22:47Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19703v1",
+        "categories": [
+          "math-ph",
+          "cond-mat.stat-mech",
+          "math.CO"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19702v1",
+      "author": "Umut Kocasari, Simon Giebenhain, Richard Shaw, Matthias Nießner",
+      "title": "Face Anything: 4D Face Reconstruction from Any Image Sequence",
+      "text": "Accurate reconstruction and tracking of dynamic human faces from image sequences is challenging because non-rigid deformations, expression changes, and viewpoint variations occur simultaneously, creating significant ambiguity in geometry and correspondence estimation. We present a unified method for high-fidelity 4D facial reconstruction based on canonical facial point prediction, a representation that assigns each pixel a normalized facial coordinate in a shared canonical space. This formulation transforms dense tracking and dynamic reconstruction into a canonical reconstruction problem, enabling temporally consistent geometry and reliable correspondences within a single feed-forward model. By jointly predicting depth and canonical coordinates, our method enables accurate depth estimation, temporally stable reconstruction, dense 3D geometry, and robust facial point tracking within a single architecture. We implement this formulation using a transformer-based model that jointly predicts depth and canonical facial coordinates, trained using multi-view geometry data that non-rigidly warps into the canonical space. Extensive experiments on image and video benchmarks demonstrate state-of-the-art performance across reconstruction and tracking tasks, achieving approximately 3$\\times$ lower correspondence error and faster inference than prior dynamic reconstruction methods, while improving depth accuracy by 16%. These results highlight canonical facial point prediction as an effective foundation for unified feed-forward 4D facial reconstruction.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:22:39Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19702v1",
+        "categories": [
+          "cs.CV"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19701v1",
+      "author": "Yacine Ali-Haïmoud",
+      "title": "A practical theorem on gravitational-wave background statistics",
+      "text": "Inspiralling supermassive black-hole binaries (SMBHBs) are expected to be the main source of the nanohertz gravitational-wave background (GWB) targeted by pulsar timing arrays (PTAs). We provide a simple and general analytic expression for the probability distribution function (PDF) of the GWB characteristic strain squared $h_c^2$ in the limit of a large but finite effective number of sources, $N$, relevant for the lowest-frequency bands where PTAs are most sensitive. Explicitly, we show that for $N \\gg 1$, the PDF of the rescaled variable $y \\equiv h_c^2/\\overline{h_c^2}$ takes the universal self-similar form $P(y) \\simeq N^{1/3} \\mathcal{P}(N^{1/3} (y -1))$, where $\\mathcal{P}$ is the reflected map-Airy distribution. The effective number of in-band sources $N$ is fully specified by the mean $\\overline{h_c^2}$ and the cubic shot-noise strain scale $\\overline{h_0^3}$, a new summary statistic of the GWB that depends only on the local properties of the SMBHB population. This result is universal: it applies to any population of SMBHBs, regardless of whether they are circular or eccentric, and of the mechanism dominating orbital hardening. We explicitly quantify the accuracy of the large-source-count PDF for a simple but physically realistic SMBHB model, and outline its practical application to PTA data analysis.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:20:51Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19701v1",
+        "categories": [
+          "astro-ph.CO",
+          "gr-qc"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19682v1",
+      "author": "Lluís Torres-Hugas, Jordi Duch, Sergio Gómez, Alex Arenas",
+      "title": "Cycle holonomy induces higher-order constraints and controls remote synchronization transitions via twisted Laplacian spectra",
+      "text": "Higher-order interaction networks are typically modeled using hypergraphs or simplicial complexes, where interactions explicitly involve more than two nodes. Here we demonstrate that effective higher-order dynamical constraints emerge naturally on the 1-skeleton of a graph, provided the interaction carries nontrivial topological structure. We study phase-oscillator dynamics with edge phase lags modeled as a $U(1)$-valued connection. This structure induces a gradient Sakaguchi--Kuramoto-type flow and an associated twisted Laplacian whose spectrum depends on the cohomology class of the connection. We prove that the associated twisted Laplacian admits a zero mode if and only if the connection is cohomologically trivial, that is, when all cycle holonomies vanish. Consequently, synchronization is obstructed not by local pairwise mismatches, but by intrinsic topological frustration on cycles. We derive that the smallest eigenvalue of the twisted Laplacian scales with the magnitude of the holonomy, and its spectral transitions accurately predict the loss of stability of the phase-locked state as frustration is increased. For the specific case of constant phase lag, we analytically derive the critical transition point, $α_c = π/3$ for a pentagonal cycle, which is in quantitative agreement with previously reported numerical thresholds. Our results establish a spectral framework linking dynamical frustration to network cohomology, and show that transitions in remote synchronization are shaped by cycle-level topological constraints.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:02:53Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19682v1",
+        "categories": [
+          "physics.soc-ph",
+          "cond-mat.stat-mech",
+          "nlin.AO"
+        ]
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 458,
+  "fetched_at": "2026-04-22T04:43:17.238778Z"
+}

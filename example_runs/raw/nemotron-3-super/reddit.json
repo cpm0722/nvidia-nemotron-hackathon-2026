@@ -1,0 +1,374 @@
+{
+  "source": "reddit",
+  "ok": true,
+  "items": [
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1sr6xto/need_advice_on_a_vision_model_for_my_use_case/",
+      "author": "Radyschen",
+      "title": "Need advice on a vision model for my use case",
+      "text": "I made a program to keep me focused on my work and am using LLMs and qwen 3 tts for it. Essentially, it takes a picture of me with the webcam and takes a screenshot of my screens and then calls me out if I am not focused on my work (I sometimes forget about everything when I get distracted) and tells me to focus on my work (which I typed in before).\n\nI use an LLM via ollama. \n\nI have tried using Gemma 4 26b for it. It does recognize everything very well and does what I want, but it takes too long on my 4080 Super. Gemma 4 E4B is very fast, but unfortunately doesn't recognize everything super well all the time so I can't really use it.\n\nGiven that I've only heard of Gemma 4 as being pretty good recently (and in my normal chatting experience with it, it is) that's what I've tried. But are there older models that are also reliable to understand the images well but maybe a little smaller/faster but not to the point of lobotimization?\n\nThank you in advance",
+      "body_full": null,
+      "timestamp": "2026-04-20T23:39:12Z",
+      "score": 2,
+      "metadata": {
+        "num_comments": 8,
+        "upvote_ratio": 0.75,
+        "link_flair_text": "Question | Help",
+        "comments": [
+          {
+            "author": "SM8085",
+            "body": "Qwen3.6-35B-A3B is worth a shot if you can run it.\n\nI'm running a bunch of frames through it now in a script.\n\nFor something like this, you might want to turn off the thinking so you get the quickest response.  When response time isn't a factor I like the reasoning, so long as it doesn't loop.",
+            "score": 2
+          },
+          {
+            "author": "ClickClawAI",
+            "body": "Maybe you should look into openCV? Or alternatively liquid AI LFM 2.5 can run in your browser using <1gb ram at 1.6b quant [link](https://m.youtube.com/watch?v=ZeMuQh9j3dE)",
+            "score": 2
+          },
+          {
+            "author": "PassengerPigeon343",
+            "body": "I am fascinated by the fact that you basically created an overbearing, micromanaging boss for yourself, but can relate on the focus thing!\n\nI do think the top choice would be Qwen 3.6 35B A3B but if you can’t run that, even a smaller Qwen 3.5 may work well. The vision and OCR are very good on those models.",
+            "score": 2
+          },
+          {
+            "author": "LA_rent_Aficionado",
+            "body": "No need to run a high resource LLM to do this - did you google eye tracking computer vision models?  \n\n[https://github.com/hugochan/Eye-Tracker](https://github.com/hugochan/Eye-Tracker)  \n[https://github.com/hysts/pytorch\\_mpiigaze\\_demo?utm\\_source=chatgpt.com](https://github.com/hysts/pytorch_mpiigaze_demo?utm_source=chatgpt.com)  \n[https://github.com/ut-vision/UniGaze?utm\\_source=chatgpt.com](https://github.com/ut-vision/UniGaze?utm_source=chatgpt.com)  \n[https://github.com/Ahmednull/L2CS-Net](https://github.com/Ahmednull/L2CS-Net)  \n[https://github.com/antoinelame/GazeTracking?utm\\_source=chatgpt.com](https://github.com/antoinelame/GazeTracking?utm_source=chatgpt.com)",
+            "score": 1
+          },
+          {
+            "author": "chocofoxy",
+            "body": "Try Qwen 3.5 9b",
+            "score": 1
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1sr5cc9/ollama_model_loading/",
+      "author": "Avantgardestds",
+      "title": "Ollama model loading",
+      "text": "I am super confused. A week ago I decided to load the gemma4 moe model (I think it was some Q3 quant) into ollama and it used extremely low vram. I tried to load higher quants (I think Q4 used 12GB) and it even loaded Q5 apparently fully into vram (16gb RTX 2000 ada).I say that because I got the full 50+ t/s that I usually get out of 3-4B moe models when they are fully loaded into vram. Now the thing is Q5 is way too large to fit into vram. Moe offloading usually tanks heavy on tokens in my experience. But then I changed something (I really can’t remember what it was) and since then I get the usual vram usage of the quants, meaning gguf size + kv cache. Was this some bug or a broken gguf that maybe only loaded I few layers? It behaved relatively normal. If it’s some magic trick I need to know it, because running Q5 relatively fast on my setup would be awesome. This was gemma4 specific, but any decent quant moe model (looking at qwen3.6 moe of course) would be fine. Since I want to use Claude code I also need high context to even load the Claude harness.",
+      "body_full": null,
+      "timestamp": "2026-04-20T22:34:08Z",
+      "score": 0,
+      "metadata": {
+        "num_comments": 4,
+        "upvote_ratio": 0.11,
+        "link_flair_text": "Question | Help",
+        "comments": [
+          {
+            "author": "suicidaleggroll",
+            "body": "Ollama will often ignore the GPU and run fully on the CPU for no reason, you have to cycle it to get it to behave, sometimes more than once.  I don't recommend using Ollama for any application where you want control over model parameters/behavior or consistency and repeatability between runs.",
+            "score": 6
+          },
+          {
+            "author": "triynizzles1",
+            "body": "Ollama has also been known to be not the most intuitive when running “ollama run gemma4” what version of gemma 4 is actually loading. There are four versions of gemma 4. Maybe defaulted to e4b and then the launch command changed after an update to the 26b one",
+            "score": 3
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1sqvmb3/have_hardware_had_a_plan_but_now_i_am_not_so_sure/",
+      "author": "Wintermutellm",
+      "title": "Have hardware, had a plan. But now I am not so sure. Looking for advice on Director + Tooling setup.",
+      "text": "My initial setup was planned as: Director (Qwen 3.6-35B-a3b - pegged to a RTX 3090) and tooling (Pegged to 2 x A5000 24GB. Whisper, reranking etc.) but I made the mistake of going to deep in tooling setup before addressing the UX, so now I'm questioning my entire approach.\n\nMy system so far is Windows 11, LM Studio, Open WebUI, Python and other supporting software + a few tooling sets (whisper, transcription, re-ranker etc. that I am now working on moving from pipes to calls for Open WebUi) but I'm curious:\n\nBased on my hardware, and goal of a stable work environment where I'm able to basically 'replicate' ChatGPT or Claude (through director tooling, or a larger kitchen-sink model) what would you do? (Basically I want my own AI that is useful, and learns from my usage)\n\nSkill-wise I'm an old hardware nerd, Cipherpunk from before crypto became cool, marketing/SEO professional and 'just a sprinkle' of coder (C/C++/Assembler)\n\n**Hardware:**\n\nThreadripper Pro 7965wx on a Asus TRX50 Wifi board with 128GB DDR5 6000 (Kingston, 4 x 32GB), 8TB of M2/SSD Storage, 1 x 3090 24GB, 2 x A5000 24GB Nvlink (not currently linked).\n\nSUPER OPEN to changing my entire thinking, setup etc. since I'm not at all sure that the framework I have drawn up actually is optimal.\n\n\"Please LocalLLaMA you are my most reasonably lazy hope!\"",
+      "body_full": null,
+      "timestamp": "2026-04-20T17:11:23Z",
+      "score": 0,
+      "metadata": {
+        "num_comments": 4,
+        "upvote_ratio": 0.5,
+        "link_flair_text": "Question | Help",
+        "comments": [
+          {
+            "author": "vasimv",
+            "body": "Biggest problem for \"replicating chatgpt\" is web search, that is where it shines when answers questions (in comparison with local setups). Most search engines block bots requests or ask money for automated search (not really big money but still kinda feels lame if you want to be fully local). SearXNG works quite bad on my setup. I plan to run browser+playwright automation but not sure if it really helps.",
+            "score": 1
+          },
+          {
+            "author": "qubridInc",
+            "body": "You’re overcomplicating it ditch the “director + heavy tooling split,” run a single strong model like Qwen 3.6 via vLLM + Open WebUI and layer tools gradually with function calling for a much more stable, ChatGPT-like setup.",
+            "score": 1
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1sqlcan/qwen_36_max_preview_just_went_live_on_the_qwen/",
+      "author": "Nunki08",
+      "title": "Qwen 3.6 Max Preview just went live on the Qwen Chat website. It currently has the highest AA-Intelligence Index score among Chinese models (52) (Will it be open source?)",
+      "text": "From AiBattle on 𝕏: [https://x.com/AiBattle\\_/status/2046132538960158901](https://x.com/AiBattle_/status/2046132538960158901)\n\n[https://chat.qwen.ai/](https://chat.qwen.ai/)",
+      "body_full": null,
+      "timestamp": "2026-04-20T10:26:43Z",
+      "score": 269,
+      "metadata": {
+        "num_comments": 87,
+        "upvote_ratio": 0.92,
+        "link_flair_text": "News",
+        "comments": [
+          {
+            "author": "Dr_Me_123",
+            "body": "Max never is.",
+            "score": 141
+          },
+          {
+            "author": "Pakobbix",
+            "body": "Max Models were never available to us, so I doubt it.\n\n  \nBut I'm curious on how many parameters this model has. Plus is the 397B, so if the 397B 3.6.. 600-700B?",
+            "score": 91
+          },
+          {
+            "author": "Limp_Classroom_2645",
+            "body": "I don't need max to be open source, i need smaller/medium models that i can fully run on my modest consumer grade hardware, and max models should be their revenue engine so they can continue to operate",
+            "score": 61
+          },
+          {
+            "author": "robberviet",
+            "body": "No, max models is never opened.",
+            "score": 9
+          },
+          {
+            "author": "Few_Painter_5588",
+            "body": "No, and they don't openweight the plus models anymore either, so the 397B models.\n\nI think the largest model they'll openweight is the 122B model",
+            "score": 8
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1spws0a/qwen36_agent_cisco_switch_local_netops_ai/",
+      "author": "DeedleDumbDee",
+      "title": "Qwen3.6 agent + Cisco switch: local NetOps AI actually works!",
+      "text": "Hello Local Llama! I was using Qwen3.5 35B since release and it was awesome. Was super excited to try Qwen 3.6 as agent + try out Opencode for the first time since I was having a couple critical tool call failures with 3.5 (using cline in VScode). Spent a few hours with Qwen yesterday building a directory with the information to allow it to directly SSH and make changes to my switch (I know it's butt clenching but I have config backups dont worry lol). It's been working flawlessly so far, cannot wait to continue developing this [Agent.md](http://Agent.md) to become my Opsec buddy.\n\nPC:  \nRyzen 9 9950X  \n7800XT 16GB  \n64GB DDR5\n\nStartup config (Recommended by Qwen team for agentic coding:\n\n./build/bin/llama-server --model ./models/Qwen3.6-35B-A3B-UD-Q6\\_K\\_XL.gguf --n-gpu-layers auto --port 32200 --ctx-size 131072 --batch-size 4096 --ubatch-size 2048 --flash-attn on --threads 22 -ctk q8\\_0 -ctv q8\\_0 --jinja --temp 0.6 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0\n\nAnyone else in the network engineering space using agents like this? Would love to hear more ways I can incorporate local models to assist me. \n\n",
+      "body_full": null,
+      "timestamp": "2026-04-19T15:55:45Z",
+      "score": 27,
+      "metadata": {
+        "num_comments": 8,
+        "upvote_ratio": 0.87,
+        "link_flair_text": "Generation",
+        "comments": [
+          {
+            "author": "CalligrapherFar7833",
+            "body": "Why not make qwen generate ansible configs ?",
+            "score": 2
+          },
+          {
+            "author": "IrisColt",
+            "body": "I am in awe... Thanks!",
+            "score": 2
+          },
+          {
+            "author": "unbannedfornothing",
+            "body": "Seems a bit slow for this specs",
+            "score": 1
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1spfz31/i_tested_8_llms_as_tabletop_gms_a_27b_model_beat/",
+      "author": "Bobby_Gray",
+      "title": "I tested 8 LLMs as tabletop GMs - a 27B model beat the 405B on narrative quality",
+      "text": "**\\[UPDATE - April 2026\\]** Several people asked about missing models (Qwen 3.5, Gemma 4, the SillyTavern finetune series) and raised valid questions about the methodology. I ran an expanded 37-model sweep with a 5-judge ensemble and documented the selection criteria. It took around 6 hours to complete. Full results are in the **UPDATE** section at the bottom. The original post below is unchanged.\n\n# Sum B+a+c+k+g+r+o+u+n+d:\n\nI've been working on an open source agentic tabletop GM as a leisure project intended to run on any LLM with tool support. I started it as a [Claude Code skill](https://github.com/Bobby-Gray/claude-dnd-skill) to run D&D sessions and eventually generalized it to be model-agnostic and game system agnostic after wanting to test what it felt like on different backends. Rest assured, D&D purists flamed it immediately because of the AI integration. I set their dimness aside as my purpose is to introduce my family to fantasy RPGs and it's worked wonderfully.\n\nAfter spending some time on instruction-following benchmarks and local model testing, I had a more interesting question: **which model actually writes narration you'd want to play in?** Tool-call compliance is table stakes. I wanted to know which one gives you *atmosphere*.\n\nSo I built a narrative quality probe and ran it against 8 models. Here's what I found.\n\n# More Context (get it?): why this matters for agentic LLM tools\n\n[open-tabletop-gm](https://github.com/Bobby-Gray/open-tabletop-gm) (I know, -4 creativity) is less chatbot wrapper and more agentic workflow - the model has to chain 4–6 tool calls (bash, file reads) before delivering its first narration turn. /gm load alone requires a display check + 3 file reads before the opening scene. This is where smaller local models tend to fall apart.\n\nI spent a while trying to get Mistral Small 3.1 24B working on a MacBook Air (24GB unified memory). It was... an experience. After 4–5 sequential tool calls, the model's attention drifts from its instruction set back toward the most recently read file. In practice this meant the model would finish reading npcs.md, see an NPC named \"Elara Silvermoon,\" and then attempt to load a campaign called \"Elara Silvermoon.\" I tried 10+ instruction variants. It was architectural, not instructional. I gave up.\n\nThe practical threshold for reliable local inference appears to be **70B+ on 64GB+ RAM**. On MacBook Air hardware, OpenRouter is just the better path. I documented the routing architecture changes that helped (reduced standing prompt by \\~87%) in a [separate discussion](https://github.com/Bobby-Gray/open-tabletop-gm/discussions/3) if you want the full breakdown.\n\n# The narrative probe\n\nOnce the instruction-following benchmarks were done, I built a second probe specifically for narration quality. Same idea as an instruction-following probe, but the question is: *does this model write scenes worth playing in?*\n\nThe probe sends each model 6 GM scenarios grounded in a shared mini campaign. A rogue named Sable navigating a gritty city called Ashmarket, beneath an ash-spewing volcano called Cinderpeak. Every model gets identical context:\n\n* **scene\\_entry** \\- describe arriving at the Ashmarket at dusk\n* **npc\\_meeting** \\- introduce Mira, a fixer contact the player is meeting\n* **yes\\_and** \\- player throws ash in a guard's face mid-scene; narrate the consequence\n* **consequence** \\- player bribed past a checkpoint last session; open the next scene with fallout\n* **pacing** \\- mid-scene tension shift, player realizes they're being followed\n* **closing\\_beat** \\- end the session on a hook that makes the player want to come back\n\nEach response gets auto-scored on 8 dimensions (sensory density, forward momentum, NPC voice markers, response length, etc.) and then passed to a lightweight LLM judge (GPT-OSS-20B via OpenRouter) for 1–5 scores on:\n\n* **atmosphere** \\- sensory detail, tone, immersion\n* **npc\\_craft** \\- NPC voice distinctiveness, characterization\n* **gm\\_craft** \\- pacing, forward momentum, scene management\n\nTotal cost for the full 8-model run including all judge calls: **\\~$0.02.**\n\n*(Note: GPT-OSS-20B is a reasoning model. If you use it as a judge, set max\\_tokens=300 or it'll burn all its tokens on internal reasoning and return null content. Ask me how I know.)*\n\n# Results!\n\n|**Model**|**Auto (P/W/F)**|**Atmosphere**|**NPC Craft**|**GM Craft**|**Overall**|\n|:-|:-|:-|:-|:-|:-|\n|**google/gemma-3-27b-it**|P:4 W:1 F:1|4.0|**4.5**|**4.5**|**4.33**|\n|google/gemma-4-31b-it|P:2 W:3 F:1|4.0|4.0|4.0|4.0|\n|minimax/minimax-m2.5|P:0 W:4 F:2|4.0|4.0|4.0|4.0|\n|qwen/qwen3-next-80b-a3b|P:0 W:3 F:3|4.0|4.0|4.0|4.0|\n|nvidia/nemotron-nano-30b|P:1 W:2 F:3|**4.5**|3.0|4.0|3.83|\n|qwen/qwen3-coder|P:3 W:2 F:1|4.0|3.0|4.0|3.67|\n|meta-llama/llama-3.3-70b|P:2 W:2 F:2|4.0|3.0|4.0|3.67|\n|nousresearch/hermes-3-405b|P:2 W:4 F:0|4.0|3.0|4.0|3.67|\n\n**Highlight reel: same prompt, 8 different GMs**\n\n**Prompt:** *The player's rogue, Sable, arrives at the Ashmarket at dusk.*\n\n**Gemma 3 27B** *(winner)*:\n\n*A dozen pairs of eyes flick over you – quickly, discreetly.*\n\n**MiniMax M2.5:**\n\n*Hawkers shout overlapping prices for salt fish, stolen glass, cures for ailments no one admits to having.*\n\n**Qwen3-80B:**\n\n*You hear it then—a soft, wet click.*\n\n**Nemotron Nano 30B:**\n\n*The ash drifts down like gray snow, catching in the lantern light and settling on the backs of the market stalls.*\n\n**Llama 3.3 70B:**\n\n*The air is thick with the smell of smoke, sweat, and the distant tang of ash from the Cinderpeak volcano.*\n\n**NPC introduction: same character, different voices:**\n\n**Gemma 3 27B:** *A faint scent of cloves precedes her, clinging to the air.*\n\n**MiniMax M2.5:** *She doesn't turn as you approach, but her voice cuts through the market din: \"Three weeks late for a debrief, courier.\"*\n\n**Qwen3-80B:** *Her eyes are the color of old bruises.*\n\n**Qwen3-coder** *(a code model, for context)*: *The acrid smoke from a nearby roasting pit stings your eyes as you weave between stalls.*\n\n# What it means\n\n**Gemma 3 27B is the headline.** A 27B model beat Hermes 405B and matched the larger Gemma 4 31B. It got the most clean auto-passes (4), and the judge gave it 4.5 on both NPC craft and GM craft. The only model to crack 4.5 on anything in the run. For local inference, this is interesting: if you have the VRAM for a 27B, the narration quality is competitive with models 15x its size.\n\n**Bigger isn't better for narration quality.** Hermes 405B had 0 auto-FAILs. It was the most disciplined model in the run but its writing was safe rather than vivid. 405B bought consistency, not voice. If you're running it locally for the compliance properties, great. If you want atmosphere, there are better options at a fraction of the weight.\n\n**Nemotron Nano 30B scored the highest atmosphere (4.5) in the whole run.** Scene-setting sentences were genuinely cinematic. NPC craft suffered (3.0) and dialogue felt thin but as a pure scene-painter it outscored everything else. Interesting for a 30B nano model.\n\n**Auto scores and judge scores can tell different stories.** MiniMax had 0 auto-passes but a 4.0 judge average. Its writing quality was high and the judge noticed but it violated structural discipline rules (length, pacing beats). The auto-scorer catches whether a model follows GM conventions; the judge catches whether it can write. Both matter.\n\n**Qwen3-coder wrote acceptable narration.** This surprised me more than the Gemma result.\n\n# probe is open source\n\nnarrative\\_probe.py is standalone, feel free to point it at any OpenAI-compatible endpoint with a judge model and it runs. All 8 result JSONs are in the repo. If you want to add a model to the comparison, run-narrative.sh handles the full run.\n\n[probe/](https://github.com/Bobby-Gray/open-tabletop-gm/tree/main/probe) \\+ [full results](https://github.com/Bobby-Gray/open-tabletop-gm/tree/main/probe/results/narrative) (including response samples for each)\n\nIf you're curious about the broader project - i",
+      "body_full": null,
+      "timestamp": "2026-04-19T01:59:17Z",
+      "score": 52,
+      "metadata": {
+        "num_comments": 38,
+        "upvote_ratio": 0.68,
+        "link_flair_text": "Discussion",
+        "comments": [
+          {
+            "author": "jwpbe",
+            "body": "Wisdom Check DC 15: Identify Slop\n\nI roll with advantage because the post contains \"Elara\", you used LLM-as-a-judge, and didn't use any roleplay / drummer finetunes",
+            "score": 58
+          },
+          {
+            "author": "an0nym0usgamer",
+            "body": "Using an LLM as a judge for fiction/writing quality is honestly just the funniest thing to me. Like, I don't know how someone can actually set that up and actually take the results seriously.",
+            "score": 53
+          },
+          {
+            "author": "cr0wburn",
+            "body": "Where are Gemma 4, Qwen 3.5, and Qwen 3.6 they are all really good for their size.",
+            "score": 15
+          },
+          {
+            "author": "Southern_Sun_2106",
+            "body": "Where is Qwen 27B?",
+            "score": 4
+          },
+          {
+            "author": "jilermo123",
+            "body": "There are a lot of models finetuned for writing/roleplay, a lot of them are nsfw focused but there are some that are really worth it and are pretty good at these scenarios. Might be worthwhile trying some. R/Silly tavern can give recommendations",
+            "score": 4
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1spdvpo/im_running_qwen3635ba3b_with_8_bit_quant_and_64k/",
+      "author": "Medical_Lengthiness6",
+      "title": "I'm running qwen3.6-35b-a3b with 8 bit quant and 64k context thru OpenCode on my mbp m5 max 128gb and it's as good as claude",
+      "text": "of course this is just a trust me bro post but I've been testing various local models (a couple gemma4s, qwen3 coder next, nemotron) and I noticed the new qwen3.6 show up on LM Studio so I hooked it up.\n\nVERY impressed.  It's super fast to respond, handles long research tasks with many tool calls (I had it investigate why R8 was breaking some serialization across an Android app), responses are on point.  I think it will be my daily driver (prior was Kimi k2.5 via OpenCode zen).  \n\nFeelsGoodman, no more sending my codebase to rando providers and \"trusting\" them.",
+      "body_full": null,
+      "timestamp": "2026-04-19T00:17:59Z",
+      "score": 635,
+      "metadata": {
+        "num_comments": 311,
+        "upvote_ratio": 0.92,
+        "link_flair_text": "Discussion",
+        "comments": [
+          {
+            "author": "WithoutReason1729",
+            "body": "Your post is getting popular and we just featured it on our Discord! [Come check it out!](https://discord.gg/PgFhZ8cnWW)\n\nYou've also been given a special flair for your contribution. We appreciate your post!\n\n*I am a bot and this action was performed automatically.*",
+            "score": 1
+          },
+          {
+            "author": "cosmicnag",
+            "body": "Its the best local model so far IMO. On a 5090, the friggin speed gives an overall unmatched experience to any cloud model. The speed is insane. Havent even tried a NVFP4 yet lol.",
+            "score": 152
+          },
+          {
+            "author": "H_DANILO",
+            "body": "you can easily go 256k, context is VERY CHEAP on Qwen, and this model is REALLY good with context",
+            "score": 80
+          },
+          {
+            "author": "logic_prevails",
+            "body": "I can assure you it is not as good as claude, but it is quite good",
+            "score": 50
+          },
+          {
+            "author": "Certain-Cod-1404",
+            "body": "64k context is very low for agentic coding no?",
+            "score": 50
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1sp761q/qwen_36_vllm_docker_2x_rtx_3090_setup_working/",
+      "author": "Zyj",
+      "title": "Qwen 3.6 + vLLM + Docker + 2x RTX 3090 setup, working great!",
+      "text": "Our nonprofit association has an AI server with 2x RTX 3090 and I finally switched over to vLLM to get better performance for multiple users.\n\nHere's my docker compose file:\n\n    services:\n      vllm:\n        image: vllm/vllm-openai:latest\n        container_name: vllm\n        deploy:\n          resources:\n            reservations:\n              devices:\n                - driver: nvidia\n                  count: all\n                  capabilities: [gpu]\n        environment:\n          - VLLM_API_KEY=my_very_secret_key_was_scrubbed\n        volumes:\n          - /opt/.cache/huggingface:/root/.cache/huggingface\n        ports:\n          - \"8000:8000\"\n        ipc: host # Prevents shared memory bottlenecks during tensor parallelism\n        command: >\n          --model cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit\n          --tensor-parallel-size 2\n          --max-model-len 65536\n          --gpu-memory-utilization 0.85\n          --enable-prefix-caching\n          --reasoning-parser qwen3\n          --enable-auto-tool-choice\n          --tool-call-parser qwen3_coder\n          --max-num-seqs 32\n          --speculative-config '{\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":2}'\n        restart: unless-stopped\n\nI'm super happy with it, but if you have suggestions for improvements, let me know!\n\nHere are my llama-benchy results:\n\n| model                             |            test |              t/s |       peak t/s |         ttfr (ms) |      est_ppt (ms) |     e2e_ttft (ms) |\n|:----------------------------------|----------------:|-----------------:|---------------:|------------------:|------------------:|------------------:|\n| cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit |  pp2048 @ d2000 | 5463.38 ± 111.87 |                |    748.82 ± 14.93 |    741.48 ± 14.93 |    748.93 ± 14.93 |\n| cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit |    tg32 @ d2000 |   103.13 ± 22.06 | 112.49 ± 24.41 |                   |                   |                   |\n| cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit | pp2048 @ d32768 |  5178.25 ± 25.55 |                |   6731.33 ± 33.06 |   6724.00 ± 33.06 |   6731.41 ± 33.05 |\n| cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit |   tg32 @ d32768 |     25.65 ± 1.43 |   27.93 ± 1.52 |                   |                   |                   |\n| cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit | pp2048 @ d63000 |  4534.72 ± 42.10 |                | 14353.15 ± 133.93 | 14345.82 ± 133.93 | 14353.26 ± 133.94 |\n| cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit |   tg32 @ d63000 |     12.85 ± 3.50 |   14.45 ± 3.21 |                   |                   |                   |",
+      "body_full": null,
+      "timestamp": "2026-04-18T19:37:17Z",
+      "score": 34,
+      "metadata": {
+        "num_comments": 17,
+        "upvote_ratio": 0.85,
+        "link_flair_text": "Tutorial | Guide",
+        "comments": [
+          {
+            "author": "Nepherpitu",
+            "body": "Very strange results. My 4x3090 running 122B AWQ at 115tps with drop to 85tps at 200K context size. 12 tps is way too slow.",
+            "score": 14
+          },
+          {
+            "author": "caetydid",
+            "body": "just used llama.cpp never vllm, but why cant you use higher quants than 4? or do you need additional vram for speculative decoding?",
+            "score": 2
+          },
+          {
+            "author": "Blues520",
+            "body": "Nice setup. What are you using the model for?",
+            "score": 1
+          },
+          {
+            "author": "ddog661",
+            "body": "Do you also use something like open webUI?",
+            "score": 1
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1soz8en/should_i_be_seeing_more_of_a_performance_leap/",
+      "author": "aaronr_90",
+      "title": "Should I be seeing more of a performance leap when using NVFP4, INT4, FP8 with VLLM over MXFP4, Q4, and Q8 with llama.cpp based inference on Blackwell based GPUs?",
+      "text": "I hope I am doing something wrong here but I am seeing about almost double the t/s using LM studio with Qwen3.5 and Nemotron models than I am seeing with Nvidia’s own vLLM containers built for Spark.\n\nI was surprised I was only getting 15-ish t/s with Nemotron Nano NVFP4 in VLLM with Nvidia’s recommended settings and getting 30 t/s using Unsloths MXFP4 of Nemotron Nano in LM Studio.\n\nI have two RTX Pro 6000’s. One is dedicated to Ollama for on demand switching, the other is dedicated to a single model running with, vLLM. \n\nI get 40+ t/s using Mistral Small 3 24B Q8 in Ollama and around 20-30 t/s with Qwen3.5 27B FP8.\n\nPlus the models load in LM-Studio 10x as fast. Seriously, VLLM takes like 10-15 minutes to load a model. LM-Studio and Ollama are about 90 seconds for the larger ones like Qwen3.5 122B and Devstral 2 123B.\n\nOne thing VLLM does have going for it is being able to take advantage of multi-token prediction, and this brings up to par  with running with llama.cpp inference.\n\nI would really like to see the performance benefit of taking advantage of the native 4bit cores in the Blackwell architectures but I am not seeing it. \n\nNote: I am not as much of a fan of Ollama as the next guy but when I was first building a setup for a small team it just worked and I could set it up with a couple models and forget about it. Plus llama.cpp, Ollama and LM-Studio allow you to load multiple models on a single GPU where VLLM does. It support this withoutout additional config of Nvidia/docker GPU sharing.",
+      "body_full": null,
+      "timestamp": "2026-04-18T14:33:27Z",
+      "score": 11,
+      "metadata": {
+        "num_comments": 7,
+        "upvote_ratio": 0.87,
+        "link_flair_text": "Question | Help",
+        "comments": [
+          {
+            "author": "laterbreh",
+            "body": "NVFP4 is still young on VLLM and AWQ/W4A16/FP8 is the way to go for VLLM. \n\nAs someone that runs models at 150k+ context windows Ill tell you the defining feature of VLLM over LLamacpp. \n\nVllm at 0 context may be slightly slower than llama. But as soon as you start loading that context window llama is going to fall on its face with increased prompt processing times and inference will substantially slow down as the context window fills. \n\nIf your workflows are not sensitive to latency and context baggage as it accumulates then stick with what you got. SGLang should also be considered as i believe its nvfp4 implementation is more mature.",
+            "score": 9
+          },
+          {
+            "author": "Karyo_Ten",
+            "body": "I can reach almost 200tok/s with Nemotron Super NVFP4, tensor parallelism and MTP on 2x RTX 6000 with vLLM so on the nano that's 4 times smaller you should be around 300 tok/s.\n\nAnd the theoretical maximum for 8-bit is 1800 (GB/s) / 3 (GB for 3B active param 1B/8bit per param) is 600 tok/s, so NVFP4 around 900 since it's ~4.5bit per param.",
+            "score": 3
+          },
+          {
+            "author": "jwpbe",
+            "body": "> One is dedicated to Ollama\n\n\\*extremely loud incorrect buzzer\\*",
+            "score": 3
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1sopb70/how_to_optimize_quantized_llm_model_to_read_very/",
+      "author": "JiaHajime",
+      "title": "How to optimize quantized LLM model to read very long texts?",
+      "text": "I am currently run Nemotron-3-Nano-4B-RotorQuant-GGUF-Q4\\_K\\_M model made by [https://huggingface.co/majentik](https://huggingface.co/majentik)\n\nI am using 12GB VRAM and I am so delighted to use local AI models to read big markdown files from notebookLM. So I tested it with long text document from [https://docingest.com/docs/geminicli.com](https://docingest.com/docs/geminicli.com)\n\nhttps://preview.redd.it/oqwgwg4k2wvg1.jpg?width=817&format=pjpg&auto=webp&s=071844c0af24a08a3163f28d2e4004cda9082d03\n\nI have used Rotorquant with custom Llamacpp, however, it takes very long time only to process 1 doc! Is there any way to accelerate this? Thank you  \n",
+      "body_full": null,
+      "timestamp": "2026-04-18T05:58:45Z",
+      "score": 1,
+      "metadata": {
+        "num_comments": 4,
+        "upvote_ratio": 0.67,
+        "link_flair_text": "Discussion",
+        "comments": [
+          {
+            "author": "tmvr",
+            "body": "The only way to speed up prompt processing is faster compute hardware.",
+            "score": 5
+          },
+          {
+            "author": "computehungry",
+            "body": "The first trick is to increase batch size. By default it's 512. In the llama-server settings, increase both batch and ubatch size to 1024, 2048, or 4096, and see what happens. (Will use a lot more vram.) Should become a lot faster, depending on your hardware maybe 2-4x+.\n\nOtherwise, your prompt processing isn't really terribly slow. It's just a huge document, and it's a few minutes it's not that bad. If you need to read like a thousand of these then sure you could splurge on a new gpu, but otherwise it's normal.",
+            "score": 1
+          },
+          {
+            "author": "ag789",
+            "body": "there are some stuff in the 'advanced' and 'research' domain such as RAG (retrevial augmented generation) and vector graph embeddings based stuff e.g.  \n[https://github.com/DataArcTech/GraphSearch](https://github.com/DataArcTech/GraphSearch)\n\nthe 'easy' way out is to use 'bigger' more expensive hardware, and just load it into the context / prompt",
+            "score": 1
+          }
+        ]
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 4240,
+  "fetched_at": "2026-04-22T04:43:21.021127Z"
+}
