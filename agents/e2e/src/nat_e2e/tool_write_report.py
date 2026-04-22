@@ -1,9 +1,12 @@
 """NAT tool: write_report.
 
 Forwards ``{product, run_id, paths}`` to the reporter A2A agent, which reads
-each validated JSON file, synthesizes a markdown report via its LLM, writes
-``runs/{run_id}/report_{product_slug}.md``, and returns the file path. This
-tool simply surfaces that path back to the orchestrator LLM.
+each validated JSON file, synthesizes both a markdown report and a structured
+JSON sidecar via its LLM, writes
+``runs/{run_id}/report_{product_slug}.md`` and
+``runs/{run_id}/report_{product_slug}.json``, and returns a JSON string
+``{"report_md": "<path>", "report_json": "<path>"}``. This tool surfaces that
+payload back to the orchestrator LLM verbatim.
 """
 
 import asyncio
@@ -62,8 +65,9 @@ async def write_report(
     yield FunctionInfo.from_fn(
         fn=run,
         description=(
-            "Ask the reporter agent to synthesize a markdown report for a product "
-            "from its validated evidence file paths. Returns the markdown file path "
-            "(runs/{run_id}/report_{product}.md)."
+            "Ask the reporter agent to synthesize a markdown report and a structured "
+            "JSON sidecar for a product from its validated evidence file paths. "
+            "Returns a JSON string with keys 'report_md' and 'report_json' holding the "
+            "two artifact paths (runs/{run_id}/report_{product}.md and .json)."
         ),
     )

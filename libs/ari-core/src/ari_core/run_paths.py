@@ -11,7 +11,8 @@ Layout::
         query.json                            # {user_query, products}
         raw/{product_slug}/{source}.json      # extractor scrape result
         validated/{product_slug}/{source}.json  # validator filtered result
-        report_{product_slug}.md              # reporter output
+        report_{product_slug}.md              # reporter markdown (humans)
+        report_{product_slug}.json            # reporter structured JSON (frontend)
 
 ``run_id`` is ``YYYYMMDD-HHMMSS-{8-char uuid}`` so that lexicographic ordering
 matches chronological ordering. ``product_slug`` is ``slugify_product`` applied
@@ -111,8 +112,17 @@ def validated_path(
 
 
 def report_path(run_id: str, product: str, root: Path | str | None = None) -> Path:
-    """Return the reporter output path (``report_{product}.md``)."""
+    """Return the reporter markdown output path (``report_{product}.md``)."""
     return run_root(run_id, root) / f"report_{slugify_product(product)}.md"
+
+
+def report_json_path(run_id: str, product: str, root: Path | str | None = None) -> Path:
+    """Return the reporter structured JSON output path (``report_{product}.json``).
+
+    Sibling to ``report_path`` — the reporter writes both files per product.
+    Frontend consumes the JSON; humans read the markdown.
+    """
+    return run_root(run_id, root) / f"report_{slugify_product(product)}.json"
 
 
 def ensure_parent(path: Path) -> Path:

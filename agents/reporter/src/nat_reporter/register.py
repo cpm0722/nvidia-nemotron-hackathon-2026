@@ -10,15 +10,23 @@ Input (A2A message text, JSON)::
 
 The workflow reads each validated ScrapeResult JSON from ``paths``, concatenates
 them as evidence context, invokes the configured LLM (nemotron-3-super) with
-the system prompt, and persists the resulting markdown to
-``runs/{run_id}/report_{product_slug}.md``. The output is the path string.
+the system prompt, then post-processes the LLM output:
+
+1. Strips a leading Nemotron-Super reasoning block that ends with ``</think>``.
+2. Extracts the final ```json`` fenced block (structured report payload).
+3. Writes the markdown portion to ``runs/{run_id}/report_{product_slug}.md``.
+4. Writes the parsed JSON portion to ``runs/{run_id}/report_{product_slug}.json``.
+
+Returns a JSON string ``{"report_md": "<path>", "report_json": "<path>"}``
+so the orchestrator / frontend can locate both artifacts deterministically.
 
 Keeping file I/O inside this workflow (rather than at the orchestrator layer)
-means the reporter's contract to callers is "give me paths, get a path back",
+means the reporter's contract to callers is "give me paths, get paths back",
 which matches the pattern used by the per-source collectors.
 """
 
 import json
+import re
 from collections.abc import AsyncGenerator
 from pathlib import Path
 
@@ -32,7 +40,16 @@ from nat.cli.register_workflow import register_function
 from nat.data_models.component_ref import LLMRef
 from nat.data_models.function import FunctionBaseConfig
 
-from ari_core import report_path, write_text
+from ari_core import report_json_path, report_path, write_json, write_text
+
+# Strip everything up to and including the first </think> tag (Nemotron-Super
+# thinking-mode prefix). Applied at the start of the raw LLM response.
+_THINK_RE = re.compile(r"(?s)^.*?</think>\s*")
+
+# Capture the LAST ```json ... ``` fenced block in the response body. We take
+# the last one so if the model embeds JSON in reasoning text earlier, we still
+# pick up the final payload.
+_JSON_FENCE_RE = re.compile(r"(?s)```json\s*\n(\{.*?\})\s*```")
 
 
 class ReportGeneratorConfig(FunctionBaseConfig, name="report_generator"):
@@ -66,11 +83,43 @@ def _load_evidence(paths: list[str]) -> list[dict]:
     return blobs
 
 
+def _split_report(raw: str) -> tuple[str, dict | None, str | None]:
+    """Split a raw LLM response into (markdown, parsed_json, parse_error).
+
+    1. Drop any leading ``...</think>`` reasoning block.
+    2. Find the last ```json`` fenced block; parse it.
+    3. Markdown = the response with the fenced block stripped (and the think
+       prefix already removed).
+
+    If no JSON fence is present or parsing fails, the parsed JSON is ``None``
+    and an error string is returned; the markdown is still returned so the
+    human-readable artifact is never lost.
+    """
+    cleaned = _THINK_RE.sub("", raw, count=1)
+
+    parsed: dict | None = None
+    parse_error: str | None = None
+    match = None
+    for m in _JSON_FENCE_RE.finditer(cleaned):
+        match = m  # keep iterating so the last match wins
+    if match is None:
+        parse_error = "no fenced json block found"
+        md = cleaned.strip()
+    else:
+        try:
+            parsed = json.loads(match.group(1))
+        except json.JSONDecodeError as exc:
+            parse_error = f"fenced json parse failed: {exc}"
+        md = (cleaned[: match.start()] + cleaned[match.end():]).strip()
+
+    return md, parsed, parse_error
+
+
 @register_function(config_type=ReportGeneratorConfig)
 async def report_generator(
     config: ReportGeneratorConfig, builder: Builder
 ) -> AsyncGenerator[FunctionInfo, None]:
-    """Read validated JSON files, call the LLM, write the markdown report, return its path."""
+    """Read validated JSON files, call the LLM, write markdown + JSON artifacts, return their paths."""
     llm = await builder.get_llm(config.llm_name, wrapper_type=LLMFrameworkEnum.LANGCHAIN)
 
     async def generate(raw_input: str) -> str:
@@ -98,21 +147,47 @@ async def report_generator(
             HumanMessage(content=user_text),
         ]
         response = await llm.ainvoke(messages)
-        text = (
+        raw = (
             response.text()
             if hasattr(response, "text")
             else str(getattr(response, "content", response))
         )
 
-        out_path = report_path(run_id, product)
-        write_text(out_path, text)
-        return str(out_path)
+        md_text, report_obj, parse_error = _split_report(raw)
+
+        md_out = report_path(run_id, product)
+        json_out = report_json_path(run_id, product)
+
+        write_text(md_out, md_text + "\n")
+
+        if report_obj is not None:
+            # Enrich with run-level context the LLM doesn't know so the JSON
+            # file is self-contained for the frontend.
+            report_obj.setdefault("run_id", run_id)
+            write_json(json_out, report_obj)
+        else:
+            # Save a stub JSON so downstream consumers never see a missing file.
+            write_json(
+                json_out,
+                {
+                    "run_id": run_id,
+                    "product": product,
+                    "error": parse_error or "unknown parse error",
+                    "raw_markdown_path": str(md_out),
+                },
+            )
+
+        return json.dumps(
+            {"report_md": str(md_out), "report_json": str(json_out)},
+            ensure_ascii=False,
+        )
 
     yield FunctionInfo.from_fn(
         fn=generate,
         description=(
-            "Read validated evidence JSON files for an AI product, synthesize a markdown "
-            "report via the configured LLM, persist it to runs/{run_id}/report_{product}.md, "
-            "and return the report file path."
+            "Read validated evidence JSON files for one AI product, synthesize a markdown "
+            "report plus a structured JSON sidecar via the configured LLM, persist them "
+            "to runs/{run_id}/report_{product}.md and runs/{run_id}/report_{product}.json, "
+            "and return both paths as a JSON string."
         ),
     )
