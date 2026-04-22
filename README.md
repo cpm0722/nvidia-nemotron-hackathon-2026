@@ -157,7 +157,13 @@ Only the e2e front-end (port `10000`) is published to the host. Intra-stack traf
 
 ### Run the full e2e pipeline manually
 
-Start all agents (each in a separate terminal), then call the e2e agent:
+Each agent script `cd`s into its own agent directory, so without an explicit override every agent would write `runs/` under a different cwd. Export an absolute `ARI_RUNS_ROOT` (pointing at the repo-root `runs/`) in every terminal first so all agents share the same pipeline artefacts:
+
+```bash
+export ARI_RUNS_ROOT="$(git rev-parse --show-toplevel)/runs"
+```
+
+Then start all agents (each in a separate terminal with `ARI_RUNS_ROOT` exported), then call the e2e agent:
 
 ```bash
 # Terminal 1 — query-generator
