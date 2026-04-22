@@ -91,6 +91,28 @@ NAT_UI_STUB=0 ./scripts/run.sh
 
 헤더 배지가 `LIVE`(초록)로 표시되면 실제 orchestrator 파이프라인으로 붙은 것입니다.
 
+### 3) `docker compose` 로 한 번에 기동 (UI 포함 풀스택)
+
+프로젝트 루트에서 `docker compose up -d --build` 를 실행하면 17개 에이전트와 함께
+UI 컨테이너(`ari-ui`)가 같이 뜹니다. UI 는 **공용 에이전트 이미지가 아닌 전용 이미지
+(`ari/nat-ui:latest`, `docker/ui.Dockerfile` 에서 빌드)** 를 사용하며, LIVE 모드가
+기본입니다.
+
+```bash
+# 프로젝트 루트에서
+cp .env.example .env
+docker compose up -d --build
+open http://localhost:8080/        # 호스트 포트는 NAT_UI_HOST_PORT 로 덮어씀 (기본 8080)
+```
+
+compose 가 주입하는 환경 변수:
+
+- `NAT_UI_HOST=0.0.0.0` (컨테이너 외부 노출을 위해 필수)
+- `NAT_UI_PORT=8080`
+- `NAT_UI_STUB=0`
+- `NAT_UI_ORCHESTRATOR_URL=http://orchestrator:10000` (ari-net DNS)
+- `ARI_RUNS_ROOT=/app/runs` (`./runs` bind-mount 과 매칭)
+
 ### 환경 변수
 
 | 이름 | 기본값 | 설명 |

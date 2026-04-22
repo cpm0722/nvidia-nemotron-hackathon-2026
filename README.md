@@ -134,15 +134,18 @@ No API key is required — set `api_key: empty` in `config.yml`.
 
 ### Run via `docker compose` (recommended)
 
-Brings up all 17 A2A agents (7 extractors + 7 validators + query-generator + reporter + orchestrator) in the correct dependency order from a single shared image.
+Brings up all 17 A2A agents (7 extractors + 7 validators + query-generator + reporter + orchestrator) plus the browser chat UI in the correct dependency order. The agent stack shares one image; the UI is built from a **separate, minimal image** (`docker/ui.Dockerfile` → `ari/nat-ui:latest`) so it stays small and rebuilds quickly.
 
 ```bash
 cp .env.example .env             # edit model endpoints if yours differ
-docker compose up -d --build     # first run builds the shared image
+docker compose up -d --build     # first run builds both images
 docker compose ps                # wait until every service is 'healthy'
 curl http://localhost:10000/.well-known/agent-card.json  # orchestrator is up
 
-# send a query
+# open the chat UI in a browser
+open http://localhost:8080/
+
+# or send a query over A2A directly
 cd agents/orchestrator && ./scripts/a2a_client.sh "GPT5와 Gemma4 비교해줘"
 ```
 
@@ -152,9 +155,10 @@ Startup order is enforced by `depends_on: condition: service_healthy`:
 L1: 7 validators + query-generator + reporter   (talk to Brev NIM only)
 L2: 7 extractors                                  (each depends on its own validator)
 L3: orchestrator                                  (depends on every L1/L2 service)
+L4: ui                                            (depends on orchestrator; standalone image)
 ```
 
-Only the orchestrator front-end (port `10000`) is published to the host. Intra-stack traffic stays on the `ari-net` bridge via compose DNS (`http://arcalive-validator:10020`, etc.). Override the host port with `ORCHESTRATOR_HOST_PORT` in `.env`.
+Two host ports are published: the orchestrator A2A front-end (`10000`) and the chat UI (`8080`). Everything else stays on the `ari-net` bridge via compose DNS (`http://arcalive-validator:10020`, `http://orchestrator:10000`, etc.). Override host ports with `ORCHESTRATOR_HOST_PORT` and `NAT_UI_HOST_PORT` in `.env`.
 
 #### Deploy a subset of collectors
 
@@ -357,11 +361,12 @@ nvidia-nemotron-hackathon-2026/
 │   ├── ari-core/                               # Shared schemas + a2a_client + run_paths (file-layout helpers)
 │   └── validator-core/                         # Shared validator A2A client helper used by every extractor
 ├── runs/                                       # Per-run artefacts: query.json, raw/, validated/, report_*.md (gitignored, shared volume in Docker)
-├── docker/                                     # Shared image for all 17 A2A agents
-│   ├── Dockerfile                              # uv-workspace install; entrypoint reads CONFIG_FILE
-│   └── entrypoint.sh                           # cd to agent dir + `nat a2a serve`
-├── docker-compose.yml                          # 17 services, 3-layer depends_on graph, healthchecks, shared runs/ volume
-├── .env.example                                # Brev model endpoints + ORCHESTRATOR_HOST_PORT template
+├── docker/                                     # Container images
+│   ├── Dockerfile                              # Shared agent image (uv-workspace install; CONFIG_FILE selects the agent)
+│   ├── entrypoint.sh                           # Agent entrypoint: cd to agent dir + `nat a2a serve`
+│   └── ui.Dockerfile                           # Standalone UI image (FastAPI + uvicorn + httpx only)
+├── docker-compose.yml                          # 18 services (17 agents + ui), 4-layer depends_on graph, healthchecks, shared runs/ volume
+├── .env.example                                # Brev model endpoints + host-port overrides (ORCHESTRATOR_HOST_PORT, NAT_UI_HOST_PORT)
 ├── docs/                                       # Internal reference documents
 ├── task-histories/                             # Branch plans and completion reports (gitignored)
 ├── pyproject.toml                              # uv workspace root (14 collector subpackages + orchestrator/qgen/reporter)
