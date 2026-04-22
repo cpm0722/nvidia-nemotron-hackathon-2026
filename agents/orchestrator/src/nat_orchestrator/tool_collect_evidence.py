@@ -12,7 +12,7 @@ does not stop a run.
 
 ``collector_urls`` is a ``name -> url`` map of every known collector, while
 ``enabled_collectors`` selects the subset to call at runtime. This lets
-docker compose ``profiles`` and the e2e agent share a single list so a
+docker compose ``profiles`` and the orchestrator agent share a single list so a
 deploy-time subset (e.g. ``ENABLED_COLLECTORS=arcalive,geeknews``) only
 starts those collectors *and* only routes evidence calls to them.
 """

@@ -6,11 +6,11 @@ requires = ["setuptools>=64"]
 where = ["src"]
 
 [project]
-name = "nat_e2e"
+name = "nat_orchestrator"
 version = "0.1.0"
 requires-python = ">=3.11,<3.14"
 description = "NAT A2A orchestration agent: runs the full query-generator → extractors → reporter pipeline"
-keywords = ["ai", "agents", "e2e", "orchestration", "nat", "a2a"]
+keywords = ["ai", "agents", "orchestration", "nat", "a2a"]
 classifiers = ["Programming Language :: Python"]
 dependencies = [
     "nvidia-nat[a2a,langchain]",
@@ -25,7 +25,7 @@ ari_core = { path = "../../libs/ari-core", editable = true }
 test = ["pytest>=8.0"]
 
 [project.entry-points."nat.components"]
-nat_e2e = "nat_e2e.register"
+nat_orchestrator = "nat_orchestrator.register"
 
 [tool.ruff]
 line-length = 100
