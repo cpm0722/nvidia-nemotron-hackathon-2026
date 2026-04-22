@@ -159,59 +159,8 @@
 
   marked.setOptions({ gfm: true, breaks: false });
 
-  const RUN_ID_RE = /^\d{8}-\d{6}-[0-9a-f]{8}$/;
-
   function render(text) {
     return DOMPurify.sanitize(marked.parse(text ?? ""));
-  }
-
-  // Escape parens/backslashes for markdown URL destinations, and quotes for the
-  // title string inside `"..."`.
-  function escapeMdUrl(s) {
-    return String(s).replace(/[\\()]/g, (c) => "\\" + c);
-  }
-  function escapeMdTitle(s) {
-    return String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  }
-
-  // Turn 【N】 / [^N] markers into markdown links before parsing, using the
-  // citation URL. Code-block contents are untouched because this runs on the
-  // raw markdown and marked itself preserves fenced/indented blocks verbatim.
-  function linkifyCitations(md, citations) {
-    if (!citations || citations.length === 0) return md;
-    const cmap = {};
-    citations.forEach((c) => {
-      if (c && typeof c.id === "number" && c.url) cmap[c.id] = c;
-    });
-    const replace = (match, id, openCh, closeCh) => {
-      const c = cmap[parseInt(id, 10)];
-      if (!c) return match;
-      const title = c.quote || c.title || c.url;
-      return `[${openCh}${id}${closeCh}](${escapeMdUrl(c.url)} "${escapeMdTitle(title)}")`;
-    };
-    return md
-      .replace(/【(\d+)】/g, (m, id) => replace(m, id, "【", "】"))
-      .replace(/\[\^(\d+)\]/g, (m, id) => replace(m, id, "[", "]"));
-  }
-
-  function renderProduct(product, isFirst) {
-    const linked = linkifyCitations(product.markdown || "", product.citations || []);
-    let html = marked.parse(linked);
-    // Open citation/source links in a new tab.
-    html = html.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ');
-    const clean = DOMPurify.sanitize(html, { ADD_ATTR: ["target"] });
-    return (isFirst ? "" : '<hr class="product-divider">') + clean;
-  }
-
-  function renderRun(run) {
-    const products = Array.isArray(run?.products) ? run.products : [];
-    return products.map((p, i) => renderProduct(p, i === 0)).join("");
-  }
-
-  async function fetchRun(runId) {
-    const res = await fetch(`/api/runs/${encodeURIComponent(runId)}`);
-    if (!res.ok) throw new Error(`GET /api/runs/${runId} failed: ${res.status}`);
-    return await res.json();
   }
 
   function scrollToBottom() {
@@ -423,7 +372,7 @@
     meta.innerHTML = `<span class="spinner"></span>${label} running… (${doneCount}/${agents.length})`;
   }
 
-  function setAssistantDone(el, contentHtml, reportName) {
+  function setAssistantDone(el, markdown, reportName) {
     el.classList.remove("error");
     // Hide internal file extension from the user-facing label.
     const cleanName = reportName
@@ -437,7 +386,7 @@
     if (agents) agents.classList.add("is-hidden");
     const bubble = el.querySelector(".bubble");
     bubble.classList.remove("hidden");
-    bubble.innerHTML = contentHtml;
+    bubble.innerHTML = render(markdown);
     scrollToBottom();
   }
 
@@ -540,9 +489,9 @@
     const bubble = el.querySelector(".bubble");
 
     try {
-      const run = await fetchRun(item.run_id);
+      const markdown = await fetchReport(item.run_id);
       bubble.classList.remove("hidden");
-      bubble.innerHTML = renderRun(run);
+      bubble.innerHTML = render(markdown);
     } catch (err) {
       el.classList.add("error");
       bubble.classList.remove("hidden");
@@ -621,15 +570,8 @@
           updateMeta(pendingEl, data.agents, data.status);
         }
       });
-      let contentHtml;
-      if (RUN_ID_RE.test(status.report_name)) {
-        const run = await fetchRun(status.report_name);
-        contentHtml = renderRun(run);
-      } else {
-        const markdown = await fetchReport(status.report_name);
-        contentHtml = render(markdown);
-      }
-      setAssistantDone(pendingEl, contentHtml, status.report_name);
+      const markdown = await fetchReport(status.report_name);
+      setAssistantDone(pendingEl, markdown, status.report_name);
       fetchHistory();
     } catch (err) {
       setAssistantError(pendingEl, String(err.message || err));
