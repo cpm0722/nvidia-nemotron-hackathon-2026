@@ -34,10 +34,8 @@ from pydantic import BaseModel
 JobStatus = Literal["pending", "done", "error"]
 AgentStatus = Literal["pending", "working", "done", "error"]
 
-# Fixed agent list rendered in the UI. Order matches the pipeline flow:
-# query-generator → 7 parallel collectors → reporter.
-AGENTS: list[tuple[str, str]] = [
-    ("query-generator", "Query Generator"),
+# Phase 2 sources, each of which runs a collect → validate sub-pipeline.
+SOURCES: list[tuple[str, str]] = [
     ("arcalive", "ArcaLive"),
     ("arxiv", "arXiv"),
     ("benchmark", "Benchmark"),
@@ -45,14 +43,38 @@ AGENTS: list[tuple[str, str]] = [
     ("lobsters", "Lobsters"),
     ("openai", "OpenAI Blog"),
     ("reddit", "Reddit"),
-    ("reporter", "Reporter"),
 ]
 
-# Phase 2 collector IDs — driven by on-disk <agent_id>.md files in LIVE mode.
-COLLECTOR_IDS: list[str] = [
-    "arcalive", "arxiv", "benchmark", "geeknews",
-    "lobsters", "openai", "reddit",
+# Sub-stages inside each source (order is meaningful — collect runs first).
+STAGES: list[tuple[str, str]] = [
+    ("collect", "collect"),
+    ("validate", "validate"),
 ]
+
+SOURCE_IDS: list[str] = [sid for sid, _ in SOURCES]
+
+
+def _collector_pill_ids() -> list[tuple[str, str]]:
+    """(pill_id, label) for every collect/validate pill under phase 2.
+
+    Label is just the stage name ("collect"/"validate") — the source name is
+    rendered by the frontend as the source card header, so we avoid duplicating
+    it in the pill itself.
+    """
+    return [
+        (f"{sid}-{stage_id}", stage_label)
+        for sid, _ in SOURCES
+        for stage_id, stage_label in STAGES
+    ]
+
+
+# Fixed agent list rendered in the UI. Order matches the pipeline flow:
+# query-generator → 7 sources × (collect, validate) → reporter.
+AGENTS: list[tuple[str, str]] = (
+    [("query-generator", "Query Generator")]
+    + _collector_pill_ids()
+    + [("reporter", "Reporter")]
+)
 
 STUB_AGENT_MAX_SECONDS = float(os.environ.get("NAT_UI_STUB_AGENT_MAX", "10"))
 # Query Generator is animated as a fixed visual delay — it never produces a
@@ -174,22 +196,28 @@ def _stub_report(query: str) -> str:
 
 
 async def _run_stub(job: Job) -> str:
-    """Purely visual run: phase 1 (5s) → phase 2 (parallel random) → phase 3 (random)."""
+    """Purely visual run: phase 1 (5s) → phase 2 (per-source collect→validate) → phase 3."""
     # Phase 1 — query-generator fixed visual delay.
     await asyncio.sleep(QUERY_GEN_VISUAL_DELAY_SECONDS)
     job.agents["query-generator"] = "done"
 
-    # Phase 2 — collectors start in parallel, each random 0–STUB_AGENT_MAX_SECONDS.
-    for aid in COLLECTOR_IDS:
-        job.agents[aid] = "working"
+    # Phase 2 — each source runs collect → validate sequentially; all 7 sources
+    # start their collect stages in parallel.
+    for sid in SOURCE_IDS:
+        job.agents[f"{sid}-collect"] = "working"
 
-    async def _stub_collector(aid: str) -> None:
+    async def _stub_source(sid: str) -> None:
+        collect_key = f"{sid}-collect"
+        validate_key = f"{sid}-validate"
         await asyncio.sleep(random.uniform(0.0, STUB_AGENT_MAX_SECONDS))
-        job.agents[aid] = "done"
+        job.agents[collect_key] = "done"
+        job.agents[validate_key] = "working"
+        await asyncio.sleep(random.uniform(0.0, STUB_AGENT_MAX_SECONDS))
+        job.agents[validate_key] = "done"
 
-    await asyncio.gather(*[_stub_collector(aid) for aid in COLLECTOR_IDS])
+    await asyncio.gather(*[_stub_source(sid) for sid in SOURCE_IDS])
 
-    # Phase 3 — reporter starts only after every collector is done.
+    # Phase 3 — reporter starts only after every source finishes validate.
     job.agents["reporter"] = "working"
     await asyncio.sleep(random.uniform(0.0, STUB_AGENT_MAX_SECONDS))
     job.agents["reporter"] = "done"
@@ -200,28 +228,52 @@ async def _run_stub(job: Job) -> str:
 async def _animate_phases(job: Job, work_dir: Path) -> None:
     """Drive the phased pill transitions while the real e2e call is in flight.
 
-    Phase 1 — sleep QUERY_GEN_VISUAL_DELAY_SECONDS, then flip query-generator
-              to done (Query Generator never writes a .md — it's visual only).
-    Phase 2 — flip all collectors to working, then poll work_dir for each
-              <collector>.md to flip them individually to done.
-    Phase 3 — once every collector is done, flip reporter to working and poll
-              for reporter.md.
+    Phase 1 — sleep QUERY_GEN_VISUAL_DELAY_SECONDS then flip query-generator to
+              done (Query Generator never writes a file — it's visual only).
+    Phase 2 — for every source, start its collect pill as working. As
+              <source>-collect.md appears, flip collect to done and promote
+              validate to working. As <source>-validate.md appears, flip
+              validate to done. All sources run in parallel.
+    Phase 3 — once every source's validate is done, flip reporter to working
+              and poll for reporter.md.
     """
     # Phase 1
     await asyncio.sleep(QUERY_GEN_VISUAL_DELAY_SECONDS)
     if job.agents.get("query-generator") == "working":
         job.agents["query-generator"] = "done"
 
-    # Phase 2 — collectors
-    for aid in COLLECTOR_IDS:
-        if job.agents.get(aid) == "pending":
-            job.agents[aid] = "working"
+    # Phase 2 — start every source's collect stage; validate stays pending.
+    for sid in SOURCE_IDS:
+        if job.agents.get(f"{sid}-collect") == "pending":
+            job.agents[f"{sid}-collect"] = "working"
 
     while True:
-        for aid in COLLECTOR_IDS:
-            if job.agents.get(aid) == "working" and (work_dir / f"{aid}.md").exists():
-                job.agents[aid] = "done"
-        if all(job.agents.get(aid) == "done" for aid in COLLECTOR_IDS):
+        for sid in SOURCE_IDS:
+            collect_key = f"{sid}-collect"
+            validate_key = f"{sid}-validate"
+            collect_file = work_dir / f"{collect_key}.md"
+            validate_file = work_dir / f"{validate_key}.md"
+
+            # Collect: mark done on file appearance, promote validate to working.
+            if job.agents.get(collect_key) != "done" and collect_file.exists():
+                job.agents[collect_key] = "done"
+                if job.agents.get(validate_key) == "pending":
+                    job.agents[validate_key] = "working"
+
+            # Validate: mark done on file appearance (independent of collect
+            # state so a race where validate lands first still resolves).
+            if job.agents.get(validate_key) != "done" and validate_file.exists():
+                job.agents[validate_key] = "done"
+                # Cascade: if collect somehow missed its file, promote anyway.
+                if job.agents.get(collect_key) != "done":
+                    job.agents[collect_key] = "done"
+
+        all_done = all(
+            job.agents.get(f"{sid}-collect") == "done"
+            and job.agents.get(f"{sid}-validate") == "done"
+            for sid in SOURCE_IDS
+        )
+        if all_done:
             break
         await asyncio.sleep(0.5)
 

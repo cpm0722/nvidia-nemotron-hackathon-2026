@@ -492,6 +492,87 @@ body {
   gap: 6px;
 }
 
+/* ── per-source mini-pipeline grid (phase 2 only) ──────────────────── */
+
+.sources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.source-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 0;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+
+/* Highlight the card while either of its stages is working. */
+.source-card:has(.agent-pill[data-status="working"]) {
+  border-color: rgba(118, 185, 0, 0.45);
+}
+
+/* Dim the card once both stages are done, to let the active sources stand out. */
+.source-card:has(.agent-pill[data-status="done"]:nth-child(3)):not(:has([data-status="working"])):not(:has([data-status="pending"])) {
+  opacity: 0.8;
+}
+
+.source-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.source-stages {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.stage-arrow {
+  color: var(--border);
+  font-size: 13px;
+  line-height: 1;
+  flex: 0 0 auto;
+  transition: color 0.25s ease;
+}
+
+/* When the preceding stage is done, arrow turns green. */
+.source-stages .agent-pill[data-status="done"] + .stage-arrow {
+  color: var(--accent);
+}
+
+/* Stage pill — compact variant. */
+.stage-pill {
+  padding: 3px 8px;
+  font-size: 11px;
+  gap: 5px;
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
+}
+
+.stage-pill .agent-indicator {
+  width: 8px;
+  height: 8px;
+}
+
+.stage-pill .agent-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── connector (vertical) ─────────────────────────────────────────── */
 
 .phase-arrow {
