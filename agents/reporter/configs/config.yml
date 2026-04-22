@@ -16,6 +16,6 @@ llms:
     max_tokens: 8192
 
 workflow:
-  _type: chat_completion
+  _type: report_generator
   llm_name: primary_llm
   system_prompt: file://../prompts/system_prompt.txt
