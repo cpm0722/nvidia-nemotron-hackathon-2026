@@ -8,7 +8,7 @@ This directory contains all agents in the pipeline. Each agent is an independent
 user query
     │
     ▼
-e2e (orchestrator, generates run_id)
+orchestrator (generates run_id)
     │
     ▼
 query-generator  ──▶  products.json
@@ -27,14 +27,14 @@ reporter (Nemotron-Super)
     per-product loop → report.md + report.json
 ```
 
-Agents: `e2e`, `query-generator`, `reporter`, and `collectors/{arcalive,arxiv,benchmark,geeknews,lobsters,openai,reddit}/{extractor,validator}` — 17 A2A services in total.
+Agents: `orchestrator`, `query-generator`, `reporter`, and `collectors/{arcalive,arxiv,benchmark,geeknews,lobsters,openai,reddit}/{extractor,validator}` — 17 A2A services in total.
 
 ## Standard Directory Structure
 
 Collectors are nested under `agents/collectors/{source}/`; orchestrator and top-level agents sit directly under `agents/`. Layout per agent:
 
 ```
-agents/{agent-name}/                     # e.g. agents/e2e, agents/reporter
+agents/{agent-name}/                     # e.g. agents/orchestrator, agents/reporter
   or
 agents/collectors/{source}/{extractor|validator}/
 ├── configs/
@@ -58,7 +58,7 @@ agents/collectors/{source}/{extractor|validator}/
 └── pyproject.toml
 ```
 
-Extractors do not invoke an LLM, so they have no `prompts/` directory and register a custom Python function as their `workflow._type`. Validators, reporter, query-generator, and e2e all consume `prompts/system_prompt.txt`.
+Extractors do not invoke an LLM, so they have no `prompts/` directory and register a custom Python function as their `workflow._type`. Validators, reporter, query-generator, and orchestrator all consume `prompts/system_prompt.txt`.
 
 ## pyproject.toml Conventions
 
@@ -133,7 +133,7 @@ llms:
     max_tokens: 8192
 
 workflow:
-  _type: chat_completion                  # reporter/validator: chat_completion; qgen/e2e: react_agent, etc.
+  _type: chat_completion                  # reporter/validator: chat_completion; qgen/orchestrator: react_agent, etc.
   llm_name: primary_llm
   system_prompt: file://../prompts/system_prompt.txt
 ```
@@ -144,7 +144,7 @@ Brev endpoints and API keys are injected via env vars (`SUPER_MODEL_BASE_URL`, `
 
 | Agent type | Model | Brev endpoint |
 |---|---|---|
-| e2e (orchestrator) | Nemotron-Super (react_agent) | Super |
+| orchestrator | Nemotron-Super (react_agent) | Super |
 | query-generator | `nvidia/nemotron-3-nano-30b-a3b` | Nano |
 | collectors/{source}/extractor | — (no LLM; scrape + A2A call only) | — |
 | collectors/{source}/validator | `nvidia/nemotron-3-super-120b-a12b` | Super |
@@ -182,7 +182,7 @@ curl -s http://localhost:10021/.well-known/agent.json | jq .
 
 | Agent | Role | Source / purpose | Port |
 |---|---|---|---|
-| `e2e` | orchestrator | allocates run_id, drives the whole pipeline | 10000 |
+| `orchestrator` | orchestrator | allocates run_id, drives the whole pipeline | 10000 |
 | `query-generator` | qgen | user query → product list | 10001 |
 | `reporter` | reporter | per-product report generation | 10002 |
 | `collectors/arcalive/extractor` | extractor | arca.live (Korean community) | 10010 |

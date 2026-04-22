@@ -4,11 +4,11 @@
 > 공식 벤치마크와 사용자 반응을 빠르게 브리핑해주는 채팅 UI.
 > 이름의 `NeMo` 는 백본인 Nemotron 에서 따왔고, 그래서 브랜드 컬러도 NVIDIA 그린입니다.
 
-브라우저 기반의 간단한 채팅 UI 로, 사용자 질의를 e2e 에이전트(port 10000)에
+브라우저 기반의 간단한 채팅 UI 로, 사용자 질의를 orchestrator 에이전트(port 10000)에
 전달하고 최종 마크다운 리포트를 받아서 화면에 렌더링합니다.
 
 > **작업 상태**: UI 기반(프레임) 작업만 먼저 완료된 상태입니다.
-> e2e 파이프라인이 아직 작업 중인 동안에도 UI를 독립적으로 개발/테스트할 수
+> orchestrator 파이프라인이 아직 작업 중인 동안에도 UI를 독립적으로 개발/테스트할 수
 > 있도록 **STUB 모드**를 기본값으로 두었습니다. 다른 에이전트 개발이 끝나면
 > `NAT_UI_STUB=0`으로 전환하기만 하면 곧바로 연동됩니다.
 
@@ -29,18 +29,18 @@
 │  nat_ui.server                                                   │
 │    job 큐잉 + 비동기 실행                                        │
 │    ├─ STUB 모드: 샘플 마크다운을 reports/ 에 기록                │
-│    └─ LIVE 모드: A2A v0.3 message/send → e2e(10000) 호출         │
+│    └─ LIVE 모드: A2A v0.3 message/send → orchestrator(10000) 호출         │
 │                   결과 마크다운을 reports/*.report.md 로 저장    │
 └────────────┬─────────────────────────────────────────────────────┘
              │ (LIVE 모드에서만)
              ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│  agents/e2e A2A 서버 (port 10000)                                │
+│  agents/orchestrator A2A 서버 (port 10000)                                │
 │    query-generator → collectors × N → reporter                   │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-비동기 폴링 구조를 택한 이유: e2e 파이프라인은 수 분이 걸릴 수 있어서 HTTP
+비동기 폴링 구조를 택한 이유: orchestrator 파이프라인은 수 분이 걸릴 수 있어서 HTTP
 동기 응답으로 받기엔 부적합합니다. 클라이언트가 `job_id`로 상태를 주기적으로
 확인하고, 완료되면 파일을 읽어오는 방식이 가장 단순/안정적입니다.
 
@@ -79,17 +79,17 @@ cd ui
 마크다운이 생성되어 화면에 렌더링됩니다. 헤더 오른쪽 배지가 `STUB`으로
 표시됩니다.
 
-### 2) LIVE 모드 (실제 e2e 에이전트 연동)
+### 2) LIVE 모드 (실제 orchestrator 에이전트 연동)
 
 먼저 프로젝트 루트 README의 순서대로 query-generator, 모든 collector/validator,
-reporter, e2e 에이전트를 각각 띄운 뒤:
+reporter, orchestrator 에이전트를 각각 띄운 뒤:
 
 ```bash
 cd ui
 NAT_UI_STUB=0 ./scripts/run.sh
 ```
 
-헤더 배지가 `LIVE`(초록)로 표시되면 실제 e2e 파이프라인으로 붙은 것입니다.
+헤더 배지가 `LIVE`(초록)로 표시되면 실제 orchestrator 파이프라인으로 붙은 것입니다.
 
 ### 환경 변수
 
@@ -98,8 +98,8 @@ NAT_UI_STUB=0 ./scripts/run.sh
 | `NAT_UI_HOST` | `127.0.0.1` | 바인드 주소 |
 | `NAT_UI_PORT` | `8080` | 바인드 포트 |
 | `NAT_UI_STUB` | `1` | `1` = STUB, `0` = LIVE |
-| `NAT_UI_E2E_URL` | `http://localhost:10000` | e2e A2A 서버 URL |
-| `NAT_UI_E2E_TIMEOUT` | `600` | A2A 호출 타임아웃(초) |
+| `NAT_UI_ORCHESTRATOR_URL` | `http://localhost:10000` | orchestrator A2A 서버 URL |
+| `NAT_UI_ORCHESTRATOR_TIMEOUT` | `600` | A2A 호출 타임아웃(초) |
 | `NAT_UI_REPORTS_DIR` | `ui/reports/` | 마크다운 저장 디렉토리 |
 | `NAT_UI_STUB_AGENT_MAX` | `10` | collector / reporter 의 최대 대기 시간(초) — STUB 모드에서만 사용 |
 | `NAT_UI_QUERY_GEN_DELAY` | `5` | Query Generator phase 의 시각적 고정 지연(초) — STUB/LIVE 공통 |
@@ -118,7 +118,7 @@ NAT_UI_STUB=0 ./scripts/run.sh
 { "job_id": "6f…" }
 ```
 
-즉시 `job_id`를 반환하고 백그라운드에서 e2e 호출이 진행됩니다.
+즉시 `job_id`를 반환하고 백그라운드에서 orchestrator 호출이 진행됩니다.
 
 ### `GET /api/chat/{job_id}`
 
@@ -149,7 +149,7 @@ NAT_UI_STUB=0 ./scripts/run.sh
 // error — 실패 시점에 working 이었던 에이전트들은 error 로 전환된다
 { "job_id": "6f…", "status": "error", "agents": [ ... ],
   "report_name": null,
-  "error": "RuntimeError: Empty response from e2e agent" }
+  "error": "RuntimeError: Empty response from orchestrator agent" }
 ```
 
 ### `GET /api/reports/{name}`
@@ -159,7 +159,7 @@ NAT_UI_STUB=0 ./scripts/run.sh
 
 ### `GET /api/config`
 
-현재 모드(stub/live)와 e2e URL, reports 디렉토리 경로를 반환합니다 (UI
+현재 모드(stub/live)와 orchestrator URL, reports 디렉토리 경로를 반환합니다 (UI
 헤더 배지에서 사용).
 
 ---
@@ -241,7 +241,7 @@ collect → validate 사이 화살표도 그린으로 바뀝니다.
 
 ### LIVE 모드 — 파일 기반 진행 표시 (계약)
 
-LIVE 모드에서는 UI 가 실제 e2e A2A 호출과 **phase 애니메이션**을 병렬로
+LIVE 모드에서는 UI 가 실제 orchestrator A2A 호출과 **phase 애니메이션**을 병렬로
 돌립니다. Phase 1 은 고정 5초 타이머고, Phase 2/3 는 아래 파일 신호로
 진행됩니다. 계약만 맞추면 자동으로 켜집니다.
 
@@ -256,7 +256,7 @@ ${NAT_UI_REPORTS_DIR}/<job_id>/
 `job_id` 는 UI 가 발급하는 UUID v4 입니다. 기본 `NAT_UI_REPORTS_DIR` 은
 `ui/reports/` 이므로, 예) `ui/reports/6f2c…/`.
 
-#### 2) A2A 메시지 envelope (UI → e2e)
+#### 2) A2A 메시지 envelope (UI → orchestrator)
 
 기존처럼 plain text 로 보내지 않고, **JSON 한 덩어리**를 A2A `text` part 에
 실어 보냅니다:
@@ -269,12 +269,12 @@ ${NAT_UI_REPORTS_DIR}/<job_id>/
 }
 ```
 
-e2e 쪽에서는 수신한 텍스트를 **우선 JSON 으로 파싱 시도**하고, 파싱되면
+orchestrator 쪽에서는 수신한 텍스트를 **우선 JSON 으로 파싱 시도**하고, 파싱되면
 envelope 으로 처리 / 실패하면 (예: 직접 `a2a_client.sh "<query>"` 로 테스트
 할 때) 그대로 `query` 로 취급해 주세요. 그래야 UI 없이 CLI 로 돌리는 기존
 플로우도 유지됩니다.
 
-e2e 는 `work_dir` 을 모든 하위 에이전트에게 전달해서 각자 결과 파일을
+orchestrator 는 `work_dir` 을 모든 하위 에이전트에게 전달해서 각자 결과 파일을
 거기에 쓰도록 합니다.
 
 #### 3) stage 별 결과 파일 — **Query Generator 는 쓰지 않습니다**
@@ -298,7 +298,7 @@ e2e 는 `work_dir` 을 모든 하위 에이전트에게 전달해서 각자 결�
 
 > **Query Generator 는 파일을 만들지 않습니다.** UI 가 Phase 1 을 고정
 > `NAT_UI_QUERY_GEN_DELAY` 초 동안 "연출" 로 보여주고 자동으로 done 으로
-> 넘기기 때문에, e2e 쪽에서 `query-generator.md` 를 쓸 필요가 없습니다.
+> 넘기기 때문에, orchestrator 쪽에서 `query-generator.md` 를 쓸 필요가 없습니다.
 
 UI 는 0.5초 간격으로 `work_dir` 을 polling 합니다.
 - `<source>-collect.md` 가 생기면 → 그 소스 collect = done, 같은 소스의 validate = working 으로 전이
@@ -312,7 +312,7 @@ cascade 합니다.
 
 #### 4) 최종 리포트
 
-현재는 e2e 의 A2A 응답 텍스트를 최종 마크다운으로 사용합니다
+현재는 orchestrator 의 A2A 응답 텍스트를 최종 마크다운으로 사용합니다
 (`ui/reports/<timestamp>-<slug>.report.md` 에 저장). `reporter.md` 는 진행
 신호 전용이며 내용은 UI 가 무시합니다. 필요하면 이 동작을 바꿔달라고
 말씀해 주세요 — `_run_job` 의 한 줄만 고치면 "reporter.md 를 최종 본문으로
@@ -320,12 +320,12 @@ cascade 합니다.
 
 #### 5) 소프트 실패 처리
 
-e2e 가 성공적으로 응답했는데 일부 파일이 안 떨어진 경우, UI 는 해당 pill
+orchestrator 가 성공적으로 응답했는데 일부 파일이 안 떨어진 경우, UI 는 해당 pill
 을 **자동으로 done 으로 승격** 시킵니다 (파이프라인이 끝났다는 사실이 각
 에이전트의 완료를 이미 함의하므로). 따라서 신호 파일을 빠뜨려도 UI 가
 영원히 spinner 로 남지는 않습니다.
 
-반대로 e2e 가 에러를 반환하면, 그 시점에 `pending` 또는 `working` 이던
+반대로 orchestrator 가 에러를 반환하면, 그 시점에 `pending` 또는 `working` 이던
 pill 들은 모두 `error` 로 전이됩니다.
 
 ---
@@ -336,7 +336,7 @@ pill 들은 모두 `error` 로 전이됩니다.
 
 | 항목 | 값 |
 |---|---|
-| A2A 엔드포인트 | `${NAT_UI_E2E_URL}` (기본 `http://localhost:10000`) |
+| A2A 엔드포인트 | `${NAT_UI_ORCHESTRATOR_URL}` (기본 `http://localhost:10000`) |
 | A2A 메서드 | `message/send` (v0.3), single `text` part |
 | 요청 text part | **JSON envelope** `{job_id, work_dir, query}` — 위 "LIVE 모드 계약" 참고 |
 | 응답 text part | 그대로 렌더링 가능한 순수 마크다운 문자열 (`<think>` 블록 등 없이) |
@@ -350,8 +350,8 @@ pill 들은 모두 `error` 로 전이됩니다.
 
 ### CLI 테스트와의 호환
 
-`agents/e2e/scripts/a2a_client.sh "<query>"` 는 여전히 plain text 로 쿼리를
-보냅니다. e2e 의 수신부는 **JSON 파싱 시도 → 실패 시 plain query 로
+`agents/orchestrator/scripts/a2a_client.sh "<query>"` 는 여전히 plain text 로 쿼리를
+보냅니다. orchestrator 의 수신부는 **JSON 파싱 시도 → 실패 시 plain query 로
 fallback** 패턴으로 구현해 주세요. 그래야 UI 없이도 기존 CLI 플로우가
 깨지지 않습니다.
 
@@ -371,7 +371,7 @@ fallback** 패턴으로 구현해 주세요. 그래야 UI 없이도 기존 CLI �
   충분하지만, 다중 인스턴스로 띄우려면 Redis 등 외부 저장소로 옮겨야 합니다.
 
 - **Q. 스트리밍으로 진행 상황을 보여줄 수 있나요?**
-  e2e 측이 A2A SSE/task streaming 을 지원하면, `/api/chat/{id}` 폴링 대신
+  orchestrator 측이 A2A SSE/task streaming 을 지원하면, `/api/chat/{id}` 폴링 대신
   WebSocket/SSE 로 바꿀 수 있습니다. 현재는 단순 폴링입니다.
 
 - **Q. STUB 모드의 가짜 마크다운은 어디서 수정하나요?**
