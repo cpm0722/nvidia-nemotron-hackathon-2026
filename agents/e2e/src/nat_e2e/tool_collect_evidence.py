@@ -1,14 +1,17 @@
 """NAT tool: collect_evidence.
 
-Fans out a ``{product, run_id}`` message to every configured collector A2A
-endpoint in parallel. Each collector (extractor) internally scrapes, calls
-its paired validator, persists both raw and validated JSON files under
-``runs/{run_id}/``, and returns the validated file path as its response.
+Fans out a ``{product, run_id, job_id?, event_url?}`` message to every
+configured collector A2A endpoint in parallel. Each collector (extractor)
+internally scrapes, calls its paired validator, persists both raw and
+validated JSON files under ``runs/{run_id}/``, and returns the validated
+file path as its response. Extractors parse the same envelope and emit
+their own progress events to the UI.
 
 The tool aggregates those path strings into JSON
 ``{"run_id", "product", "paths"}`` for the orchestrator LLM. Individual
 collector failures are silently dropped (best-effort) so one dead source
-does not stop a run.
+does not stop a run — a per-collector ``error`` event is emitted in that
+case so the UI still reflects the failure.
 """
 
 import asyncio
@@ -22,7 +25,13 @@ from nat.builder.function_info import FunctionInfo
 from nat.cli.register_workflow import register_function
 from nat.data_models.function import FunctionBaseConfig
 
-from ari_core import a2a_send
+from ari_core import (
+    Envelope,
+    a2a_send,
+    emit_event,
+    get_event_context,
+    serialize_downstream_message,
+)
 
 
 class CollectEvidenceConfig(FunctionBaseConfig, name="collect_evidence"):
@@ -72,13 +81,29 @@ async def collect_evidence(
             return None
 
     async def run(req: CollectEvidenceInput) -> str:
-        message = json.dumps(
-            {"product": req.product, "run_id": req.run_id}, ensure_ascii=False
+        event_url, job_id = get_event_context()
+        envelope = Envelope(job_id=job_id, event_url=event_url)
+        message = serialize_downstream_message(
+            envelope, product=req.product, run_id=req.run_id
+        )
+        await emit_event(
+            agent=None,
+            event_type="start",
+            phase="collect",
+            message=f"Dispatching {len(config.collector_urls)} collectors for '{req.product}'…",
+            data={"product": req.product, "run_id": req.run_id},
         )
         results = await asyncio.gather(
             *[_call(url, message) for url in config.collector_urls]
         )
         paths = [r.strip() for r in results if r and r.strip()]
+        await emit_event(
+            agent=None,
+            event_type="complete",
+            phase="collect",
+            message=f"{len(paths)}/{len(config.collector_urls)} collectors returned evidence",
+            data={"paths": paths, "product": req.product},
+        )
         return json.dumps(
             {"run_id": req.run_id, "product": req.product, "paths": paths},
             ensure_ascii=False,
