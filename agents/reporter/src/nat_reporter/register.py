@@ -18,8 +18,6 @@ means the reporter's contract to callers is "give me paths, get a path back",
 which matches the pattern used by the per-source collectors.
 """
 
-from __future__ import annotations
-
 import json
 from collections.abc import AsyncGenerator
 from pathlib import Path

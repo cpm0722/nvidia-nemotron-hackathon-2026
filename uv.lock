@@ -253,8 +253,10 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "pydantic", specifier = ">=2.0" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "requests", specifier = ">=2.31" },
 ]
+provides-extras = ["test"]
 
 [[package]]
 name = "attrs"
@@ -1768,6 +1770,7 @@ name = "nat-e2e"
 version = "0.1.0"
 source = { editable = "agents/e2e" }
 dependencies = [
+    { name = "ari-core" },
     { name = "nvidia-nat", extra = ["a2a", "langchain"] },
     { name = "requests" },
 ]
@@ -1779,6 +1782,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ari-core", editable = "libs/ari-core" },
     { name = "nvidia-nat", extras = ["a2a", "langchain"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "requests", specifier = ">=2.31" },
@@ -2054,6 +2058,7 @@ name = "nat-reporter"
 version = "0.1.0"
 source = { editable = "agents/reporter" }
 dependencies = [
+    { name = "ari-core" },
     { name = "nvidia-nat", extra = ["a2a", "langchain"] },
 ]
 
@@ -2064,6 +2069,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ari-core", editable = "libs/ari-core" },
     { name = "nvidia-nat", extras = ["a2a", "langchain"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
 ]
