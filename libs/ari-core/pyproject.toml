@@ -13,6 +13,7 @@ description = "Shared schemas, HTTP helpers, and async runner for ARI extractor 
 keywords = ["ari", "extractor", "schemas", "nat"]
 classifiers = ["Programming Language :: Python"]
 dependencies = [
+    "httpx>=0.27",
     "pydantic>=2.0",
     "requests>=2.31",
 ]
