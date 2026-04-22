@@ -155,6 +155,31 @@ L3: e2e                                           (depends on every L1/L2 servic
 
 Only the e2e front-end (port `10000`) is published to the host. Intra-stack traffic stays on the `ari-net` bridge via compose DNS (`http://arcalive-validator:10020`, etc.). Override the host port with `E2E_HOST_PORT` in `.env`.
 
+#### Deploy a subset of collectors
+
+Each collector's validator+extractor pair is tagged with two compose profiles — the collector's own name and `all` — so you can start only the ones you need. `e2e`, `query-generator`, and `reporter` are untagged and always run.
+
+Two `.env` variables control this and **must be kept in sync**:
+
+| Variable | Purpose |
+|---|---|
+| `COMPOSE_PROFILES` | Which collector services docker compose starts. |
+| `ENABLED_COLLECTORS` | Which collectors the e2e agent's `collect_evidence` tool fans out to. |
+
+Valid collector names: `arcalive`, `arxiv`, `benchmark`, `geeknews`, `lobsters`, `openai`, `reddit`.
+
+```bash
+# Full stack (17 services) — default in .env.example
+COMPOSE_PROFILES=all
+ENABLED_COLLECTORS=arcalive,arxiv,benchmark,geeknews,lobsters,openai,reddit
+
+# Minimal two-collector deploy
+COMPOSE_PROFILES=arcalive,geeknews
+ENABLED_COLLECTORS=arcalive,geeknews
+```
+
+`e2e.depends_on` marks each extractor with `required: false`, so any collector absent from `COMPOSE_PROFILES` is skipped rather than aborting compose. If you list a name in `ENABLED_COLLECTORS` that `collect_evidence` does not know about, config load fails fast with a `ValueError` — this is the typo guard, so a missing collector never silently drops.
+
 ### Run the full e2e pipeline manually
 
 Each agent script `cd`s into its own agent directory, so without an explicit override every agent would write `runs/` under a different cwd. Export an absolute `ARI_RUNS_ROOT` (pointing at the repo-root `runs/`) in every terminal first so all agents share the same pipeline artefacts:
