@@ -15,5 +15,5 @@ workflow:
   max_comments_per_story: 10
   max_comment_chars: 1500
   workers: 4
-  validator_url: http://localhost:10024
+  validator_url: ${VALIDATOR_URL:-http://localhost:10024}
   validator_timeout_seconds: 120

@@ -15,5 +15,5 @@ workflow:
   max_comments_per_topic: 10
   max_comment_chars: 1500
   html_workers: 4
-  validator_url: http://localhost:10023
+  validator_url: ${VALIDATOR_URL:-http://localhost:10023}
   validator_timeout_seconds: 120
