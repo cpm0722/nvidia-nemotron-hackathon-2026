@@ -1,4 +1,4 @@
-"""Minimal A2A v0.3 JSON-RPC client used by extractors and the e2e orchestrator.
+"""Minimal A2A v0.3 JSON-RPC client used by extractors and the orchestrator.
 
 The A2A protocol allows agents to exchange messages over HTTP. We only need
 the happy-path ``message/send`` call and extraction of the response text from
