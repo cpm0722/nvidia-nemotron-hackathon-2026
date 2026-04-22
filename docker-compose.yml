@@ -9,6 +9,8 @@
 #   L1: validators × 7, query-generator, reporter (talk to Brev NIM only)
 #   L2: extractors × 7 (depend on their own validator)
 #   L3: orchestrator (depends on all of L1 + L2 except validators)
+#   L4: ui (browser chat front-end, built from docker/ui.Dockerfile —
+#       a *separate* image from the shared agent one on purpose)
 #
 # Model endpoints come from .env (SUPER_MODEL_BASE_URL / NANO_MODEL_BASE_URL).
 #
@@ -281,3 +283,36 @@ services:
     ports:
       - "${ORCHESTRATOR_HOST_PORT:-10000}:10000"
     healthcheck: *agent-healthcheck
+
+  # ────────────────────────── L4: chat UI (standalone image) ──────────────────────────
+  # Built from docker/ui.Dockerfile — deliberately NOT the shared agent image.
+  # Exposes the FastAPI chat UI on the host at :${NAT_UI_HOST_PORT:-8080}, forwards
+  # user queries to orchestrator over the ari-net compose network, and reads run
+  # artefacts from the bind-mounted ./runs to drive the 14-pill progress UI.
+  ui:
+    build:
+      context: .
+      dockerfile: docker/ui.Dockerfile
+    image: ari/nat-ui:latest
+    container_name: ari-ui
+    restart: unless-stopped
+    networks:
+      - ari-net
+    depends_on:
+      orchestrator: { condition: service_healthy }
+    environment:
+      NAT_UI_HOST: "0.0.0.0"
+      NAT_UI_PORT: "8080"
+      NAT_UI_STUB: "0"
+      NAT_UI_ORCHESTRATOR_URL: http://orchestrator:10000
+      ARI_RUNS_ROOT: /app/runs
+    volumes:
+      - ./runs:/app/runs
+    ports:
+      - "${NAT_UI_HOST_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/api/config > /dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
