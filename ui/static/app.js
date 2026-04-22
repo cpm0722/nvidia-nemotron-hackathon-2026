@@ -230,8 +230,11 @@
                 .map(
                   (aid) => `
                   <span class="agent-pill" data-id="${aid}" data-status="pending">
-                    <span class="agent-indicator"></span>
-                    <span class="agent-label"></span>
+                    <span class="agent-head">
+                      <span class="agent-indicator"></span>
+                      <span class="agent-label"></span>
+                    </span>
+                    <span class="agent-detail"></span>
                   </span>`,
                 )
                 .join("")}
@@ -367,6 +370,128 @@
     }
   }
 
+  // Apply a single streamed event to the pending assistant bubble: update the
+  // pill's data-status + detail text, and when the event is phase-scoped,
+  // refresh the phase header sub-line.
+  function applyEvent(pendingEl, event) {
+    const container = pendingEl.querySelector(".agents");
+    if (!container) return;
+    if (event.agent) {
+      const pill = container.querySelector(`.agent-pill[data-id="${event.agent}"]`);
+      if (pill) {
+        const nextStatus =
+          event.type === "error"
+            ? "error"
+            : event.type === "complete"
+              ? "done"
+              : "working";
+        if (pill.dataset.status !== nextStatus) pill.dataset.status = nextStatus;
+        const detail = pill.querySelector(".agent-detail");
+        if (detail && event.message) detail.textContent = event.message;
+      }
+    }
+    // Bubble up the most recent phase-scoped message to the phase header.
+    if (event.phase) {
+      const phaseEl = container.querySelector(`.phase[data-phase="${phaseIdFor(event.phase)}"]`);
+      if (phaseEl) {
+        let live = phaseEl.querySelector(".phase-live");
+        if (!live) {
+          live = document.createElement("div");
+          live.className = "phase-live";
+          phaseEl.querySelector(".phase-meta")?.appendChild(live);
+        }
+        if (event.message) live.textContent = event.message;
+      }
+    }
+    // Recompute aggregate phase/arrow states from current pill statuses.
+    refreshPhaseStates(container);
+  }
+
+  // Event "phase" value → PHASES[].id.
+  function phaseIdFor(phase) {
+    if (phase === "plan") return "query-generator";
+    if (phase === "collect") return "collectors";
+    if (phase === "report") return "reporter";
+    return phase;
+  }
+
+  function refreshPhaseStates(container) {
+    const agentsById = {};
+    container.querySelectorAll(".agent-pill").forEach((pill) => {
+      agentsById[pill.dataset.id] = { status: pill.dataset.status };
+    });
+    PHASES.forEach((phase, idx) => {
+      const phaseEl = container.querySelector(`.phase[data-phase="${phase.id}"]`);
+      const state = phaseState(phase, agentsById);
+      if (phaseEl && phaseEl.dataset.state !== state) phaseEl.dataset.state = state;
+      if (idx === 0) return;
+      const prev = PHASES[idx - 1];
+      const prevState = phaseState(prev, agentsById);
+      const arrow = container.querySelector(`.phase-arrow[data-for="${phase.id}"]`);
+      if (arrow) {
+        const next =
+          prevState === "done" ? "active" : prevState === "error" ? "error" : "inactive";
+        if (arrow.dataset.state !== next) arrow.dataset.state = next;
+      }
+    });
+  }
+
+  // Subscribe to SSE. Resolves with {report_name} on pipeline complete, rejects
+  // on error. If the browser rejects EventSource or the stream 404s, the caller
+  // should fall back to pollJob.
+  function streamJob(jobId, pendingEl) {
+    return new Promise((resolve, reject) => {
+      const agents = PHASES.flatMap((p) => p.ids).map((id) => ({ id, label: id, status: "pending" }));
+      renderAgents(pendingEl, agents); // build skeleton immediately
+      updateMeta(pendingEl, agents, "pending");
+
+      let es;
+      try {
+        es = new EventSource(`/api/chat/${jobId}/stream`);
+      } catch (err) {
+        reject(err);
+        return;
+      }
+      let settled = false;
+
+      es.onmessage = (msg) => {
+        let event;
+        try {
+          event = JSON.parse(msg.data);
+        } catch {
+          return;
+        }
+        applyEvent(pendingEl, event);
+        updateMetaFromPills(pendingEl);
+        if (event.agent === null || event.agent === undefined) {
+          if (event.type === "complete") {
+            settled = true;
+            es.close();
+            resolve({ report_name: event.data?.report_name || null });
+          } else if (event.type === "error") {
+            settled = true;
+            es.close();
+            reject(new Error(event.message || "pipeline error"));
+          }
+        }
+      };
+      es.onerror = () => {
+        if (!settled) {
+          es.close();
+          reject(new Error("sse-failed"));
+        }
+      };
+    });
+  }
+
+  function updateMetaFromPills(pendingEl) {
+    const container = pendingEl.querySelector(".agents");
+    if (!container) return;
+    const pills = Array.from(container.querySelectorAll(".agent-pill"));
+    const agents = pills.map((p) => ({ id: p.dataset.id, status: p.dataset.status }));
+    updateMeta(pendingEl, agents, "pending");
+  }
+
   async function fetchReport(name) {
     const res = await fetch(`/api/reports/${encodeURIComponent(name)}`);
     if (!res.ok) throw new Error(`GET /api/reports/${name} failed: ${res.status}`);
@@ -380,14 +505,29 @@
     sendBtn.disabled = true;
     try {
       const jobId = await createJob(query);
-      const status = await pollJob(jobId, (data) => {
-        if (data.agents) {
-          renderAgents(pendingEl, data.agents);
-          updateMeta(pendingEl, data.agents, data.status);
-        }
-      });
-      const markdown = await fetchReport(status.report_name);
-      setAssistantDone(pendingEl, markdown, status.report_name);
+      let result;
+      try {
+        result = await streamJob(jobId, pendingEl);
+      } catch (streamErr) {
+        // EventSource rejected (no SSE support or mid-stream failure) — fall
+        // back to the legacy polling loop so the UI still progresses.
+        if (String(streamErr?.message) !== "sse-failed") throw streamErr;
+        result = await pollJob(jobId, (data) => {
+          if (data.agents) {
+            renderAgents(pendingEl, data.agents);
+            updateMeta(pendingEl, data.agents, data.status);
+          }
+          (data.events || []).forEach((ev) => applyEvent(pendingEl, ev));
+        });
+      }
+      if (!result?.report_name) {
+        // Last-resort lookup — happens only if the terminal event didn't
+        // carry report_name (shouldn't in practice).
+        const status = await pollJob(jobId, null);
+        result = { report_name: status.report_name };
+      }
+      const markdown = await fetchReport(result.report_name);
+      setAssistantDone(pendingEl, markdown, result.report_name);
     } catch (err) {
       setAssistantError(pendingEl, String(err.message || err));
     } finally {
