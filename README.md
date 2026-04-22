@@ -137,9 +137,11 @@ No API key is required — set `api_key: empty` in `config.yml`.
 Brings up all 17 A2A agents (7 extractors + 7 validators + query-generator + reporter + orchestrator) in the correct dependency order from a single shared image.
 
 ```bash
-cp .env.example .env             # edit model endpoints if yours differ
-docker compose up -d --build     # first run builds the shared image
-docker compose ps                # wait until every service is 'healthy'
+cp .env.example .env                              # edit model endpoints if yours differ
+# Start every collector. Swap in a comma-separated subset to deploy fewer,
+# e.g. COMPOSE_PROFILES=arcalive,geeknews docker compose up -d --build
+COMPOSE_PROFILES=all docker compose up -d --build # first run builds the shared image
+docker compose ps                                 # wait until every service is 'healthy'
 curl http://localhost:10000/.well-known/agent-card.json  # orchestrator is up
 
 # send a query
