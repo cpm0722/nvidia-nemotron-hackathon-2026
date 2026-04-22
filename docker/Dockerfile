@@ -75,4 +75,8 @@ RUN uv sync --frozen --no-dev
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# Auto-imported by `site.py` at every Python startup — silences NAT's
+# 0.0.0.0-bind warning that's irrelevant inside the compose network.
+COPY docker/sitecustomize.py /opt/venv/lib/python3.13/site-packages/sitecustomize.py
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
