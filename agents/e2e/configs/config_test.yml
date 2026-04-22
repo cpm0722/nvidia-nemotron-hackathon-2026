@@ -2,15 +2,43 @@ general:
   front_end:
     _type: a2a
     name: "E2E Pipeline Agent (test)"
-    description: "arcalive + geeknews 2개 collector만 사용하는 e2e 테스트용 설정"
+    description: "arcalive + geeknews 2개 collector 만 사용하는 e2e react_agent 테스트용 설정"
     host: 0.0.0.0
     port: 10000
 
+llms:
+  primary_llm:
+    _type: openai
+    model_name: nvidia/nemotron-3-super-120b-a12b
+    base_url: https://model-server-uya78rbya.brevlab.com/v1
+    api_key: empty
+    temperature: 0.0
+    max_tokens: 8192
+
+functions:
+  plan_query:
+    _type: plan_query
+    query_generator_url: http://localhost:10001
+    timeout_seconds: 180
+  collect_evidence:
+    _type: collect_evidence
+    collector_urls:
+      - http://localhost:10010   # arcalive
+      - http://localhost:10013   # geeknews
+    timeout_seconds: 180
+  write_report:
+    _type: write_report
+    reporter_url: http://localhost:10002
+    timeout_seconds: 300
+
 workflow:
-  _type: e2e_pipeline
-  query_generator_url: http://localhost:10001
-  collector_urls:
-    - http://localhost:10010
-    - http://localhost:10013
-  reporter_url: http://localhost:10002
-  timeout_seconds: 180
+  _type: react_agent
+  llm_name: primary_llm
+  tool_names:
+    - plan_query
+    - collect_evidence
+    - write_report
+  system_prompt: file://../prompts/system_prompt.txt
+  verbose: true
+  max_tool_calls: 30
+  use_native_tool_calling: false
