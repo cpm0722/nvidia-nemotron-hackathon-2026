@@ -1,5 +1,6 @@
 """Shared utilities for ARI extractor agents: schemas, HTTP base, async runner."""
 
+from ari_core.a2a_client import a2a_send, parse_collect_input, parse_validator_response
 from ari_core.async_runner import run_scraper_async
 from ari_core.http_base import DEFAULT_TIMEOUT_SECONDS, USER_AGENT, Timer, iso, since_timestamp
 from ari_core.run_paths import (
@@ -25,9 +26,12 @@ __all__ = [
     "ScrapeResult",
     "Timer",
     "USER_AGENT",
+    "a2a_send",
     "ensure_parent",
     "iso",
     "new_run_id",
+    "parse_collect_input",
+    "parse_validator_response",
     "query_path",
     "raw_path",
     "read_json",
