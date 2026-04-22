@@ -11,4 +11,4 @@ workflow:
   limit: 10
   max_text_chars: 8000
   validator_url: ${VALIDATOR_URL:-http://localhost:10025}
-  validator_timeout_seconds: 120
+  validator_timeout_seconds: 180
