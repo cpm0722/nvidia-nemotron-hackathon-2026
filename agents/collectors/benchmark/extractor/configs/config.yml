@@ -10,5 +10,5 @@ workflow:
   _type: benchmark_extractor
   limit: 10
   comment_limit: 3
-  validator_url: http://localhost:10022
+  validator_url: ${VALIDATOR_URL:-http://localhost:10022}
   validator_timeout_seconds: 120

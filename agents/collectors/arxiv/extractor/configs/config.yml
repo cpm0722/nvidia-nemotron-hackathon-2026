@@ -10,5 +10,5 @@ workflow:
   _type: arxiv_extractor
   limit: 10
   max_text_chars: 8000
-  validator_url: http://localhost:10021
+  validator_url: ${VALIDATOR_URL:-http://localhost:10021}
   validator_timeout_seconds: 120
