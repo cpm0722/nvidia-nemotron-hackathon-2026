@@ -10,8 +10,8 @@ llms:
   primary_llm:
     _type: openai
     model_name: nvidia/nemotron-3-nano
-    base_url: https://model-server-4dfr8gv78.brevlab.com/v1
-    api_key: empty
+    base_url: ${NANO_MODEL_BASE_URL:-https://model-server-4dfr8gv78.brevlab.com/v1}
+    api_key: ${NANO_MODEL_API_KEY:-empty}
     temperature: 0.0
     max_tokens: 512
 
