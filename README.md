@@ -9,11 +9,11 @@ Backbone models: [Nemotron-3-Nano-30B-A3B](https://build.nvidia.com/nvidia/nemot
 
 ## Description
 
-Given a natural language query (Korean or English), the **e2e orchestrator** — a ReAct agent powered by Nemotron-3-Super — autonomously invokes three tools to produce a markdown report per product:
+Given a natural language query (Korean or English), the **e2e orchestrator** — a ReAct agent powered by Nemotron-3-Super — autonomously invokes three tools to produce a report per product:
 
 1. **`plan_query`** — asks the query-generator to extract AI product names and allocates a new `run_id`, persisting `runs/{run_id}/query.json`.
 2. **`collect_evidence`** — fans out `{product, run_id}` to every collector A2A endpoint in parallel. Each collector scrapes, calls its paired validator, writes both the raw and validated JSON to `runs/{run_id}/raw/{product}/{source}.json` and `runs/{run_id}/validated/{product}/{source}.json`, and returns the validated file path.
-3. **`write_report`** — delegates to the reporter agent, which reads every validated file, synthesizes a markdown report, and writes it to `runs/{run_id}/report_{product}.md`.
+3. **`write_report`** — delegates to the reporter agent, which reads every validated file, synthesizes a per-product report, and writes it as a pair: a markdown narrative `runs/{run_id}/report_{product}.md` and a structured JSON sidecar `runs/{run_id}/report_{product}.json`.
 
 All inter-agent data flows through files under `runs/{run_id}/`; agents exchange paths, not payloads.
 
@@ -52,7 +52,7 @@ query-generator  (nemotron-nano, port 10001)
                                ▼
                          reporter  (nemotron-super, port 10002)
                                │  reads every validated file path,
-                               │  writes runs/{run_id}/report_{product}.md
+                               │  writes runs/{run_id}/report_{product}.{md,json}
                                ▼
                          report file path(s) returned to the user
 ```
@@ -74,7 +74,8 @@ runs/{run_id}/                         # run_id = YYYYMMDD-HHMMSS-{8-char uuid}
   query.json                           # {user_query, products}
   raw/{product}/{source}.json          # extractor scrape result
   validated/{product}/{source}.json    # validator filtered result
-  report_{product}.md                  # reporter output
+  report_{product}.md                  # reporter output — markdown narrative
+  report_{product}.json                # reporter output — structured JSON sidecar
 ```
 
 ### Data Sources
@@ -354,7 +355,7 @@ nvidia-nemotron-hackathon-2026/
 │       └── reddit/    { extractor/, validator/ }    # ports 10016 / 10026
 ├── libs/
 │   ├── ari-core/                               # Shared schemas + a2a_client + run_paths (file-layout helpers)
-│   └── validator-core/                         # Shared legacy validator_caller (kept for workspace refs)
+│   └── validator-core/                         # Shared validator A2A client helper used by every extractor
 ├── runs/                                       # Per-run artefacts: query.json, raw/, validated/, report_*.md (gitignored, shared volume in Docker)
 ├── docker/                                     # Shared image for all 17 A2A agents
 │   ├── Dockerfile                              # uv-workspace install; entrypoint reads CONFIG_FILE
