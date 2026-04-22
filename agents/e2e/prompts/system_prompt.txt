@@ -20,7 +20,14 @@ Do NOT skip any step. Do NOT reorder. Do NOT stop early. Do NOT call any tool mo
 Step 1 — plan_query  (REQUIRED, exactly once)
 ---------------------------------------------------------
 Input:
-    {{"user_query": "<the user's full original question, verbatim>"}}
+    {{"user_query": "<the user's full original message, verbatim, byte-for-byte>"}}
+
+IMPORTANT: the user's message may already be a JSON object with fields like
+`query`, `job_id`, `event_url`, `work_dir`. Do NOT unwrap it. Do NOT extract
+only the `query` field. Paste the ENTIRE message (including any surrounding
+braces and quotes) as the value of `user_query`. plan_query parses the
+envelope internally and depends on `event_url` / `job_id` to stream progress
+back to the UI — stripping them breaks the live progress display.
 
 Output shape:
     {{"run_id": "<run-id>", "products": ["<ProductName>"]}}
