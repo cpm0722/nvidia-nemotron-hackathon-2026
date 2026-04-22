@@ -20,6 +20,7 @@ import os
 import random
 import re
 import time
+import traceback
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -90,12 +91,56 @@ def _initial_agent_state() -> dict[str, "AgentStatus"]:
 
 UI_ROOT = Path(__file__).resolve().parents[2]
 STATIC_DIR = UI_ROOT / "static"
+REPO_ROOT = UI_ROOT.parent
 DEFAULT_REPORTS_DIR = UI_ROOT / "reports"
+DEFAULT_RUNS_ROOT = REPO_ROOT / "runs"
 
 REPORTS_DIR = Path(os.environ.get("NAT_UI_REPORTS_DIR", DEFAULT_REPORTS_DIR)).resolve()
+RUNS_ROOT = Path(os.environ.get("ARI_RUNS_ROOT", DEFAULT_RUNS_ROOT)).resolve()
 E2E_URL = os.environ.get("NAT_UI_E2E_URL", "http://localhost:10000")
 STUB_MODE = os.environ.get("NAT_UI_STUB", "1") == "1"
 E2E_TIMEOUT_SECONDS = float(os.environ.get("NAT_UI_E2E_TIMEOUT", "600"))
+
+# Backend run_id pattern: YYYYMMDD-HHMMSS-xxxxxxxx (see ari_core.new_run_id).
+_RUN_ID_RE = re.compile(r"\b(\d{8}-\d{6}-[0-9a-f]{8})\b")
+
+
+def _product_slug(name: str) -> str:
+    """Mirror ari_core.slugify_product — lowercase + non-alnum → dash."""
+    slug = re.sub(r"[^a-z0-9]+", "-", name.strip().lower()).strip("-")
+    return slug or "product"
+
+
+def _load_run_products(run_id: str) -> list[str]:
+    """Read ``runs/{run_id}/query.json`` and return ``products``."""
+    try:
+        data = json.loads(
+            (RUNS_ROOT / run_id / "query.json").read_text(encoding="utf-8")
+        )
+        products = data.get("products", [])
+        if isinstance(products, list):
+            return [str(p) for p in products]
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        pass
+    return []
+
+
+def _concat_run_reports(run_id: str) -> str:
+    """Concatenate ``runs/{run_id}/report_*.md`` in product order."""
+    root = RUNS_ROOT / run_id
+    products = _load_run_products(run_id)
+    parts: list[str] = []
+    seen: set[Path] = set()
+    for product in products:
+        p = root / f"report_{_product_slug(product)}.md"
+        if p.is_file():
+            parts.append(p.read_text(encoding="utf-8").rstrip() + "\n")
+            seen.add(p)
+    for p in sorted(root.glob("report_*.md")):
+        if p in seen:
+            continue
+        parts.append(p.read_text(encoding="utf-8").rstrip() + "\n")
+    return "\n---\n\n".join(parts)
 
 
 @dataclass
@@ -107,6 +152,7 @@ class Job:
     error: str | None = None
     created_at: float = field(default_factory=time.time)
     agents: dict[str, AgentStatus] = field(default_factory=_initial_agent_state)
+    run_id: str | None = None
 
 
 JOBS: dict[str, Job] = {}
@@ -225,110 +271,225 @@ async def _run_stub(job: Job) -> str:
     return _stub_report(job.query)
 
 
-async def _animate_phases(job: Job, work_dir: Path) -> None:
-    """Drive the phased pill transitions while the real e2e call is in flight.
+async def _detect_run_id(since: float, deadline: float) -> str | None:
+    """Watch RUNS_ROOT for a new run_id directory created after ``since``.
 
-    Phase 1 — sleep QUERY_GEN_VISUAL_DELAY_SECONDS then flip query-generator to
-              done (Query Generator never writes a file — it's visual only).
-    Phase 2 — for every source, start its collect pill as working. As
-              <source>-collect.md appears, flip collect to done and promote
-              validate to working. As <source>-validate.md appears, flip
-              validate to done. All sources run in parallel.
-    Phase 3 — once every source's validate is done, flip reporter to working
-              and poll for reporter.md.
+    The e2e ``plan_query`` tool allocates run_id internally and writes
+    ``runs/{run_id}/query.json`` as its first side effect; we pick up the
+    newest ``YYYYMMDD-HHMMSS-xxxxxxxx`` directory whose mtime is >= ``since``.
     """
-    # Phase 1
-    await asyncio.sleep(QUERY_GEN_VISUAL_DELAY_SECONDS)
-    if job.agents.get("query-generator") == "working":
+    while time.time() < deadline:
+        if RUNS_ROOT.exists():
+            best: tuple[float, str] | None = None
+            for p in RUNS_ROOT.iterdir():
+                if not p.is_dir() or not _RUN_ID_RE.fullmatch(p.name):
+                    continue
+                try:
+                    mtime = p.stat().st_mtime
+                except OSError:
+                    continue
+                if mtime < since - 1.0:
+                    continue
+                if best is None or mtime > best[0]:
+                    best = (mtime, p.name)
+            if best is not None:
+                return best[1]
+        await asyncio.sleep(0.5)
+    return None
+
+
+def _update_agents_from_run(job: Job, run_id: str) -> None:
+    """Drive pill states from ``runs/{run_id}/`` artifacts.
+
+    - Phase 1: ``query.json`` existence → query-generator done, all
+      ``{source}-collect`` pills promoted to working.
+    - Phase 2: any ``raw/*/{source}.json`` → ``{source}-collect`` done,
+      ``{source}-validate`` working. ``validated/*/{source}.json`` →
+      ``{source}-validate`` done (requires all products, falling back to any
+      match when ``products`` isn't known yet).
+    - Phase 3: ``report_{slug}.md`` for every product → reporter done.
+    """
+    root = RUNS_ROOT / run_id
+
+    if (root / "query.json").exists() and job.agents.get("query-generator") != "error":
         job.agents["query-generator"] = "done"
-
-    # Phase 2 — start every source's collect stage; validate stays pending.
-    for sid in SOURCE_IDS:
-        if job.agents.get(f"{sid}-collect") == "pending":
-            job.agents[f"{sid}-collect"] = "working"
-
-    while True:
         for sid in SOURCE_IDS:
-            collect_key = f"{sid}-collect"
-            validate_key = f"{sid}-validate"
-            collect_file = work_dir / f"{collect_key}.md"
-            validate_file = work_dir / f"{validate_key}.md"
+            if job.agents.get(f"{sid}-collect") == "pending":
+                job.agents[f"{sid}-collect"] = "working"
 
-            # Collect: mark done on file appearance, promote validate to working.
-            if job.agents.get(collect_key) != "done" and collect_file.exists():
+    products = _load_run_products(run_id)
+    slugs = [_product_slug(p) for p in products]
+
+    for sid in SOURCE_IDS:
+        collect_key = f"{sid}-collect"
+        validate_key = f"{sid}-validate"
+        if job.agents.get(collect_key) == "error" and job.agents.get(validate_key) == "error":
+            continue
+
+        raw_hits = list(root.glob(f"raw/*/{sid}.json"))
+        validated_hits = list(root.glob(f"validated/*/{sid}.json"))
+        raw_slugs = {p.parent.name for p in raw_hits}
+        validated_slugs = {p.parent.name for p in validated_hits}
+
+        # Collect stage: all products have raw, OR (no product info yet) any raw.
+        if job.agents.get(collect_key) != "done":
+            if slugs and all(s in raw_slugs for s in slugs):
                 job.agents[collect_key] = "done"
                 if job.agents.get(validate_key) == "pending":
                     job.agents[validate_key] = "working"
+            elif not slugs and raw_hits:
+                job.agents[collect_key] = "done"
+                if job.agents.get(validate_key) == "pending":
+                    job.agents[validate_key] = "working"
+            elif raw_hits and job.agents.get(collect_key) == "pending":
+                job.agents[collect_key] = "working"
 
-            # Validate: mark done on file appearance (independent of collect
-            # state so a race where validate lands first still resolves).
-            if job.agents.get(validate_key) != "done" and validate_file.exists():
+        # Validate stage: cascade — validated file implies collect is done.
+        if job.agents.get(validate_key) != "done":
+            done_all = slugs and all(s in validated_slugs for s in slugs)
+            done_any_loose = not slugs and validated_hits
+            if done_all or done_any_loose:
                 job.agents[validate_key] = "done"
-                # Cascade: if collect somehow missed its file, promote anyway.
                 if job.agents.get(collect_key) != "done":
                     job.agents[collect_key] = "done"
+            elif validated_hits and job.agents.get(validate_key) != "working":
+                job.agents[validate_key] = "working"
 
-        all_done = all(
-            job.agents.get(f"{sid}-collect") == "done"
-            and job.agents.get(f"{sid}-validate") == "done"
-            for sid in SOURCE_IDS
-        )
-        if all_done:
-            break
-        await asyncio.sleep(0.5)
-
-    # Phase 3 — reporter
-    if job.agents.get("reporter") == "pending":
-        job.agents["reporter"] = "working"
-
-    while job.agents.get("reporter") == "working":
-        if (work_dir / "reporter.md").exists():
+    # Phase 3: reporter
+    if job.agents.get("reporter") != "error":
+        md_hits = list(root.glob("report_*.md"))
+        md_slugs = {m.stem.removeprefix("report_") for m in md_hits}
+        if slugs and md_hits and all(s in md_slugs for s in slugs):
             job.agents["reporter"] = "done"
-            return
+        elif md_hits and job.agents.get("reporter") in ("pending",):
+            job.agents["reporter"] = "working"
+        else:
+            all_validated = all(
+                job.agents.get(f"{sid}-validate") == "done" for sid in SOURCE_IDS
+            )
+            if all_validated and job.agents.get("reporter") == "pending":
+                job.agents["reporter"] = "working"
+
+
+async def _watch_run_progress(job: Job, run_id_holder: dict, stop_event: asyncio.Event) -> None:
+    """Poll disk state until ``stop_event`` is set (A2A call finishes)."""
+    # Visual phase 1 grace if run_id dir doesn't exist yet.
+    qgen_deadline = time.time() + QUERY_GEN_VISUAL_DELAY_SECONDS
+    while not stop_event.is_set():
+        run_id = run_id_holder.get("value")
+        if run_id is None:
+            if time.time() > qgen_deadline and job.agents.get("query-generator") == "working":
+                # Keep qgen visually working until we actually see query.json.
+                pass
+            await asyncio.sleep(0.5)
+            continue
+        _update_agents_from_run(job, run_id)
         await asyncio.sleep(0.5)
 
 
-async def _run_live(job: Job) -> str:
-    """LIVE run: kick off e2e in parallel with the phased animation.
+async def _run_live(job: Job) -> tuple[str, str]:
+    """Kick off e2e over A2A, discover run_id from disk, drive 14-pill animation.
 
-    If e2e returns before the animation naturally completes (unlikely but
-    possible — e.g. very fast pipeline or cached answer), any still-pending/
-    working pill is force-advanced to done so the UI doesn't get stuck.
+    Returns ``(run_id, concatenated_markdown)``. The e2e agent's ``plan_query``
+    tool owns run_id allocation — we just send the raw query text and watch
+    ``runs/`` for the new directory.
     """
-    work_dir = REPORTS_DIR / job.id
-    work_dir.mkdir(parents=True, exist_ok=True)
+    since = time.time()
+    deadline = since + E2E_TIMEOUT_SECONDS
 
-    envelope = json.dumps(
-        {"job_id": job.id, "work_dir": str(work_dir), "query": job.query},
-        ensure_ascii=False,
+    e2e_task = asyncio.create_task(_a2a_send(E2E_URL, job.query, E2E_TIMEOUT_SECONDS))
+
+    run_id_holder: dict[str, str | None] = {"value": None}
+
+    async def _detect_and_store() -> None:
+        rid = await _detect_run_id(since, deadline)
+        if rid is not None:
+            run_id_holder["value"] = rid
+            job.run_id = rid  # expose to error handler before A2A returns
+
+    detect_task = asyncio.create_task(_detect_and_store())
+
+    stop_event = asyncio.Event()
+    progress_task = asyncio.create_task(
+        _watch_run_progress(job, run_id_holder, stop_event)
     )
-    e2e_task = asyncio.create_task(_a2a_send(E2E_URL, envelope, E2E_TIMEOUT_SECONDS))
-    animation_task = asyncio.create_task(_animate_phases(job, work_dir))
 
     try:
-        markdown = await e2e_task
-        if not markdown.strip():
-            raise RuntimeError("Empty response from e2e agent")
-        # Pipeline completed — promote any laggard pill to done.
-        for aid in job.agents:
-            if job.agents[aid] in ("pending", "working"):
-                job.agents[aid] = "done"
-        return markdown
+        response_text = await e2e_task
     finally:
-        animation_task.cancel()
-        try:
-            await animation_task
-        except asyncio.CancelledError:
-            pass
+        stop_event.set()
+        for t in (detect_task, progress_task):
+            t.cancel()
+            try:
+                await t
+            except asyncio.CancelledError:
+                pass
+
+    run_id = run_id_holder.get("value")
+    if run_id is None:
+        m = _RUN_ID_RE.search(response_text or "")
+        if m:
+            run_id = m.group(1)
+
+    if run_id is None:
+        raise RuntimeError(
+            "Could not determine run_id (no runs/{YYYYMMDD-HHMMSS-xxxxxxxx}/ "
+            "directory created and no match in e2e response)"
+        )
+
+    _update_agents_from_run(job, run_id)
+    for aid in job.agents:
+        if job.agents[aid] in ("pending", "working"):
+            job.agents[aid] = "done"
+
+    markdown = _concat_run_reports(run_id)
+    if not markdown.strip():
+        markdown = response_text or "# (empty report)"
+    return run_id, markdown
+
+
+def _write_error_log(job: Job, exc: BaseException) -> Path | None:
+    """Persist the full traceback + job context under the run's logs/ dir.
+
+    Goes to ``runs/{run_id}/logs/ui-error.log`` when we captured a run_id before
+    the failure; otherwise ``runs/_failed-{job_id}/logs/ui-error.log`` so the
+    connect-before-e2e failure mode is still inspectable.
+    """
+    folder = job.run_id if job.run_id else f"_failed-{job.id}"
+    log_dir = RUNS_ROOT / folder / "logs"
+    try:
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_file = log_dir / "ui-error.log"
+        tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+        body = (
+            f"job_id: {job.id}\n"
+            f"query:  {job.query}\n"
+            f"mode:   {'STUB' if STUB_MODE else 'LIVE'}\n"
+            f"e2e:    {E2E_URL}\n"
+            f"run_id: {job.run_id or '(none — failure before run allocation)'}\n"
+            f"agents: {json.dumps(job.agents, ensure_ascii=False)}\n"
+            f"---\n{tb}"
+        )
+        log_file.write_text(body, encoding="utf-8")
+        return log_file
+    except OSError:
+        return None
 
 
 async def _run_job(job: Job) -> None:
     """Execute one job: phased pill animation + persist final markdown."""
     try:
-        markdown = await (_run_stub(job) if STUB_MODE else _run_live(job))
-        report_name = _new_report_name(job.query)
-        (REPORTS_DIR / report_name).write_text(markdown, encoding="utf-8")
-        job.report_name = report_name
+        if STUB_MODE:
+            markdown = await _run_stub(job)
+            report_name = _new_report_name(job.query)
+            (REPORTS_DIR / report_name).write_text(markdown, encoding="utf-8")
+            job.report_name = report_name
+        else:
+            run_id, _markdown = await _run_live(job)
+            # LIVE mode serves reports directly from runs/{run_id}/report_*.md
+            # so report_name is the run_id itself (see /api/reports/{name}).
+            job.run_id = run_id
+            job.report_name = run_id
         job.status = "done"
     except Exception as exc:
         # On failure, any agent that hasn't completed is surfaced as error so
@@ -336,7 +497,9 @@ async def _run_job(job: Job) -> None:
         for aid, status in job.agents.items():
             if status in ("pending", "working"):
                 job.agents[aid] = "error"
-        job.error = f"{type(exc).__name__}: {exc}"
+        log_file = _write_error_log(job, exc)
+        suffix = f" (log: {log_file})" if log_file else ""
+        job.error = f"{type(exc).__name__}: {exc}{suffix}"
         job.status = "error"
 
 
@@ -374,6 +537,21 @@ async def get_report(name: str) -> PlainTextResponse:
     # Block path traversal — accept only plain filenames.
     if "/" in name or "\\" in name or name.startswith("."):
         raise HTTPException(status_code=400, detail="invalid report name")
+
+    # LIVE mode: name is a run_id (YYYYMMDD-HHMMSS-xxxxxxxx) — concatenate
+    # every report_*.md in the run directory.
+    if _RUN_ID_RE.fullmatch(name):
+        root = (RUNS_ROOT / name).resolve()
+        if not str(root).startswith(str(RUNS_ROOT)):
+            raise HTTPException(status_code=400, detail="invalid run_id path")
+        if not root.is_dir():
+            raise HTTPException(status_code=404, detail="run not found")
+        md = _concat_run_reports(name)
+        if not md.strip():
+            raise HTTPException(status_code=404, detail="no report_*.md in run")
+        return PlainTextResponse(md, media_type="text/markdown")
+
+    # STUB mode (or legacy): single markdown file under REPORTS_DIR.
     path = (REPORTS_DIR / name).resolve()
     if REPORTS_DIR not in path.parents and path.parent != REPORTS_DIR:
         raise HTTPException(status_code=400, detail="invalid report path")
@@ -388,6 +566,7 @@ async def get_config() -> dict:
         "stub_mode": STUB_MODE,
         "e2e_url": E2E_URL,
         "reports_dir": str(REPORTS_DIR),
+        "runs_root": str(RUNS_ROOT),
     }
 
 

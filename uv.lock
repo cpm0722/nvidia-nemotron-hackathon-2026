@@ -1799,6 +1799,7 @@ dependencies = [
     { name = "lxml" },
     { name = "nvidia-nat", extra = ["a2a"] },
     { name = "requests" },
+    { name = "validator-core" },
 ]
 
 [package.optional-dependencies]
@@ -1814,6 +1815,7 @@ requires-dist = [
     { name = "nvidia-nat", extras = ["a2a"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "requests", specifier = ">=2.31" },
+    { name = "validator-core", editable = "libs/validator-core" },
 ]
 provides-extras = ["test"]
 
@@ -1826,6 +1828,7 @@ dependencies = [
     { name = "feedparser" },
     { name = "nvidia-nat", extra = ["a2a"] },
     { name = "requests" },
+    { name = "validator-core" },
 ]
 
 [package.optional-dependencies]
@@ -1840,6 +1843,7 @@ requires-dist = [
     { name = "nvidia-nat", extras = ["a2a"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "requests", specifier = ">=2.31" },
+    { name = "validator-core", editable = "libs/validator-core" },
 ]
 provides-extras = ["test"]
 
@@ -1853,6 +1857,7 @@ dependencies = [
     { name = "httpx" },
     { name = "lxml" },
     { name = "nvidia-nat", extra = ["a2a"] },
+    { name = "validator-core" },
 ]
 
 [package.optional-dependencies]
@@ -1868,6 +1873,7 @@ requires-dist = [
     { name = "lxml", specifier = ">=5.0" },
     { name = "nvidia-nat", extras = ["a2a"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+    { name = "validator-core", editable = "libs/validator-core" },
 ]
 provides-extras = ["test"]
 
@@ -1880,6 +1886,7 @@ dependencies = [
     { name = "feedparser" },
     { name = "nvidia-nat", extra = ["a2a"] },
     { name = "requests" },
+    { name = "validator-core" },
 ]
 
 [package.optional-dependencies]
@@ -1894,6 +1901,7 @@ requires-dist = [
     { name = "nvidia-nat", extras = ["a2a"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "requests", specifier = ">=2.31" },
+    { name = "validator-core", editable = "libs/validator-core" },
 ]
 provides-extras = ["test"]
 
@@ -1906,6 +1914,7 @@ dependencies = [
     { name = "feedparser" },
     { name = "nvidia-nat", extra = ["a2a"] },
     { name = "requests" },
+    { name = "validator-core" },
 ]
 
 [package.optional-dependencies]
@@ -1920,6 +1929,7 @@ requires-dist = [
     { name = "nvidia-nat", extras = ["a2a"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "requests", specifier = ">=2.31" },
+    { name = "validator-core", editable = "libs/validator-core" },
 ]
 provides-extras = ["test"]
 
@@ -1932,6 +1942,7 @@ dependencies = [
     { name = "feedparser" },
     { name = "nvidia-nat", extra = ["a2a"] },
     { name = "requests" },
+    { name = "validator-core" },
 ]
 
 [package.optional-dependencies]
@@ -1946,6 +1957,7 @@ requires-dist = [
     { name = "nvidia-nat", extras = ["a2a"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "requests", specifier = ">=2.31" },
+    { name = "validator-core", editable = "libs/validator-core" },
 ]
 provides-extras = ["test"]
 
@@ -1957,6 +1969,7 @@ dependencies = [
     { name = "ari-core" },
     { name = "nvidia-nat", extra = ["a2a"] },
     { name = "requests" },
+    { name = "validator-core" },
 ]
 
 [package.optional-dependencies]
@@ -1970,6 +1983,7 @@ requires-dist = [
     { name = "nvidia-nat", extras = ["a2a"] },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "requests", specifier = ">=2.31" },
+    { name = "validator-core", editable = "libs/validator-core" },
 ]
 provides-extras = ["test"]
 
