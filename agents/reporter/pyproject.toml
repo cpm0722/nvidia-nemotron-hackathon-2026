@@ -14,10 +14,17 @@ keywords = ["ai", "agents", "reporter", "nat", "a2a"]
 classifiers = ["Programming Language :: Python"]
 dependencies = [
     "nvidia-nat[a2a,langchain]",
+    "ari_core",
 ]
+
+[tool.uv.sources]
+ari_core = { path = "../../libs/ari-core", editable = true }
 
 [project.optional-dependencies]
 test = ["pytest>=8.0"]
+
+[project.entry-points."nat.components"]
+nat_reporter = "nat_reporter.register"
 
 [tool.ruff]
 line-length = 100
