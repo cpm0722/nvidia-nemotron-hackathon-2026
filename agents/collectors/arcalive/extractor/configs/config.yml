@@ -12,4 +12,4 @@ workflow:
   max_pages: 2
   limit: 5
   validator_url: ${VALIDATOR_URL:-http://localhost:10020}
-  validator_timeout_seconds: 120
+  validator_timeout_seconds: 180

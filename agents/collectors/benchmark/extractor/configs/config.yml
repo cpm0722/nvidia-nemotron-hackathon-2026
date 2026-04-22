@@ -11,4 +11,4 @@ workflow:
   limit: 10
   comment_limit: 3
   validator_url: ${VALIDATOR_URL:-http://localhost:10022}
-  validator_timeout_seconds: 120
+  validator_timeout_seconds: 180
