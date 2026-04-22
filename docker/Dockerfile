@@ -27,8 +27,7 @@ COPY pyproject.toml uv.lock ./
 COPY libs/ ./libs/
 COPY agents/ ./agents/
 
-RUN --mount=type=cache,id=uv_cache,target=/root/.cache/uv,sharing=locked \
-    uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
