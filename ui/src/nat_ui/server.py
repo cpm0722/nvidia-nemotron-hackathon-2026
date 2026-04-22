@@ -1,0 +1,359 @@
+"""FastAPI backend for the browser chat UI.
+
+Exposes three endpoints:
+- POST /api/chat              : enqueue a user query, returns job_id immediately.
+- GET  /api/chat/{job_id}     : poll job status (pending / done / error).
+- GET  /api/reports/{name}    : read a generated markdown report.
+
+Two run modes, selected via the NAT_UI_STUB env var:
+- STUB (default, NAT_UI_STUB=1): write a canned sample markdown after a short
+  delay. Useful while the e2e agent is still being built.
+- LIVE (NAT_UI_STUB=0): POST the query to the e2e A2A endpoint and save the
+  returned markdown to REPORTS_DIR.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+import random
+import re
+import time
+import uuid
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Literal
+
+import httpx
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+
+JobStatus = Literal["pending", "done", "error"]
+AgentStatus = Literal["pending", "working", "done", "error"]
+
+# Fixed agent list rendered in the UI. Order matches the pipeline flow:
+# query-generator → 7 parallel collectors → reporter.
+AGENTS: list[tuple[str, str]] = [
+    ("query-generator", "Query Generator"),
+    ("arcalive", "ArcaLive"),
+    ("arxiv", "arXiv"),
+    ("benchmark", "Benchmark"),
+    ("geeknews", "GeekNews"),
+    ("lobsters", "Lobsters"),
+    ("openai", "OpenAI Blog"),
+    ("reddit", "Reddit"),
+    ("reporter", "Reporter"),
+]
+
+# Phase 2 collector IDs — driven by on-disk <agent_id>.md files in LIVE mode.
+COLLECTOR_IDS: list[str] = [
+    "arcalive", "arxiv", "benchmark", "geeknews",
+    "lobsters", "openai", "reddit",
+]
+
+STUB_AGENT_MAX_SECONDS = float(os.environ.get("NAT_UI_STUB_AGENT_MAX", "10"))
+# Query Generator is animated as a fixed visual delay — it never produces a
+# *.md artifact; we just show a 5s "working" state before phase 2 begins.
+QUERY_GEN_VISUAL_DELAY_SECONDS = float(os.environ.get("NAT_UI_QUERY_GEN_DELAY", "5"))
+
+
+def _initial_agent_state() -> dict[str, "AgentStatus"]:
+    """Phase-1 initial state: query-generator running, everything else pending."""
+    state: dict[str, AgentStatus] = {aid: "pending" for aid, _ in AGENTS}
+    state["query-generator"] = "working"
+    return state
+
+UI_ROOT = Path(__file__).resolve().parents[2]
+STATIC_DIR = UI_ROOT / "static"
+DEFAULT_REPORTS_DIR = UI_ROOT / "reports"
+
+REPORTS_DIR = Path(os.environ.get("NAT_UI_REPORTS_DIR", DEFAULT_REPORTS_DIR)).resolve()
+E2E_URL = os.environ.get("NAT_UI_E2E_URL", "http://localhost:10000")
+STUB_MODE = os.environ.get("NAT_UI_STUB", "1") == "1"
+E2E_TIMEOUT_SECONDS = float(os.environ.get("NAT_UI_E2E_TIMEOUT", "600"))
+
+
+@dataclass
+class Job:
+    id: str
+    query: str
+    status: JobStatus = "pending"
+    report_name: str | None = None
+    error: str | None = None
+    created_at: float = field(default_factory=time.time)
+    agents: dict[str, AgentStatus] = field(default_factory=_initial_agent_state)
+
+
+JOBS: dict[str, Job] = {}
+
+
+class ChatRequest(BaseModel):
+    query: str
+
+
+class ChatResponse(BaseModel):
+    job_id: str
+
+
+class AgentState(BaseModel):
+    id: str
+    label: str
+    status: AgentStatus
+
+
+class JobStatusResponse(BaseModel):
+    job_id: str
+    status: JobStatus
+    agents: list[AgentState]
+    report_name: str | None = None
+    error: str | None = None
+
+
+app = FastAPI(title="AI Product Feedback Aggregator — Chat UI")
+
+
+@app.on_event("startup")
+async def _ensure_reports_dir() -> None:
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _slugify(text: str) -> str:
+    slug = re.sub(r"[^\w\-]+", "-", text.strip(), flags=re.UNICODE).strip("-")
+    return slug[:40] or "query"
+
+
+def _new_report_name(query: str) -> str:
+    return f"{int(time.time())}-{_slugify(query)}.report.md"
+
+
+async def _a2a_send(url: str, message: str, timeout: float) -> str:
+    """A2A v0.3 message/send over HTTP. Matches agents/e2e/src/nat_e2e/register.py."""
+    payload = {
+        "jsonrpc": "2.0",
+        "id": str(uuid.uuid4()),
+        "method": "message/send",
+        "params": {
+            "message": {
+                "kind": "message",
+                "messageId": str(uuid.uuid4()),
+                "role": "user",
+                "parts": [{"kind": "text", "text": message}],
+            },
+        },
+    }
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        resp = await client.post(url, json=payload)
+        resp.raise_for_status()
+        data = resp.json()
+    result = data.get("result", {})
+    artifacts = result.get("artifacts", [])
+    if artifacts:
+        parts = artifacts[0].get("parts", [])
+        return parts[0].get("text", "") if parts else ""
+    parts = result.get("parts", [])
+    return parts[0].get("text", "") if parts else ""
+
+
+def _stub_report(query: str) -> str:
+    return (
+        f"# Briefing preview: {query}\n\n"
+        "> This is a placeholder generated by the UI in **STUB mode**.\n"
+        "> The real briefing will appear here once the live pipeline is wired in.\n\n"
+        "## Summary\n\n"
+        f"- Topic: **{query}**\n"
+        "- Source: stubbed\n"
+        "- Generated: just now\n\n"
+        "## Notes\n\n"
+        "In live mode, the briefing will combine official benchmarks, papers, "
+        "and community reactions into a single structured view rendered below "
+        "the user message.\n"
+    )
+
+
+async def _run_stub(job: Job) -> str:
+    """Purely visual run: phase 1 (5s) → phase 2 (parallel random) → phase 3 (random)."""
+    # Phase 1 — query-generator fixed visual delay.
+    await asyncio.sleep(QUERY_GEN_VISUAL_DELAY_SECONDS)
+    job.agents["query-generator"] = "done"
+
+    # Phase 2 — collectors start in parallel, each random 0–STUB_AGENT_MAX_SECONDS.
+    for aid in COLLECTOR_IDS:
+        job.agents[aid] = "working"
+
+    async def _stub_collector(aid: str) -> None:
+        await asyncio.sleep(random.uniform(0.0, STUB_AGENT_MAX_SECONDS))
+        job.agents[aid] = "done"
+
+    await asyncio.gather(*[_stub_collector(aid) for aid in COLLECTOR_IDS])
+
+    # Phase 3 — reporter starts only after every collector is done.
+    job.agents["reporter"] = "working"
+    await asyncio.sleep(random.uniform(0.0, STUB_AGENT_MAX_SECONDS))
+    job.agents["reporter"] = "done"
+
+    return _stub_report(job.query)
+
+
+async def _animate_phases(job: Job, work_dir: Path) -> None:
+    """Drive the phased pill transitions while the real e2e call is in flight.
+
+    Phase 1 — sleep QUERY_GEN_VISUAL_DELAY_SECONDS, then flip query-generator
+              to done (Query Generator never writes a .md — it's visual only).
+    Phase 2 — flip all collectors to working, then poll work_dir for each
+              <collector>.md to flip them individually to done.
+    Phase 3 — once every collector is done, flip reporter to working and poll
+              for reporter.md.
+    """
+    # Phase 1
+    await asyncio.sleep(QUERY_GEN_VISUAL_DELAY_SECONDS)
+    if job.agents.get("query-generator") == "working":
+        job.agents["query-generator"] = "done"
+
+    # Phase 2 — collectors
+    for aid in COLLECTOR_IDS:
+        if job.agents.get(aid) == "pending":
+            job.agents[aid] = "working"
+
+    while True:
+        for aid in COLLECTOR_IDS:
+            if job.agents.get(aid) == "working" and (work_dir / f"{aid}.md").exists():
+                job.agents[aid] = "done"
+        if all(job.agents.get(aid) == "done" for aid in COLLECTOR_IDS):
+            break
+        await asyncio.sleep(0.5)
+
+    # Phase 3 — reporter
+    if job.agents.get("reporter") == "pending":
+        job.agents["reporter"] = "working"
+
+    while job.agents.get("reporter") == "working":
+        if (work_dir / "reporter.md").exists():
+            job.agents["reporter"] = "done"
+            return
+        await asyncio.sleep(0.5)
+
+
+async def _run_live(job: Job) -> str:
+    """LIVE run: kick off e2e in parallel with the phased animation.
+
+    If e2e returns before the animation naturally completes (unlikely but
+    possible — e.g. very fast pipeline or cached answer), any still-pending/
+    working pill is force-advanced to done so the UI doesn't get stuck.
+    """
+    work_dir = REPORTS_DIR / job.id
+    work_dir.mkdir(parents=True, exist_ok=True)
+
+    envelope = json.dumps(
+        {"job_id": job.id, "work_dir": str(work_dir), "query": job.query},
+        ensure_ascii=False,
+    )
+    e2e_task = asyncio.create_task(_a2a_send(E2E_URL, envelope, E2E_TIMEOUT_SECONDS))
+    animation_task = asyncio.create_task(_animate_phases(job, work_dir))
+
+    try:
+        markdown = await e2e_task
+        if not markdown.strip():
+            raise RuntimeError("Empty response from e2e agent")
+        # Pipeline completed — promote any laggard pill to done.
+        for aid in job.agents:
+            if job.agents[aid] in ("pending", "working"):
+                job.agents[aid] = "done"
+        return markdown
+    finally:
+        animation_task.cancel()
+        try:
+            await animation_task
+        except asyncio.CancelledError:
+            pass
+
+
+async def _run_job(job: Job) -> None:
+    """Execute one job: phased pill animation + persist final markdown."""
+    try:
+        markdown = await (_run_stub(job) if STUB_MODE else _run_live(job))
+        report_name = _new_report_name(job.query)
+        (REPORTS_DIR / report_name).write_text(markdown, encoding="utf-8")
+        job.report_name = report_name
+        job.status = "done"
+    except Exception as exc:
+        # On failure, any agent that hasn't completed is surfaced as error so
+        # the user can tell something broke mid-flight.
+        for aid, status in job.agents.items():
+            if status in ("pending", "working"):
+                job.agents[aid] = "error"
+        job.error = f"{type(exc).__name__}: {exc}"
+        job.status = "error"
+
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def create_chat(req: ChatRequest) -> ChatResponse:
+    query = req.query.strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="query is empty")
+    job = Job(id=str(uuid.uuid4()), query=query)
+    JOBS[job.id] = job
+    asyncio.create_task(_run_job(job))
+    return ChatResponse(job_id=job.id)
+
+
+@app.get("/api/chat/{job_id}", response_model=JobStatusResponse)
+async def get_chat(job_id: str) -> JobStatusResponse:
+    job = JOBS.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    agents = [
+        AgentState(id=aid, label=label, status=job.agents.get(aid, "working"))
+        for aid, label in AGENTS
+    ]
+    return JobStatusResponse(
+        job_id=job.id,
+        status=job.status,
+        agents=agents,
+        report_name=job.report_name,
+        error=job.error,
+    )
+
+
+@app.get("/api/reports/{name}", response_class=PlainTextResponse)
+async def get_report(name: str) -> PlainTextResponse:
+    # Block path traversal — accept only plain filenames.
+    if "/" in name or "\\" in name or name.startswith("."):
+        raise HTTPException(status_code=400, detail="invalid report name")
+    path = (REPORTS_DIR / name).resolve()
+    if REPORTS_DIR not in path.parents and path.parent != REPORTS_DIR:
+        raise HTTPException(status_code=400, detail="invalid report path")
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="report not found")
+    return PlainTextResponse(path.read_text(encoding="utf-8"), media_type="text/markdown")
+
+
+@app.get("/api/config")
+async def get_config() -> dict:
+    return {
+        "stub_mode": STUB_MODE,
+        "e2e_url": E2E_URL,
+        "reports_dir": str(REPORTS_DIR),
+    }
+
+
+@app.get("/")
+async def index() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+def main() -> None:
+    import uvicorn
+
+    host = os.environ.get("NAT_UI_HOST", "127.0.0.1")
+    port = int(os.environ.get("NAT_UI_PORT", "8080"))
+    uvicorn.run(app, host=host, port=port)
+
+
+if __name__ == "__main__":
+    main()
