@@ -161,29 +161,48 @@
     return el;
   }
 
+  const COLLECTOR_SOURCES = [
+    { id: "arcalive", label: "ArcaLive" },
+    { id: "arxiv", label: "arXiv" },
+    { id: "benchmark", label: "Benchmark" },
+    { id: "geeknews", label: "GeekNews" },
+    { id: "lobsters", label: "Lobsters" },
+    { id: "openai", label: "OpenAI Blog" },
+    { id: "reddit", label: "Reddit" },
+  ];
+  const COLLECTOR_STAGES = [
+    { id: "collect", label: "collect" },
+    { id: "validate", label: "validate" },
+  ];
+
   const PHASES = [
     {
       id: "query-generator",
       num: 1,
       title: "Query Generator",
       description: "Extract model names from query",
+      layout: "flat",
       ids: ["query-generator"],
     },
     {
       id: "collectors",
       num: 2,
       title: "Data Collectors",
-      description: "Scrape 7 sources in parallel",
-      ids: [
-        "arcalive", "arxiv", "benchmark", "geeknews",
-        "lobsters", "openai", "reddit",
-      ],
+      description: "Collect and validate 7 sources in parallel",
+      layout: "sources",
+      sources: COLLECTOR_SOURCES,
+      stages: COLLECTOR_STAGES,
+      // Flat list of every pill ID inside this phase, used by phaseState().
+      ids: COLLECTOR_SOURCES.flatMap((s) =>
+        COLLECTOR_STAGES.map((st) => `${s.id}-${st.id}`),
+      ),
     },
     {
       id: "reporter",
       num: 3,
       title: "Reporter",
       description: "Compose the final briefing",
+      layout: "flat",
       ids: ["reporter"],
     },
   ];
@@ -214,6 +233,39 @@
           <polygon points="2,24 12,24 7,34" fill="currentColor"/>
         </svg>`;
 
+      const flatPill = (aid) => `
+        <span class="agent-pill" data-id="${aid}" data-status="pending">
+          <span class="agent-indicator"></span>
+          <span class="agent-label"></span>
+        </span>`;
+
+      const stagePill = (aid) => `
+        <span class="agent-pill stage-pill" data-id="${aid}" data-status="pending">
+          <span class="agent-indicator"></span>
+          <span class="agent-label"></span>
+        </span>`;
+
+      const sourceCard = (phase, source) => `
+        <div class="source-card" data-source="${source.id}">
+          <div class="source-name">${escapeAttr(source.label)}</div>
+          <div class="source-stages">
+            ${phase.stages
+              .map(
+                (stage, i) => `
+                ${i > 0 ? `<span class="stage-arrow" aria-hidden="true">→</span>` : ""}
+                ${stagePill(`${source.id}-${stage.id}`)}`,
+              )
+              .join("")}
+          </div>
+        </div>`;
+
+      const renderBody = (phase) =>
+        phase.layout === "sources"
+          ? `<div class="sources-grid">${phase.sources
+              .map((s) => sourceCard(phase, s))
+              .join("")}</div>`
+          : phase.ids.map(flatPill).join("");
+
       container.innerHTML = PHASES.map(
         (phase, idx) => `
           ${idx > 0 ? `<div class="phase-arrow" data-for="${phase.id}" data-state="inactive">${connectorSvg}</div>` : ""}
@@ -226,15 +278,7 @@
               </div>
             </div>
             <div class="phase-body">
-              ${phase.ids
-                .map(
-                  (aid) => `
-                  <span class="agent-pill" data-id="${aid}" data-status="pending">
-                    <span class="agent-indicator"></span>
-                    <span class="agent-label"></span>
-                  </span>`,
-                )
-                .join("")}
+              ${renderBody(phase)}
             </div>
           </div>`,
       ).join("");

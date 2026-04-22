@@ -81,7 +81,7 @@ cd ui
 
 ### 2) LIVE 모드 (실제 e2e 에이전트 연동)
 
-먼저 프로젝트 루트 README의 순서대로 query-generator, 모든 extractor/validator,
+먼저 프로젝트 루트 README의 순서대로 query-generator, 모든 collector/validator,
 reporter, e2e 에이전트를 각각 띄운 뒤:
 
 ```bash
@@ -123,20 +123,20 @@ NAT_UI_STUB=0 ./scripts/run.sh
 ### `GET /api/chat/{job_id}`
 
 ```json
-// pending (agents 가 점점 done 으로 바뀌어간다)
+// pending (agents 가 점점 done 으로 바뀌어간다 — query-generator + 14 stage pills + reporter = 총 16개)
 {
   "job_id": "6f…",
   "status": "pending",
   "agents": [
-    { "id": "query-generator", "label": "Query Generator", "status": "done" },
-    { "id": "arcalive",        "label": "ArcaLive",        "status": "working" },
-    { "id": "arxiv",           "label": "arXiv",           "status": "done" },
-    { "id": "benchmark",       "label": "Benchmark",       "status": "working" },
-    { "id": "geeknews",        "label": "GeekNews",        "status": "working" },
-    { "id": "lobsters",        "label": "Lobsters",        "status": "done" },
-    { "id": "openai",          "label": "OpenAI Blog",     "status": "working" },
-    { "id": "reddit",          "label": "Reddit",          "status": "done" },
-    { "id": "reporter",        "label": "Reporter",        "status": "working" }
+    { "id": "query-generator",    "label": "Query Generator", "status": "done" },
+    { "id": "arcalive-collect",   "label": "collect",         "status": "done" },
+    { "id": "arcalive-validate",  "label": "validate",        "status": "working" },
+    { "id": "arxiv-collect",      "label": "collect",         "status": "done" },
+    { "id": "arxiv-validate",     "label": "validate",        "status": "done" },
+    { "id": "benchmark-collect",  "label": "collect",         "status": "working" },
+    { "id": "benchmark-validate", "label": "validate",        "status": "pending" },
+    { "id": "…",                  "label": "…",               "status": "…" },
+    { "id": "reporter",           "label": "Reporter",        "status": "pending" }
   ],
   "report_name": null,
   "error": null
@@ -184,47 +184,60 @@ NAT_UI_STUB=0 ./scripts/run.sh
 
 ---
 
-## 에이전트 진행 표시 (3-phase)
+## 에이전트 진행 표시 (3-phase + 2-stage collectors)
 
-채팅 입력 시 9개의 에이전트가 **3단계로 순차 진행**되는 애니메이션이 뜹니다.
+채팅 입력 시 파이프라인이 **3단계로 순차 진행**되는 애니메이션이 뜹니다.
 각 phase 는 그룹 박스로 묶여 있고, 이전 phase 가 완료되면 연결 화살표가
-점멸하면서 다음 phase 로 활성화가 넘어갑니다.
+점멸하면서 다음 phase 로 활성화가 넘어갑니다. Phase 2 내부는 **7개 소스가
+병렬**로 움직이되, 각 소스가 **collect → validate** 의 미니 파이프라인을
+순차로 돌립니다.
 
 ```
-┌──────────────────┐     ┌────────────────────────────────────┐     ┌───────────┐
-│ 1. Query         │ ──▶ │ 2. Data Collectors (7)             │ ──▶ │ 3. Reporter│
-│    Generator     │     │    arcalive / arxiv / benchmark /  │     │           │
-│                  │     │    geeknews / lobsters / openai /  │     │           │
-│                  │     │    reddit                          │     │           │
-└──────────────────┘     └────────────────────────────────────┘     └───────────┘
+┌──────────────────┐     ┌─────────────────────────────────────┐     ┌───────────┐
+│ 1. Query         │ ──▶ │ 2. Data Collectors                  │ ──▶ │ 3. Reporter│
+│    Generator     │     │    ┌─────────────────────┐ × 7      │     │           │
+│                  │     │    │ <source>            │           │     │           │
+│                  │     │    │ [collect] → [valid.]│           │     │           │
+│                  │     │    └─────────────────────┘           │     │           │
+└──────────────────┘     └─────────────────────────────────────┘     └───────────┘
 ```
+
+Phase 2 는 7개 소스 카드가 CSS 그리드로 배치되며, 각 카드 안에 두 개의
+stage pill (collect / validate) 이 좌→우로 연결됩니다. 한 소스의 collect 가
+끝나야 해당 소스의 validate 가 working 으로 전이됩니다.
 
 ### Pill 상태 (4종)
 
 | 상태 | 표시 | 언제 |
 |---|---|---|
-| `pending` | 점선 테두리 + 회색 dot, 흐릿 | 아직 자기 phase 가 시작되지 않음 |
-| `working` | 회전 스피너 + pop-in 애니메이션 | 현재 phase 활성, 실행 중 |
+| `pending` | 점선 테두리 + 회색 dot, 흐릿 | 아직 자기 stage 가 시작되지 않음 |
+| `working` | 회전 스피너 + pop-in 애니메이션 | 현재 stage 활성, 실행 중 |
 | `done` | 녹색 체크 (pop-in) | 완료 |
 | `error` | 빨간 dot + 빨간 테두리 | 실패 |
 
+Source 카드 자체도 내부 stage 상태에 따라 시각적으로 반응합니다 — 어느
+stage 가 working 이면 카드 테두리가 그린으로 강조, 양쪽 stage 다 done 이면
+카드가 살짝 흐려지며 "정지" 상태를 시사합니다. collect 가 done 이 되면
+collect → validate 사이 화살표도 그린으로 바뀝니다.
+
 ### 진행 순서
 
-1. **입력 즉시** — `query-generator` = `working`, collectors 7개 + reporter = `pending`.
-2. **5초 후** (`NAT_UI_QUERY_GEN_DELAY`) — `query-generator` = `done`, 7개 collector 가 일제히 `working` 으로 전이. Query Generator 는 실제 마크다운 파일을 생성하지 **않으며**, 고정 타이머 기반의 순수 시각 연출입니다.
-3. collector 의 `<agent_id>.md` 가 `work_dir` 에 나타날 때마다 해당 pill 이 `done` 으로 전이.
-4. **7개 collector 모두 done 이 되는 순간** — `reporter` = `working`.
-5. `reporter.md` 가 나타나면 `reporter` = `done`. 전체 job = `done`.
+1. **입력 즉시** — `query-generator` = `working`, 7 × (collect + validate) 14개 pill + `reporter` = `pending`.
+2. **5초 후** (`NAT_UI_QUERY_GEN_DELAY`) — `query-generator` = `done`, 7개 소스의 **`<source>-collect`** 가 일제히 `working` 으로 전이. Query Generator 는 실제 파일을 생성하지 **않으며**, 고정 타이머 기반의 순수 시각 연출입니다.
+3. `<source>-collect.md` 가 `work_dir` 에 나타나면 → 그 소스의 collect pill = `done`, 같은 소스의 validate pill = `working` 으로 전이.
+4. `<source>-validate.md` 가 나타나면 → validate pill = `done`.
+5. **7개 소스 전부의 validate 가 done 이 되는 순간** — `reporter` = `working`.
+6. `reporter.md` 가 나타나면 `reporter` = `done`. 전체 job = `done`.
 
 ### STUB 모드에서의 타이밍
 
 `NAT_UI_STUB=1` 일 때:
 - Phase 1 = `NAT_UI_QUERY_GEN_DELAY` 초 대기 (기본 5초)
-- Phase 2 = 7개 collector 병렬, 각각 `0 ~ NAT_UI_STUB_AGENT_MAX` 초 랜덤 (기본 10초 cap)
+- Phase 2 = 7개 소스 병렬, 각 소스가 collect (`0 ~ NAT_UI_STUB_AGENT_MAX` 초) → validate (`0 ~ NAT_UI_STUB_AGENT_MAX` 초) 를 순차로 실행
 - Phase 3 = reporter 가 `0 ~ NAT_UI_STUB_AGENT_MAX` 초 랜덤
 
-파일 생성 없이 서버 내부 상태만 phase 순서대로 전이시킵니다. 연출만 확인할
-때 쓰면 됩니다.
+파일 생성 없이 서버 내부 상태만 phase/stage 순서대로 전이시킵니다. 연출만
+확인할 때 쓰면 됩니다.
 
 ### LIVE 모드 — 파일 기반 진행 표시 (계약)
 
@@ -264,31 +277,38 @@ envelope 으로 처리 / 실패하면 (예: 직접 `a2a_client.sh "<query>"` 로
 e2e 는 `work_dir` 을 모든 하위 에이전트에게 전달해서 각자 결과 파일을
 거기에 쓰도록 합니다.
 
-#### 3) 에이전트별 결과 파일 — **Query Generator 는 쓰지 않습니다**
+#### 3) stage 별 결과 파일 — **Query Generator 는 쓰지 않습니다**
 
-각 collector 와 reporter 가 완료 시점에 다음 파일을 씁니다
-(확장자 `.md`, 파일명 = pill ID):
+각 소스의 collector 와 validator, 그리고 reporter 가 완료 시점에 다음 파일을
+`work_dir` 에 씁니다 (확장자 `.md`, 파일명 = `<source>-<stage>` 또는 `reporter`):
 
 ```
-<work_dir>/arcalive.md
-<work_dir>/arxiv.md
-<work_dir>/benchmark.md
-<work_dir>/geeknews.md
-<work_dir>/lobsters.md
-<work_dir>/openai.md
-<work_dir>/reddit.md
+<work_dir>/arcalive-collect.md        <work_dir>/arcalive-validate.md
+<work_dir>/arxiv-collect.md           <work_dir>/arxiv-validate.md
+<work_dir>/benchmark-collect.md       <work_dir>/benchmark-validate.md
+<work_dir>/geeknews-collect.md        <work_dir>/geeknews-validate.md
+<work_dir>/lobsters-collect.md        <work_dir>/lobsters-validate.md
+<work_dir>/openai-collect.md          <work_dir>/openai-validate.md
+<work_dir>/reddit-collect.md          <work_dir>/reddit-validate.md
+
 <work_dir>/reporter.md
 ```
+
+소스당 2개 stage × 7개 소스 = 14개 신호 파일, 여기에 reporter 1개.
 
 > **Query Generator 는 파일을 만들지 않습니다.** UI 가 Phase 1 을 고정
 > `NAT_UI_QUERY_GEN_DELAY` 초 동안 "연출" 로 보여주고 자동으로 done 으로
 > 넘기기 때문에, e2e 쪽에서 `query-generator.md` 를 쓸 필요가 없습니다.
 
-UI 는 0.5초 간격으로 `work_dir` 을 polling 합니다. Phase 2 의 collector
-파일들이 생기면 해당 pill 을 `done` 으로 바꾸고, **7개가 전부 done 이 된
-순간** Phase 3 로 넘어가서 `reporter` 를 `working` 으로 활성화, `reporter.md`
-생성을 기다립니다. 파일 **내용** 은 UI 가 읽지 않으므로 신호용으로만
-쓰실 거면 빈 파일이어도 상관없습니다.
+UI 는 0.5초 간격으로 `work_dir` 을 polling 합니다.
+- `<source>-collect.md` 가 생기면 → 그 소스 collect = done, 같은 소스의 validate = working 으로 전이
+- `<source>-validate.md` 가 생기면 → 그 소스 validate = done
+- 7개 소스의 validate 가 **전부** done 이 되는 순간 Phase 3 활성화, `reporter.md` 대기
+
+파일 **내용** 은 UI 가 읽지 않으므로 신호용으로만 쓰실 거면 빈 파일이어도
+상관없습니다. 드물게 validate 파일이 collect 파일보다 먼저 관측되는 경우도
+안전하게 처리되도록, validate 파일이 보이면 자동으로 collect 도 done 으로
+cascade 합니다.
 
 #### 4) 최종 리포트
 
@@ -321,7 +341,7 @@ pill 들은 모두 `error` 로 전이됩니다.
 | 요청 text part | **JSON envelope** `{job_id, work_dir, query}` — 위 "LIVE 모드 계약" 참고 |
 | 응답 text part | 그대로 렌더링 가능한 순수 마크다운 문자열 (`<think>` 블록 등 없이) |
 | 작업 디렉토리 | UI가 `${NAT_UI_REPORTS_DIR}/<job_id>/` 를 선제 생성 |
-| 에이전트별 신호 파일 | `<work_dir>/<pill_id>.md` (9개, 빈 파일 허용) |
+| stage 별 신호 파일 | `<work_dir>/<source>-collect.md`, `<work_dir>/<source>-validate.md` (소스당 2개 × 7소스) + `<work_dir>/reporter.md` (빈 파일 허용) |
 | 최종 리포트 저장 위치 | UI가 `${NAT_UI_REPORTS_DIR}/<timestamp>-<slug>.report.md` 로 저장 |
 
 > `*.report.md` 확장자와 `.venv`, `__pycache__` 는 프로젝트 루트
