@@ -1,4 +1,4 @@
-# AI Product Feedback Aggregator
+# NeMoBriefing
 
 An agentic system that collects and summarizes both official performance data (benchmarks, papers) and real user reactions to newly released AI products (models, APIs, frameworks, features).
 
