@@ -1,7 +1,7 @@
 general:
   front_end:
     _type: a2a
-    name: "E2E Pipeline Agent"
+    name: "Orchestrator Pipeline Agent"
     description: "nemotron-3-super 기반 react_agent. plan_query → collect_evidence(parallel) → write_report tool 을 순서대로 호출해 자연어 질의를 제품별 markdown 보고서로 변환"
     host: 0.0.0.0
     port: 10000

@@ -3,14 +3,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="$(dirname "$SCRIPT_DIR")"
-CONFIG_FILE="$AGENT_DIR/configs/config.yml"
 
+SERVER_URL="${NAT_A2A_URL:-http://localhost:10000}"
 QUERY="${1:-GPT5와 Gemma4 비교해줘}"
 
-echo "=== e2e direct run ==="
+echo "=== orchestrator A2A client test ==="
 echo "query:  $QUERY"
-echo "config: $CONFIG_FILE"
+echo "server: $SERVER_URL"
 echo ""
 
 cd "$AGENT_DIR"
-uv run nat run --config_file "$CONFIG_FILE" --input "$QUERY"
+uv run nat a2a client call --url "$SERVER_URL" --message "$QUERY" --timeout 300

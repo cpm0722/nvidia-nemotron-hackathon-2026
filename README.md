@@ -9,7 +9,7 @@ Backbone models: [Nemotron-3-Nano-30B-A3B](https://build.nvidia.com/nvidia/nemot
 
 ## Description
 
-Given a natural language query (Korean or English), the **e2e orchestrator** — a ReAct agent powered by Nemotron-3-Super — autonomously invokes three tools to produce a report per product:
+Given a natural language query (Korean or English), the **orchestrator** — a ReAct agent powered by Nemotron-3-Super — autonomously invokes three tools to produce a report per product:
 
 1. **`plan_query`** — asks the query-generator to extract AI product names and allocates a new `run_id`, persisting `runs/{run_id}/query.json`.
 2. **`collect_evidence`** — fans out `{product, run_id}` to every collector A2A endpoint in parallel. Each collector scrapes, calls its paired validator, writes both the raw and validated JSON to `runs/{run_id}/raw/{product}/{source}.json` and `runs/{run_id}/validated/{product}/{source}.json`, and returns the validated file path.
@@ -25,7 +25,7 @@ All inter-agent data flows through files under `runs/{run_id}/`; agents exchange
 user query
     │
     ▼
-e2e orchestrator  (react_agent, nemotron-super, port 10000)
+orchestrator      (react_agent, nemotron-super, port 10000)
     │  tool: plan_query
     ▼
 query-generator  (nemotron-nano, port 10001)
@@ -57,14 +57,14 @@ query-generator  (nemotron-nano, port 10001)
                          report file path(s) returned to the user
 ```
 
-The **e2e agent** (port 10000) is a `react_agent` workflow powered by Nemotron-3-Super.
+The **orchestrator agent** (port 10000) is a `react_agent` workflow powered by Nemotron-3-Super.
 It autonomously drives three tools — `plan_query`, `collect_evidence`, `write_report` —
 and iterates over every product returned by `plan_query`.
 
 Each **collector** = one extractor A2A service + one validator A2A service. The
 extractor is still LLM-less Python: it scrapes, writes the raw JSON file, calls
 the paired validator, writes the validated JSON file, and returns the validated
-path. Only `query-generator`, `validator`, `reporter`, and the `e2e` orchestrator
+path. Only `query-generator`, `validator`, `reporter`, and the `orchestrator`
 use an LLM — extractor layers remain deterministic.
 
 ### Filesystem layout per run
@@ -94,7 +94,7 @@ runs/{run_id}/                         # run_id = YYYYMMDD-HHMMSS-{8-char uuid}
 
 | Agent | Port | Uses LLM? |
 |---|---|---|
-| e2e | 10000 | nemotron-super (react_agent) |
+| orchestrator | 10000 | nemotron-super (react_agent) |
 | query-generator | 10001 | nemotron-nano |
 | reporter | 10002 | nemotron-super (custom file-based workflow) |
 | extractors (arcalive–reddit) | 10010–10016 | no (scrape + file I/O + A2A call) |
@@ -105,7 +105,7 @@ runs/{run_id}/                         # run_id = YYYYMMDD-HHMMSS-{8-char uuid}
 | Role | Model |
 |---|---|
 | query-generator | `nvidia/nemotron-3-nano-30b-a3b` |
-| e2e, validators, reporter | `nvidia/nemotron-3-super-120b-a12b` |
+| orchestrator, validators, reporter | `nvidia/nemotron-3-super-120b-a12b` |
 | extractors | none (LLM-less Python scrape + validator delegation) |
 
 ---
@@ -134,16 +134,16 @@ No API key is required — set `api_key: empty` in `config.yml`.
 
 ### Run via `docker compose` (recommended)
 
-Brings up all 17 A2A agents (7 extractors + 7 validators + query-generator + reporter + e2e) in the correct dependency order from a single shared image.
+Brings up all 17 A2A agents (7 extractors + 7 validators + query-generator + reporter + orchestrator) in the correct dependency order from a single shared image.
 
 ```bash
 cp .env.example .env             # edit model endpoints if yours differ
 docker compose up -d --build     # first run builds the shared image
 docker compose ps                # wait until every service is 'healthy'
-curl http://localhost:10000/.well-known/agent-card.json  # e2e is up
+curl http://localhost:10000/.well-known/agent-card.json  # orchestrator is up
 
 # send a query
-cd agents/e2e && ./scripts/a2a_client.sh "GPT5와 Gemma4 비교해줘"
+cd agents/orchestrator && ./scripts/a2a_client.sh "GPT5와 Gemma4 비교해줘"
 ```
 
 Startup order is enforced by `depends_on: condition: service_healthy`:
@@ -151,21 +151,21 @@ Startup order is enforced by `depends_on: condition: service_healthy`:
 ```
 L1: 7 validators + query-generator + reporter   (talk to Brev NIM only)
 L2: 7 extractors                                  (each depends on its own validator)
-L3: e2e                                           (depends on every L1/L2 service)
+L3: orchestrator                                  (depends on every L1/L2 service)
 ```
 
-Only the e2e front-end (port `10000`) is published to the host. Intra-stack traffic stays on the `ari-net` bridge via compose DNS (`http://arcalive-validator:10020`, etc.). Override the host port with `E2E_HOST_PORT` in `.env`.
+Only the orchestrator front-end (port `10000`) is published to the host. Intra-stack traffic stays on the `ari-net` bridge via compose DNS (`http://arcalive-validator:10020`, etc.). Override the host port with `ORCHESTRATOR_HOST_PORT` in `.env`.
 
 #### Deploy a subset of collectors
 
-Each collector's validator+extractor pair is tagged with two compose profiles — the collector's own name and `all` — so you can start only the ones you need. `e2e`, `query-generator`, and `reporter` are untagged and always run.
+Each collector's validator+extractor pair is tagged with two compose profiles — the collector's own name and `all` — so you can start only the ones you need. `orchestrator`, `query-generator`, and `reporter` are untagged and always run.
 
 Two `.env` variables control this and **must be kept in sync**:
 
 | Variable | Purpose |
 |---|---|
 | `COMPOSE_PROFILES` | Which collector services docker compose starts. |
-| `ENABLED_COLLECTORS` | Which collectors the e2e agent's `collect_evidence` tool fans out to. |
+| `ENABLED_COLLECTORS` | Which collectors the orchestrator agent's `collect_evidence` tool fans out to. |
 
 Valid collector names: `arcalive`, `arxiv`, `benchmark`, `geeknews`, `lobsters`, `openai`, `reddit`.
 
@@ -179,9 +179,9 @@ COMPOSE_PROFILES=arcalive,geeknews
 ENABLED_COLLECTORS=arcalive,geeknews
 ```
 
-`e2e.depends_on` marks each extractor with `required: false`, so any collector absent from `COMPOSE_PROFILES` is skipped rather than aborting compose. If you list a name in `ENABLED_COLLECTORS` that `collect_evidence` does not know about, config load fails fast with a `ValueError` — this is the typo guard, so a missing collector never silently drops.
+`orchestrator.depends_on` marks each extractor with `required: false`, so any collector absent from `COMPOSE_PROFILES` is skipped rather than aborting compose. If you list a name in `ENABLED_COLLECTORS` that `collect_evidence` does not know about, config load fails fast with a `ValueError` — this is the typo guard, so a missing collector never silently drops.
 
-### Run the full e2e pipeline manually
+### Run the full orchestrator pipeline manually
 
 Each agent script `cd`s into its own agent directory, so without an explicit override every agent would write `runs/` under a different cwd. Export an absolute `ARI_RUNS_ROOT` (pointing at the repo-root `runs/`) in every terminal first so all agents share the same pipeline artefacts:
 
@@ -189,7 +189,7 @@ Each agent script `cd`s into its own agent directory, so without an explicit ove
 export ARI_RUNS_ROOT="$(git rev-parse --show-toplevel)/runs"
 ```
 
-Then start all agents (each in a separate terminal with `ARI_RUNS_ROOT` exported), then call the e2e agent:
+Then start all agents (each in a separate terminal with `ARI_RUNS_ROOT` exported), then call the orchestrator agent:
 
 ```bash
 # Terminal 1 — query-generator
@@ -207,19 +207,19 @@ cd agents/collectors/arcalive/validator && ./scripts/a2a_server.sh
 # Terminal 16 — reporter
 cd agents/reporter && ./scripts/a2a_server.sh
 
-# Terminal 17 — e2e orchestrator
-cd agents/e2e && ./scripts/a2a_server.sh
+# Terminal 17 — orchestrator
+cd agents/orchestrator && ./scripts/a2a_server.sh
 
 # Send a query
-cd agents/e2e && ./scripts/a2a_client.sh "GPT5와 Gemma4 비교해줘"
+cd agents/orchestrator && ./scripts/a2a_client.sh "GPT5와 Gemma4 비교해줘"
 ```
 
 ### Scaled test (arcalive + geeknews only)
 
-Use `configs/config_test.yml` when running e2e with only a subset of extractors:
+Use `configs/config_test.yml` when running the orchestrator with only a subset of extractors:
 
 ```bash
-cd agents/e2e && uv run nat a2a serve --config_file configs/config_test.yml
+cd agents/orchestrator && uv run nat a2a serve --config_file configs/config_test.yml
 ```
 
 (Requires just arcalive + geeknews extractors + validators + query-generator + reporter running.)
@@ -244,7 +244,7 @@ Every agent follows the same script interface:
 cd agents/collectors/{source}/{extractor|validator}
 
 # Or the orchestrator / supporting agents
-cd agents/{query-generator|reporter|e2e}
+cd agents/{query-generator|reporter|orchestrator}
 
 # A2A server mode
 ./scripts/a2a_server.sh
@@ -252,7 +252,7 @@ cd agents/{query-generator|reporter|e2e}
 # Test client (requires server running)
 ./scripts/a2a_client.sh "<input>"
 
-# Direct run (development — extractors, query-generator, reporter, e2e only)
+# Direct run (development — extractors, query-generator, reporter, orchestrator only)
 ./scripts/run.sh "<input>"
 ```
 
@@ -279,7 +279,7 @@ workflow:
 The validator keeps the original chat_completion workflow and prompt; its
 `config.yml` carries the LLM definition and `file://` prompt reference.
 
-The e2e agent's `config.yml` declares the `react_agent` workflow, its LLM, and the three tools it can call. Endpoints are configured per-tool:
+The orchestrator agent's `config.yml` declares the `react_agent` workflow, its LLM, and the three tools it can call. Endpoints are configured per-tool:
 
 ```yaml
 llms:
@@ -317,13 +317,13 @@ workflow:
 ```
 nvidia-nemotron-hackathon-2026/
 ├── agents/
-│   ├── e2e/                                    # ReAct orchestrator (port 10000, nemotron-super)
+│   ├── orchestrator/                           # ReAct orchestrator (port 10000, nemotron-super)
 │   │   ├── configs/
 │   │   │   ├── config.yml                      # all 7 collectors
 │   │   │   └── config_test.yml                 # arcalive + geeknews only
 │   │   ├── prompts/system_prompt.txt           # react_agent prompt with {tool_names}
 │   │   ├── scripts/
-│   │   └── src/nat_e2e/
+│   │   └── src/nat_orchestrator/
 │   │       ├── register.py                     # imports the 3 tool modules to trigger registration
 │   │       ├── tool_plan_query.py              # query-generator + run_id allocation
 │   │       ├── tool_collect_evidence.py        # parallel collector fan-out
@@ -361,9 +361,9 @@ nvidia-nemotron-hackathon-2026/
 │   ├── Dockerfile                              # uv-workspace install; entrypoint reads CONFIG_FILE
 │   └── entrypoint.sh                           # cd to agent dir + `nat a2a serve`
 ├── docker-compose.yml                          # 17 services, 3-layer depends_on graph, healthchecks, shared runs/ volume
-├── .env.example                                # Brev model endpoints + E2E_HOST_PORT template
+├── .env.example                                # Brev model endpoints + ORCHESTRATOR_HOST_PORT template
 ├── docs/                                       # Internal reference documents
 ├── task-histories/                             # Branch plans and completion reports (gitignored)
-├── pyproject.toml                              # uv workspace root (14 collector subpackages + e2e/qgen/reporter)
+├── pyproject.toml                              # uv workspace root (14 collector subpackages + orchestrator/qgen/reporter)
 └── CLAUDE.md                                   # Project instructions for Claude Code
 ```

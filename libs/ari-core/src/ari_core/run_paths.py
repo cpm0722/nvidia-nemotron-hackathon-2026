@@ -1,6 +1,6 @@
-"""Filesystem layout helpers for a single e2e pipeline run.
+"""Filesystem layout helpers for a single orchestrator pipeline run.
 
-All agents (e2e orchestrator, extractors, reporter) share a common
+All agents (orchestrator, extractors, reporter) share a common
 ``runs/{run_id}/`` directory to exchange data via files instead of in-memory
 payloads. This module is the single source of truth for that layout so the
 individual agents never hard-code paths.

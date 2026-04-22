@@ -17,5 +17,5 @@ members = [
     "agents/collectors/reddit/validator",
     "agents/query-generator",
     "agents/reporter",
-    "agents/e2e",
+    "agents/orchestrator",
 ]

@@ -8,14 +8,14 @@
 # Dependency layers:
 #   L1: validators × 7, query-generator, reporter (talk to Brev NIM only)
 #   L2: extractors × 7 (depend on their own validator)
-#   L3: e2e (depends on all of L1 + L2 except validators)
+#   L3: orchestrator (depends on all of L1 + L2 except validators)
 #
 # Model endpoints come from .env (SUPER_MODEL_BASE_URL / NANO_MODEL_BASE_URL).
 #
 # Selective deploy: each collector's validator+extractor is tagged with two
 # profiles — its own name and "all". Set COMPOSE_PROFILES (e.g.
 # "arcalive,geeknews" or "all") to pick a subset; keep ENABLED_COLLECTORS in
-# sync so e2e only fans out to the started collectors.
+# sync so orchestrator only fans out to the started collectors.
 
 x-agent-base: &agent-base
   build:
@@ -26,7 +26,7 @@ x-agent-base: &agent-base
   networks:
     - ari-net
   # Bind-mount the host's runs/ into every container so extractors,
-  # reporter, and e2e share the file-based pipeline artefacts. Each
+  # reporter, and orchestrator share the file-based pipeline artefacts. Each
   # service also exports ARI_RUNS_ROOT=/app/runs so ari_core.run_paths
   # resolves relative paths against this mount instead of the per-agent
   # cwd set by entrypoint.sh.
@@ -248,10 +248,10 @@ services:
       HEALTHCHECK_PORT: "10016"
     healthcheck: *agent-healthcheck
 
-  # ────────────────────────── L3: e2e orchestrator ──────────────────────────
-  e2e:
+  # ────────────────────────── L3: orchestrator ──────────────────────────
+  orchestrator:
     <<: *agent-base
-    container_name: ari-e2e
+    container_name: ari-orchestrator
     # required: false lets profile-disabled extractors be silently skipped
     # instead of aborting compose with "depends on undefined service".
     depends_on:
@@ -265,7 +265,7 @@ services:
       openai-extractor: { condition: service_healthy, required: false }
       reddit-extractor: { condition: service_healthy, required: false }
     environment:
-      CONFIG_FILE: /app/agents/e2e/configs/config.yml
+      CONFIG_FILE: /app/agents/orchestrator/configs/config.yml
       QUERY_GENERATOR_URL: http://query-generator:10001
       REPORTER_URL: http://reporter:10002
       ARCALIVE_EXTRACTOR_URL: http://arcalive-extractor:10010
@@ -279,5 +279,5 @@ services:
       ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10000"
     ports:
-      - "${E2E_HOST_PORT:-10000}:10000"
+      - "${ORCHESTRATOR_HOST_PORT:-10000}:10000"
     healthcheck: *agent-healthcheck

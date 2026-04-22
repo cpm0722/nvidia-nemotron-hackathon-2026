@@ -7,8 +7,8 @@ Exposes three endpoints:
 
 Two run modes, selected via the NAT_UI_STUB env var:
 - STUB (default, NAT_UI_STUB=1): write a canned sample markdown after a short
-  delay. Useful while the e2e agent is still being built.
-- LIVE (NAT_UI_STUB=0): POST the query to the e2e A2A endpoint and save the
+  delay. Useful while the orchestrator agent is still being built.
+- LIVE (NAT_UI_STUB=0): POST the query to the orchestrator A2A endpoint and save the
   returned markdown to REPORTS_DIR.
 """
 
@@ -97,9 +97,9 @@ DEFAULT_RUNS_ROOT = REPO_ROOT / "runs"
 
 REPORTS_DIR = Path(os.environ.get("NAT_UI_REPORTS_DIR", DEFAULT_REPORTS_DIR)).resolve()
 RUNS_ROOT = Path(os.environ.get("ARI_RUNS_ROOT", DEFAULT_RUNS_ROOT)).resolve()
-E2E_URL = os.environ.get("NAT_UI_E2E_URL", "http://localhost:10000")
+ORCHESTRATOR_URL = os.environ.get("NAT_UI_ORCHESTRATOR_URL", "http://localhost:10000")
 STUB_MODE = os.environ.get("NAT_UI_STUB", "1") == "1"
-E2E_TIMEOUT_SECONDS = float(os.environ.get("NAT_UI_E2E_TIMEOUT", "600"))
+ORCHESTRATOR_TIMEOUT_SECONDS = float(os.environ.get("NAT_UI_ORCHESTRATOR_TIMEOUT", "600"))
 
 # Backend run_id pattern: YYYYMMDD-HHMMSS-xxxxxxxx (see ari_core.new_run_id).
 _RUN_ID_RE = re.compile(r"\b(\d{8}-\d{6}-[0-9a-f]{8})\b")
@@ -198,7 +198,7 @@ def _new_report_name(query: str) -> str:
 
 
 async def _a2a_send(url: str, message: str, timeout: float) -> str:
-    """A2A v0.3 message/send over HTTP. Matches agents/e2e/src/nat_e2e/register.py."""
+    """A2A v0.3 message/send over HTTP. Matches agents/orchestrator/src/nat_orchestrator/register.py."""
     payload = {
         "jsonrpc": "2.0",
         "id": str(uuid.uuid4()),
@@ -274,7 +274,7 @@ async def _run_stub(job: Job) -> str:
 async def _detect_run_id(since: float, deadline: float) -> str | None:
     """Watch RUNS_ROOT for a new run_id directory created after ``since``.
 
-    The e2e ``plan_query`` tool allocates run_id internally and writes
+    The orchestrator ``plan_query`` tool allocates run_id internally and writes
     ``runs/{run_id}/query.json`` as its first side effect; we pick up the
     newest ``YYYYMMDD-HHMMSS-xxxxxxxx`` directory whose mtime is >= ``since``.
     """
@@ -388,16 +388,16 @@ async def _watch_run_progress(job: Job, run_id_holder: dict, stop_event: asyncio
 
 
 async def _run_live(job: Job) -> tuple[str, str]:
-    """Kick off e2e over A2A, discover run_id from disk, drive 14-pill animation.
+    """Kick off the orchestrator over A2A, discover run_id from disk, drive 14-pill animation.
 
-    Returns ``(run_id, concatenated_markdown)``. The e2e agent's ``plan_query``
+    Returns ``(run_id, concatenated_markdown)``. The orchestrator agent's ``plan_query``
     tool owns run_id allocation — we just send the raw query text and watch
     ``runs/`` for the new directory.
     """
     since = time.time()
-    deadline = since + E2E_TIMEOUT_SECONDS
+    deadline = since + ORCHESTRATOR_TIMEOUT_SECONDS
 
-    e2e_task = asyncio.create_task(_a2a_send(E2E_URL, job.query, E2E_TIMEOUT_SECONDS))
+    orchestrator_task = asyncio.create_task(_a2a_send(ORCHESTRATOR_URL, job.query, ORCHESTRATOR_TIMEOUT_SECONDS))
 
     run_id_holder: dict[str, str | None] = {"value": None}
 
@@ -415,7 +415,7 @@ async def _run_live(job: Job) -> tuple[str, str]:
     )
 
     try:
-        response_text = await e2e_task
+        response_text = await orchestrator_task
     finally:
         stop_event.set()
         for t in (detect_task, progress_task):
@@ -434,7 +434,7 @@ async def _run_live(job: Job) -> tuple[str, str]:
     if run_id is None:
         raise RuntimeError(
             "Could not determine run_id (no runs/{YYYYMMDD-HHMMSS-xxxxxxxx}/ "
-            "directory created and no match in e2e response)"
+            "directory created and no match in orchestrator response)"
         )
 
     _update_agents_from_run(job, run_id)
@@ -453,7 +453,7 @@ def _write_error_log(job: Job, exc: BaseException) -> Path | None:
 
     Goes to ``runs/{run_id}/logs/ui-error.log`` when we captured a run_id before
     the failure; otherwise ``runs/_failed-{job_id}/logs/ui-error.log`` so the
-    connect-before-e2e failure mode is still inspectable.
+    connect-before-orchestrator failure mode is still inspectable.
     """
     folder = job.run_id if job.run_id else f"_failed-{job.id}"
     log_dir = RUNS_ROOT / folder / "logs"
@@ -465,7 +465,7 @@ def _write_error_log(job: Job, exc: BaseException) -> Path | None:
             f"job_id: {job.id}\n"
             f"query:  {job.query}\n"
             f"mode:   {'STUB' if STUB_MODE else 'LIVE'}\n"
-            f"e2e:    {E2E_URL}\n"
+            f"orchestrator: {ORCHESTRATOR_URL}\n"
             f"run_id: {job.run_id or '(none — failure before run allocation)'}\n"
             f"agents: {json.dumps(job.agents, ensure_ascii=False)}\n"
             f"---\n{tb}"
@@ -564,7 +564,7 @@ async def get_report(name: str) -> PlainTextResponse:
 async def get_config() -> dict:
     return {
         "stub_mode": STUB_MODE,
-        "e2e_url": E2E_URL,
+        "orchestrator_url": ORCHESTRATOR_URL,
         "reports_dir": str(REPORTS_DIR),
         "runs_root": str(RUNS_ROOT),
     }

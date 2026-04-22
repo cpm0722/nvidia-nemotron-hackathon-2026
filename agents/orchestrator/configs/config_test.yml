@@ -1,8 +1,8 @@
 general:
   front_end:
     _type: a2a
-    name: "E2E Pipeline Agent (test)"
-    description: "arcalive + geeknews 2개 collector 만 사용하는 e2e react_agent 테스트용 설정"
+    name: "Orchestrator Pipeline Agent (test)"
+    description: "arcalive + geeknews 2개 collector 만 사용하는 orchestrator react_agent 테스트용 설정"
     host: 0.0.0.0
     port: 10000
 

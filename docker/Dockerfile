@@ -39,7 +39,7 @@ COPY libs/validator-core/pyproject.toml  ./libs/validator-core/pyproject.toml
 
 COPY agents/query-generator/pyproject.toml  ./agents/query-generator/pyproject.toml
 COPY agents/reporter/pyproject.toml         ./agents/reporter/pyproject.toml
-COPY agents/e2e/pyproject.toml              ./agents/e2e/pyproject.toml
+COPY agents/orchestrator/pyproject.toml     ./agents/orchestrator/pyproject.toml
 
 COPY agents/collectors/arcalive/extractor/pyproject.toml   ./agents/collectors/arcalive/extractor/pyproject.toml
 COPY agents/collectors/arcalive/validator/pyproject.toml   ./agents/collectors/arcalive/validator/pyproject.toml
