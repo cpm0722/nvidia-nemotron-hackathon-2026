@@ -378,11 +378,11 @@
       const cfg = await res.json();
       if (cfg.stub_mode) {
         modeBadge.textContent = "STUB";
-        modeBadge.title = "stub mode — set NAT_UI_STUB=0 to use the real e2e agent";
+        modeBadge.title = "stub mode — set NAT_UI_STUB=0 to use the real orchestrator agent";
       } else {
         modeBadge.textContent = "LIVE";
         modeBadge.classList.add("live");
-        modeBadge.title = `e2e agent: ${cfg.e2e_url}`;
+        modeBadge.title = `orchestrator agent: ${cfg.orchestrator_url}`;
       }
     } catch {
       modeBadge.textContent = "?";

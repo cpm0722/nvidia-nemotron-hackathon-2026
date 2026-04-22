@@ -12,7 +12,6 @@ members = [
     "nat-arcalive-validator",
     "nat-arxiv-validator",
     "nat-benchmark-validator",
-    "nat-e2e",
     "nat-extractor-arcalive",
     "nat-extractor-arxiv",
     "nat-extractor-benchmark",
@@ -23,6 +22,7 @@ members = [
     "nat-geeknews-validator",
     "nat-lobsters-validator",
     "nat-openai-validator",
+    "nat-orchestrator",
     "nat-query-generator",
     "nat-reddit-validator",
     "nat-reporter",
@@ -1766,30 +1766,6 @@ requires-dist = [
 ]
 
 [[package]]
-name = "nat-e2e"
-version = "0.1.0"
-source = { editable = "agents/e2e" }
-dependencies = [
-    { name = "ari-core" },
-    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
-    { name = "requests" },
-]
-
-[package.optional-dependencies]
-test = [
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "ari-core", editable = "libs/ari-core" },
-    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
-    { name = "requests", specifier = ">=2.31" },
-]
-provides-extras = ["test"]
-
-[[package]]
 name = "nat-extractor-arcalive"
 version = "0.1.0"
 source = { editable = "agents/collectors/arcalive/extractor" }
@@ -2031,6 +2007,30 @@ requires-dist = [
     { name = "nvidia-nat", extras = ["a2a", "langchain"] },
     { name = "validator-core", editable = "libs/validator-core" },
 ]
+
+[[package]]
+name = "nat-orchestrator"
+version = "0.1.0"
+source = { editable = "agents/orchestrator" }
+dependencies = [
+    { name = "ari-core" },
+    { name = "nvidia-nat", extra = ["a2a", "langchain"] },
+    { name = "requests" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ari-core", editable = "libs/ari-core" },
+    { name = "nvidia-nat", extras = ["a2a", "langchain"] },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+    { name = "requests", specifier = ">=2.31" },
+]
+provides-extras = ["test"]
 
 [[package]]
 name = "nat-query-generator"
