@@ -6,8 +6,6 @@ each validated JSON file, synthesizes a markdown report via its LLM, writes
 tool simply surfaces that path back to the orchestrator LLM.
 """
 
-from __future__ import annotations
-
 import asyncio
 import json
 from collections.abc import AsyncGenerator

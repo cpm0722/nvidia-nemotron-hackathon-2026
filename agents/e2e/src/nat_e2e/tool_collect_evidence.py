@@ -11,8 +11,6 @@ collector failures are silently dropped (best-effort) so one dead source
 does not stop a run.
 """
 
-from __future__ import annotations
-
 import asyncio
 import json
 from collections.abc import AsyncGenerator

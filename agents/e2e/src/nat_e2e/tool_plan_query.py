@@ -11,8 +11,6 @@ The query-generator is itself an LLM and may wrap its answer in
 finds the last top-level JSON array in the response.
 """
 
-from __future__ import annotations
-
 import asyncio
 import json
 import re
