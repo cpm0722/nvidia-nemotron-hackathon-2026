@@ -15,11 +15,13 @@ classifiers = ["Programming Language :: Python"]
 dependencies = [
     "nvidia-nat[a2a]",
     "ari_core",
+    "validator_core",
     "requests>=2.31",
 ]
 
 [tool.uv.sources]
 ari_core = { path = "../../../../libs/ari-core", editable = true }
+validator_core = { path = "../../../../libs/validator-core", editable = true }
 
 [project.optional-dependencies]
 test = ["pytest>=8.0"]

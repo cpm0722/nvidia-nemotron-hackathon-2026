@@ -40,9 +40,5 @@ match the English form. Treat them as the same product.
   JSON array AFTER `</think>`.
 - Every input `url` must appear exactly once in the output.
 
-## Source signals for arXiv (research papers)
-- Papers that propose, analyze, or extend the queried model: score ≥ 0.8.
-- Papers that only use the model as a baseline/comparison without
-  substantive discussion: score ≤ 0.3.
-- Survey papers: score ≥ 0.5 ONLY if the queried model is a central focus;
-  otherwise ≤ 0.3.
+## Source signals for <source>
+<bullet list>
