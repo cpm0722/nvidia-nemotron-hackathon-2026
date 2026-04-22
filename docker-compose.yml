@@ -20,6 +20,13 @@ x-agent-base: &agent-base
   restart: unless-stopped
   networks:
     - ari-net
+  # Bind-mount the host's runs/ into every container so extractors,
+  # reporter, and e2e share the file-based pipeline artefacts. Each
+  # service also exports ARI_RUNS_ROOT=/app/runs so ari_core.run_paths
+  # resolves relative paths against this mount instead of the per-agent
+  # cwd set by entrypoint.sh.
+  volumes:
+    - ./runs:/app/runs
 
 x-super-llm-env: &super-llm-env
   SUPER_MODEL_BASE_URL: ${SUPER_MODEL_BASE_URL:-https://model-server-uya78rbya.brevlab.com/v1}
@@ -52,6 +59,7 @@ services:
     environment:
       <<: *super-llm-env
       CONFIG_FILE: /app/agents/collectors/arcalive/validator/configs/config.yml
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10020"
     healthcheck: *agent-healthcheck
 
@@ -61,6 +69,7 @@ services:
     environment:
       <<: *super-llm-env
       CONFIG_FILE: /app/agents/collectors/arxiv/validator/configs/config.yml
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10021"
     healthcheck: *agent-healthcheck
 
@@ -70,6 +79,7 @@ services:
     environment:
       <<: *super-llm-env
       CONFIG_FILE: /app/agents/collectors/benchmark/validator/configs/config.yml
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10022"
     healthcheck: *agent-healthcheck
 
@@ -79,6 +89,7 @@ services:
     environment:
       <<: *super-llm-env
       CONFIG_FILE: /app/agents/collectors/geeknews/validator/configs/config.yml
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10023"
     healthcheck: *agent-healthcheck
 
@@ -88,6 +99,7 @@ services:
     environment:
       <<: *super-llm-env
       CONFIG_FILE: /app/agents/collectors/lobsters/validator/configs/config.yml
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10024"
     healthcheck: *agent-healthcheck
 
@@ -97,6 +109,7 @@ services:
     environment:
       <<: *super-llm-env
       CONFIG_FILE: /app/agents/collectors/openai/validator/configs/config.yml
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10025"
     healthcheck: *agent-healthcheck
 
@@ -106,6 +119,7 @@ services:
     environment:
       <<: *super-llm-env
       CONFIG_FILE: /app/agents/collectors/reddit/validator/configs/config.yml
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10026"
     healthcheck: *agent-healthcheck
 
@@ -116,6 +130,7 @@ services:
     environment:
       <<: *nano-llm-env
       CONFIG_FILE: /app/agents/query-generator/configs/config.yml
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10001"
     healthcheck: *agent-healthcheck
 
@@ -125,6 +140,7 @@ services:
     environment:
       <<: *super-llm-env
       CONFIG_FILE: /app/agents/reporter/configs/config.yml
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10002"
     healthcheck: *agent-healthcheck
 
@@ -137,6 +153,7 @@ services:
     environment:
       CONFIG_FILE: /app/agents/collectors/arcalive/extractor/configs/config.yml
       VALIDATOR_URL: http://arcalive-validator:10020
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10010"
     healthcheck: *agent-healthcheck
 
@@ -148,6 +165,7 @@ services:
     environment:
       CONFIG_FILE: /app/agents/collectors/arxiv/extractor/configs/config.yml
       VALIDATOR_URL: http://arxiv-validator:10021
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10011"
     healthcheck: *agent-healthcheck
 
@@ -159,6 +177,7 @@ services:
     environment:
       CONFIG_FILE: /app/agents/collectors/benchmark/extractor/configs/config.yml
       VALIDATOR_URL: http://benchmark-validator:10022
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10012"
     healthcheck: *agent-healthcheck
 
@@ -170,6 +189,7 @@ services:
     environment:
       CONFIG_FILE: /app/agents/collectors/geeknews/extractor/configs/config.yml
       VALIDATOR_URL: http://geeknews-validator:10023
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10013"
     healthcheck: *agent-healthcheck
 
@@ -181,6 +201,7 @@ services:
     environment:
       CONFIG_FILE: /app/agents/collectors/lobsters/extractor/configs/config.yml
       VALIDATOR_URL: http://lobsters-validator:10024
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10014"
     healthcheck: *agent-healthcheck
 
@@ -192,6 +213,7 @@ services:
     environment:
       CONFIG_FILE: /app/agents/collectors/openai/extractor/configs/config.yml
       VALIDATOR_URL: http://openai-validator:10025
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10015"
     healthcheck: *agent-healthcheck
 
@@ -203,6 +225,7 @@ services:
     environment:
       CONFIG_FILE: /app/agents/collectors/reddit/extractor/configs/config.yml
       VALIDATOR_URL: http://reddit-validator:10026
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10016"
     healthcheck: *agent-healthcheck
 
@@ -231,6 +254,7 @@ services:
       LOBSTERS_EXTRACTOR_URL: http://lobsters-extractor:10014
       OPENAI_EXTRACTOR_URL: http://openai-extractor:10015
       REDDIT_EXTRACTOR_URL: http://reddit-extractor:10016
+      ARI_RUNS_ROOT: /app/runs
       HEALTHCHECK_PORT: "10000"
     ports:
       - "${E2E_HOST_PORT:-10000}:10000"
