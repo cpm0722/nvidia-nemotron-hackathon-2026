@@ -211,7 +211,7 @@ def _publish_event(job: Job, event: dict[str, Any]) -> None:
     agent = event.get("agent")
     etype = event.get("type")
     if agent and agent in job.agents and etype in {"start", "progress", "complete", "error"}:
-        if etype == "start":
+        if etype in {"start", "progress"}:
             job.agents[agent] = "working"
         elif etype == "complete":
             job.agents[agent] = "done"
