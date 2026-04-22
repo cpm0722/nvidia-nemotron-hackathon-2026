@@ -8,14 +8,14 @@ general:
 
 workflow:
   _type: e2e_pipeline
-  query_generator_url: http://localhost:10001
+  query_generator_url: ${QUERY_GENERATOR_URL:-http://localhost:10001}
   collector_urls:
-    - http://localhost:10010
-    - http://localhost:10011
-    - http://localhost:10012
-    - http://localhost:10013
-    - http://localhost:10014
-    - http://localhost:10015
-    - http://localhost:10016
-  reporter_url: http://localhost:10002
+    - ${ARCALIVE_EXTRACTOR_URL:-http://localhost:10010}
+    - ${ARXIV_EXTRACTOR_URL:-http://localhost:10011}
+    - ${BENCHMARK_EXTRACTOR_URL:-http://localhost:10012}
+    - ${GEEKNEWS_EXTRACTOR_URL:-http://localhost:10013}
+    - ${LOBSTERS_EXTRACTOR_URL:-http://localhost:10014}
+    - ${OPENAI_EXTRACTOR_URL:-http://localhost:10015}
+    - ${REDDIT_EXTRACTOR_URL:-http://localhost:10016}
+  reporter_url: ${REPORTER_URL:-http://localhost:10002}
   timeout_seconds: 180
