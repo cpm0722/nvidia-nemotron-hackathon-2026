@@ -24,8 +24,11 @@ from nat.data_models.function import FunctionBaseConfig
 
 from ari_core import (
     ScrapeInput,
+    emit_event,
     parse_collect_input,
+    parse_envelope,
     raw_path,
+    set_event_context,
     validated_path,
     write_json,
 )
@@ -63,7 +66,20 @@ async def geeknews_extractor(
     """Scrape geeknews, persist raw + validated JSON, return validated path."""
 
     async def collect(raw_input: str) -> str:
-        product, run_id = parse_collect_input(raw_input)
+        env = parse_envelope(raw_input)
+        set_event_context(env.event_url, env.job_id)
+        try:
+            product, run_id = parse_collect_input(raw_input)
+        except ValueError as exc:
+            await emit_event(
+                agent=SOURCE_NAME, event_type="error", phase="collect",
+                message=f"{SOURCE_NAME}: bad input — {exc}",
+            )
+            raise
+        await emit_event(
+            agent=SOURCE_NAME, event_type="start", phase="collect",
+            message=f"{SOURCE_NAME}: scraping news feed…",
+        )
         raw_file = raw_path(run_id, product, SOURCE_NAME)
         validated_file = validated_path(run_id, product, SOURCE_NAME)
 
@@ -81,9 +97,27 @@ async def geeknews_extractor(
                 "scan_workers": config.scan_workers,
             }
         )
-        result = await asyncio.to_thread(_scrape_geeknews, scrape_input)
+        try:
+            result = await asyncio.to_thread(_scrape_geeknews, scrape_input)
+        except Exception as exc:
+            await emit_event(
+                agent=SOURCE_NAME, event_type="error", phase="collect",
+                message=f"{SOURCE_NAME}: scrape failed — {exc}",
+            )
+            raise
         write_json(raw_file, result.model_dump())
 
+        scraped_count = len(result.items) if result.items else 0
+        await emit_event(
+            agent=SOURCE_NAME, event_type="progress", phase="collect",
+            message=(
+                f"{SOURCE_NAME}: {scraped_count} topics scraped, validating…"
+                if scraped_count else f"{SOURCE_NAME}: nothing to validate"
+            ),
+            data={"scraped": scraped_count},
+        )
+
+        validated_count = scraped_count
         if result.ok and result.items:
             client_config = ClientConfig(
                 url=config.validator_url,
@@ -95,6 +129,7 @@ async def geeknews_extractor(
                 validate_items, client_config, product, result.items
             )
             result.items = vresult.items
+            validated_count = len(vresult.items)
             if vresult.status not in ("ok", "no_data"):
                 result.error = (
                     f"validator={vresult.status}; "
@@ -102,6 +137,11 @@ async def geeknews_extractor(
                 )
 
         write_json(validated_file, result.model_dump())
+        await emit_event(
+            agent=SOURCE_NAME, event_type="complete", phase="collect",
+            message=f"{SOURCE_NAME}: {validated_count}/{scraped_count} validated",
+            data={"scraped": scraped_count, "validated": validated_count},
+        )
         return str(validated_file)
 
     yield FunctionInfo.from_fn(
