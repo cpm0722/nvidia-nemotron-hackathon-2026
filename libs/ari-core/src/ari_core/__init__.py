@@ -2,6 +2,20 @@
 
 from ari_core.async_runner import run_scraper_async
 from ari_core.http_base import DEFAULT_TIMEOUT_SECONDS, USER_AGENT, Timer, iso, since_timestamp
+from ari_core.run_paths import (
+    ensure_parent,
+    new_run_id,
+    query_path,
+    raw_path,
+    read_json,
+    report_path,
+    run_root,
+    runs_root,
+    slugify_product,
+    validated_path,
+    write_json,
+    write_text,
+)
 from ari_core.schemas import EvidenceItem, ScrapeInput, ScrapeResult
 
 __all__ = [
@@ -11,7 +25,19 @@ __all__ = [
     "ScrapeResult",
     "Timer",
     "USER_AGENT",
+    "ensure_parent",
     "iso",
+    "new_run_id",
+    "query_path",
+    "raw_path",
+    "read_json",
+    "report_path",
+    "run_root",
     "run_scraper_async",
+    "runs_root",
     "since_timestamp",
+    "slugify_product",
+    "validated_path",
+    "write_json",
+    "write_text",
 ]
