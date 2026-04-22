@@ -2,7 +2,7 @@
 
 Every A2A agent binds to 0.0.0.0:PORT so that cross-container DNS on the
 ari-net bridge works; authentication is handled by the network boundary
-(only e2e's port is published to the host). NAT emits a hardcoded
+(only the orchestrator's port is published to the host). NAT emits a hardcoded
 pydantic warning for this exact config — not actionable in our setup.
 
 This module is auto-imported by Python's `site.py` at interpreter start
