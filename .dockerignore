@@ -1,0 +1,16 @@
+.git/
+.venv/
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/*.egg-info/
+.env
+*.swp
+.DS_Store
+task-histories/
+docs/
+NeMo-Agent-Toolkit/
+ai-product-feedback-scraper/
+**/tests/fixtures/
+.pytest_cache/
+.ruff_cache/

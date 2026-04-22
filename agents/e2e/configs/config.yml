@@ -10,30 +10,30 @@ llms:
   primary_llm:
     _type: openai
     model_name: nvidia/nemotron-3-super-120b-a12b
-    base_url: https://model-server-uya78rbya.brevlab.com/v1
-    api_key: empty
+    base_url: ${SUPER_MODEL_BASE_URL:-https://model-server-uya78rbya.brevlab.com/v1}
+    api_key: ${SUPER_MODEL_API_KEY:-empty}
     temperature: 0.0
     max_tokens: 8192
 
 functions:
   plan_query:
     _type: plan_query
-    query_generator_url: http://localhost:10001
+    query_generator_url: ${QUERY_GENERATOR_URL:-http://localhost:10001}
     timeout_seconds: 180
   collect_evidence:
     _type: collect_evidence
     collector_urls:
-      - http://localhost:10010   # arcalive
-      - http://localhost:10011   # arxiv
-      - http://localhost:10012   # benchmark
-      - http://localhost:10013   # geeknews
-      - http://localhost:10014   # lobsters
-      - http://localhost:10015   # openai
-      - http://localhost:10016   # reddit
+      - ${ARCALIVE_EXTRACTOR_URL:-http://localhost:10010}   # arcalive
+      - ${ARXIV_EXTRACTOR_URL:-http://localhost:10011}      # arxiv
+      - ${BENCHMARK_EXTRACTOR_URL:-http://localhost:10012}  # benchmark
+      - ${GEEKNEWS_EXTRACTOR_URL:-http://localhost:10013}   # geeknews
+      - ${LOBSTERS_EXTRACTOR_URL:-http://localhost:10014}   # lobsters
+      - ${OPENAI_EXTRACTOR_URL:-http://localhost:10015}     # openai
+      - ${REDDIT_EXTRACTOR_URL:-http://localhost:10016}     # reddit
     timeout_seconds: 300
   write_report:
     _type: write_report
-    reporter_url: http://localhost:10002
+    reporter_url: ${REPORTER_URL:-http://localhost:10002}
     timeout_seconds: 300
 
 workflow:
