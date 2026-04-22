@@ -23,13 +23,14 @@ functions:
   collect_evidence:
     _type: collect_evidence
     collector_urls:
-      - ${ARCALIVE_EXTRACTOR_URL:-http://localhost:10010}   # arcalive
-      - ${ARXIV_EXTRACTOR_URL:-http://localhost:10011}      # arxiv
-      - ${BENCHMARK_EXTRACTOR_URL:-http://localhost:10012}  # benchmark
-      - ${GEEKNEWS_EXTRACTOR_URL:-http://localhost:10013}   # geeknews
-      - ${LOBSTERS_EXTRACTOR_URL:-http://localhost:10014}   # lobsters
-      - ${OPENAI_EXTRACTOR_URL:-http://localhost:10015}     # openai
-      - ${REDDIT_EXTRACTOR_URL:-http://localhost:10016}     # reddit
+      arcalive:  ${ARCALIVE_EXTRACTOR_URL:-http://localhost:10010}
+      arxiv:     ${ARXIV_EXTRACTOR_URL:-http://localhost:10011}
+      benchmark: ${BENCHMARK_EXTRACTOR_URL:-http://localhost:10012}
+      geeknews:  ${GEEKNEWS_EXTRACTOR_URL:-http://localhost:10013}
+      lobsters:  ${LOBSTERS_EXTRACTOR_URL:-http://localhost:10014}
+      openai:    ${OPENAI_EXTRACTOR_URL:-http://localhost:10015}
+      reddit:    ${REDDIT_EXTRACTOR_URL:-http://localhost:10016}
+    enabled_collectors: ${ENABLED_COLLECTORS:-arcalive,arxiv,benchmark,geeknews,lobsters,openai,reddit}
     timeout_seconds: 300
   write_report:
     _type: write_report
