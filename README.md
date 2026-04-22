@@ -137,9 +137,9 @@ No API key is required — set `api_key: empty` in `config.yml`.
 Brings up all 17 A2A agents (7 extractors + 7 validators + query-generator + reporter + orchestrator) plus the browser chat UI in the correct dependency order. The agent stack shares one image; the UI is built from a **separate, minimal image** (`docker/ui.Dockerfile` → `ari/nat-ui:latest`) so it stays small and rebuilds quickly.
 
 ```bash
-cp .env.example .env             # edit model endpoints if yours differ
-docker compose up -d --build     # first run builds both images
-docker compose ps                # wait until every service is 'healthy'
+cp .env.example .env                              # edit model endpoints if yours differ
+COMPOSE_PROFILES=all docker compose up -d --build # first run builds the shared image
+docker compose ps                                 # wait until every service is 'healthy'
 curl http://localhost:10000/.well-known/agent-card.json  # orchestrator is up
 
 # open the chat UI in a browser
