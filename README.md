@@ -5,6 +5,8 @@ An agentic system that collects and summarizes both official performance data (b
 Built for the **2026 NVIDIA Nemotron Hackathon — Track A: Creative Agentic Systems**.  
 Backbone models: [Nemotron-3-Nano-30B-A3B](https://build.nvidia.com/nvidia/nemotron-3-nano-30b-a3b/modelcard) and [Nemotron-3-Super-120B-A12B](https://build.nvidia.com/nvidia/nemotron-3-super-120b-a12b/modelcard).
 
+[![Video](docs/images/demo-screenshot.png)](https://youtu.be/PZl-RVi-kAA)
+
 ---
 
 ## Description
