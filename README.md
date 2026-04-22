@@ -9,11 +9,13 @@ Backbone models: [Nemotron-3-Nano-30B-A3B](https://build.nvidia.com/nvidia/nemot
 
 ## Description
 
-Given a natural language query (Korean or English), the system:
+Given a natural language query (Korean or English), the **e2e orchestrator** — a ReAct agent powered by Nemotron-3-Super — autonomously invokes three tools to produce a markdown report per product:
 
-1. Extracts AI product/model names from the query (query-generator, LLM)
-2. Runs 7 **collectors** in parallel — each collector is a Python pipeline that scrapes a source (extractor) and forwards the raw items to an LLM-based validator A2A service for relevance filtering
-3. Reporter synthesizes all validated evidence into a structured markdown report (LLM)
+1. **`plan_query`** — asks the query-generator to extract AI product names and allocates a new `run_id`, persisting `runs/{run_id}/query.json`.
+2. **`collect_evidence`** — fans out `{product, run_id}` to every collector A2A endpoint in parallel. Each collector scrapes, calls its paired validator, writes both the raw and validated JSON to `runs/{run_id}/raw/{product}/{source}.json` and `runs/{run_id}/validated/{product}/{source}.json`, and returns the validated file path.
+3. **`write_report`** — delegates to the reporter agent, which reads every validated file, synthesizes a markdown report, and writes it to `runs/{run_id}/report_{product}.md`.
+
+All inter-agent data flows through files under `runs/{run_id}/`; agents exchange paths, not payloads.
 
 ---
 
@@ -23,38 +25,57 @@ Given a natural language query (Korean or English), the system:
 user query
     │
     ▼
+e2e orchestrator  (react_agent, nemotron-super, port 10000)
+    │  tool: plan_query
+    ▼
 query-generator  (nemotron-nano, port 10001)
-    │  product name(s)
+    │  -> runs/{run_id}/query.json  +  product list
+    │
+    │  tool: collect_evidence  (fans out in parallel for one product)
     ├──────┬──────┬──────┬──────┬──────┬──────┐
-    ▼      ▼      ▼      ▼      ▼      ▼      ▼   parallel collectors
+    ▼      ▼      ▼      ▼      ▼      ▼      ▼
 ┌──────────────────────────────── collector (one per source) ────────────────────────────┐
-│  extractor  (LLM-less A2A workflow, ports 10010–10016)                                 │
+│  extractor  (LLM-less, ports 10010–10016)                                              │
 │      │                                                                                 │
-│      │  scrape → A2A(message/send) → validator                                         │
+│      │  scrape → write raw/{product}/{source}.json                                     │
+│      │  → A2A(message/send) → validator                                                │
 │      ▼                                                                                 │
 │  validator  (chat_completion LLM A2A, ports 10020–10026)                               │
-│      │  filtered ScrapeResult                                                          │
+│      │  filtered EvidenceItem list                                                     │
 │      ▼                                                                                 │
-│  extractor returns filtered ScrapeResult JSON                                          │
+│  extractor writes validated/{product}/{source}.json and returns the path               │
 └────────────────────────────────────────────────────────────────────────────────────────┘
     │      │      │      │       │       │      │
     └──────┴──────┴──────┴───────┴───────┴──────┘
                                │
+                               │  tool: write_report  (one call per product)
                                ▼
                          reporter  (nemotron-super, port 10002)
-                               │
+                               │  reads every validated file path,
+                               │  writes runs/{run_id}/report_{product}.md
                                ▼
-                    structured markdown report
+                         report file path(s) returned to the user
 ```
 
-The **e2e agent** (port 10000) is itself an LLM-less sequential workflow that calls
-`query-generator → extractor×N (parallel) → reporter` in fixed order.
+The **e2e agent** (port 10000) is a `react_agent` workflow powered by Nemotron-3-Super.
+It autonomously drives three tools — `plan_query`, `collect_evidence`, `write_report` —
+and iterates over every product returned by `plan_query`.
 
 Each **collector** = one extractor A2A service + one validator A2A service. The
-extractor orchestrates the per-source pipeline in plain Python (no ReAct): it
-scrapes, then HTTP-calls the paired validator with the scraped items, then
-returns the filtered result. Only the validator (and the reporter / query-generator)
-use an LLM — the extractor and e2e layers are deterministic.
+extractor is still LLM-less Python: it scrapes, writes the raw JSON file, calls
+the paired validator, writes the validated JSON file, and returns the validated
+path. Only `query-generator`, `validator`, `reporter`, and the `e2e` orchestrator
+use an LLM — extractor layers remain deterministic.
+
+### Filesystem layout per run
+
+```
+runs/{run_id}/                         # run_id = YYYYMMDD-HHMMSS-{8-char uuid}
+  query.json                           # {user_query, products}
+  raw/{product}/{source}.json          # extractor scrape result
+  validated/{product}/{source}.json    # validator filtered result
+  report_{product}.md                  # reporter output
+```
 
 ### Data Sources
 
@@ -72,10 +93,10 @@ use an LLM — the extractor and e2e layers are deterministic.
 
 | Agent | Port | Uses LLM? |
 |---|---|---|
-| e2e | 10000 | no (sequential Python) |
+| e2e | 10000 | nemotron-super (react_agent) |
 | query-generator | 10001 | nemotron-nano |
-| reporter | 10002 | nemotron-super |
-| extractors (arcalive–reddit) | 10010–10016 | no (scrape + A2A call) |
+| reporter | 10002 | nemotron-super (custom file-based workflow) |
+| extractors (arcalive–reddit) | 10010–10016 | no (scrape + file I/O + A2A call) |
 | validators (arcalive–reddit) | 10020–10026 | nemotron-super (chat_completion) |
 
 ### Model Assignment
@@ -83,8 +104,8 @@ use an LLM — the extractor and e2e layers are deterministic.
 | Role | Model |
 |---|---|
 | query-generator | `nvidia/nemotron-3-nano-30b-a3b` |
-| validators, reporter | `nvidia/nemotron-3-super-120b-a12b` |
-| extractors, e2e | none (LLM-less Python orchestration) |
+| e2e, validators, reporter | `nvidia/nemotron-3-super-120b-a12b` |
+| extractors | none (LLM-less Python scrape + validator delegation) |
 
 ---
 
@@ -202,17 +223,35 @@ workflow:
 The validator keeps the original chat_completion workflow and prompt; its
 `config.yml` carries the LLM definition and `file://` prompt reference.
 
-The e2e agent's `config.yml` lists all extractor URLs:
+The e2e agent's `config.yml` declares the `react_agent` workflow, its LLM, and the three tools it can call. Endpoints are configured per-tool:
 
 ```yaml
+llms:
+  primary_llm:
+    _type: openai
+    model_name: nvidia/nemotron-3-super-120b-a12b
+    base_url: https://model-server-uya78rbya.brevlab.com/v1
+    api_key: empty
+
+functions:
+  plan_query:
+    _type: plan_query
+    query_generator_url: http://localhost:10001
+  collect_evidence:
+    _type: collect_evidence
+    collector_urls:
+      - http://localhost:10010   # arcalive
+      - http://localhost:10011   # arxiv
+      # ...
+  write_report:
+    _type: write_report
+    reporter_url: http://localhost:10002
+
 workflow:
-  _type: e2e_pipeline
-  query_generator_url: http://localhost:10001
-  collector_urls:
-    - http://localhost:10010   # arcalive extractor
-    - http://localhost:10011   # arxiv extractor
-    # ...
-  reporter_url: http://localhost:10002
+  _type: react_agent
+  llm_name: primary_llm
+  tool_names: [plan_query, collect_evidence, write_report]
+  system_prompt: file://../prompts/system_prompt.txt
 ```
 
 ---
@@ -222,12 +261,17 @@ workflow:
 ```
 nvidia-nemotron-hackathon-2026/
 ├── agents/
-│   ├── e2e/                                    # Full pipeline orchestrator (port 10000)
+│   ├── e2e/                                    # ReAct orchestrator (port 10000, nemotron-super)
 │   │   ├── configs/
-│   │   │   ├── config.yml                      # all 7 extractors
+│   │   │   ├── config.yml                      # all 7 collectors
 │   │   │   └── config_test.yml                 # arcalive + geeknews only
+│   │   ├── prompts/system_prompt.txt           # react_agent prompt with {tool_names}
 │   │   ├── scripts/
-│   │   └── src/nat_e2e/register.py             # LLM-less sequential pipeline
+│   │   └── src/nat_e2e/
+│   │       ├── register.py                     # imports the 3 tool modules to trigger registration
+│   │       ├── tool_plan_query.py              # query-generator + run_id allocation
+│   │       ├── tool_collect_evidence.py        # parallel collector fan-out
+│   │       └── tool_write_report.py            # reporter delegation
 │   ├── query-generator/                        # Product name extractor (port 10001)
 │   ├── reporter/                               # Evidence synthesizer → markdown report (port 10002)
 │   └── collectors/                             # per-source extractor + validator pairs
@@ -237,7 +281,7 @@ nvidia-nemotron-hackathon-2026/
 │       │   │   ├── scripts/{a2a_server,a2a_client,run}.sh
 │       │   │   ├── src/nat_extractor_arcalive/
 │       │   │   │   ├── extractor.py            # scraper
-│       │   │   │   ├── register.py             # @register_function scrape → validator A2A
+│       │   │   │   ├── register.py             # scrape → write raw → validator A2A → write validated
 │       │   │   │   └── (crawler.py, parser.py, models.py)
 │       │   │   ├── tests/
 │       │   │   └── pyproject.toml
@@ -254,10 +298,11 @@ nvidia-nemotron-hackathon-2026/
 │       ├── openai/    { extractor/, validator/ }    # ports 10015 / 10025
 │       └── reddit/    { extractor/, validator/ }    # ports 10016 / 10026
 ├── libs/
-│   ├── ari-core/                               # Shared scraper schemas (EvidenceItem, ScrapeResult)
+│   ├── ari-core/                               # Shared schemas + a2a_client + run_paths (file-layout helpers)
 │   └── validator-core/                         # Shared legacy validator_caller (kept for workspace refs)
+├── runs/                                       # Per-run artefacts: query.json, raw/, validated/, report_*.md
 ├── docs/                                       # Internal reference documents
-├── task-histories/                             # Branch plans and completion reports
+├── task-histories/                             # Branch plans and completion reports (gitignored)
 ├── pyproject.toml                              # uv workspace root (14 collector subpackages + e2e/qgen/reporter)
 └── CLAUDE.md                                   # Project instructions for Claude Code
 ```
