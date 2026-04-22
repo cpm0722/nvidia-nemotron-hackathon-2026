@@ -21,6 +21,7 @@ to the product name so paths stay filesystem-safe across OSes.
 from __future__ import annotations
 
 import json
+import os
 import re
 import uuid
 from datetime import UTC, datetime
@@ -64,16 +65,23 @@ def new_run_id() -> str:
 def runs_root(root: Path | str | None = None) -> Path:
     """Resolve the base ``runs/`` directory.
 
-    Args:
-        root: Explicit override. If ``None``, uses ``DEFAULT_RUNS_ROOT``.
-            (The ``ARI_RUNS_ROOT`` env var is intentionally *not* read here —
-            callers that want env overrides should do it themselves to keep
-            this helper deterministic.)
+    Resolution order:
+        1. ``root`` argument when provided (tests use this).
+        2. ``ARI_RUNS_ROOT`` environment variable — set by docker-compose to
+           ``/app/runs`` so every container writes into the same bind-mounted
+           volume. Locally, export it to an absolute path (e.g. the repo
+           root's ``runs/``) when starting agents from different cwds.
+        3. ``DEFAULT_RUNS_ROOT`` (``Path("runs")``), resolved against the
+           current working directory — only safe when all agents share the
+           same cwd.
 
     Returns:
         ``Path`` (not created).
     """
-    return Path(root) if root is not None else DEFAULT_RUNS_ROOT
+    if root is not None:
+        return Path(root)
+    env = os.environ.get(RUNS_ROOT_ENV)
+    return Path(env) if env else DEFAULT_RUNS_ROOT
 
 
 def run_root(run_id: str, root: Path | str | None = None) -> Path:

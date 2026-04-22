@@ -63,8 +63,24 @@ class TestPathHelpers:
         )
         assert report_path(run_id, "GPT-5", root=tmp_path) == rr / "report_gpt-5.md"
 
-    def test_default_root_is_runs_directory(self) -> None:
+    def test_default_root_is_runs_directory(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.delenv("ARI_RUNS_ROOT", raising=False)
         assert run_root("abc") == Path("runs") / "abc"
+
+    def test_env_var_overrides_default_root(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("ARI_RUNS_ROOT", str(tmp_path / "custom-runs"))
+        # No explicit root arg → env value wins.
+        assert run_root("abc") == tmp_path / "custom-runs" / "abc"
+
+    def test_explicit_root_beats_env_var(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("ARI_RUNS_ROOT", "/should/not/be/used")
+        assert run_root("abc", root=tmp_path) == tmp_path / "abc"
 
 
 class TestWriteJsonReadJson:
