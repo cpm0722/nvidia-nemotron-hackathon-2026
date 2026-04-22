@@ -10,7 +10,21 @@
 </head>
 <body>
   <header class="topbar">
-    <a href="/" class="brand" aria-label="NeMoBriefing home">
+    <div class="topbar-left">
+      <button
+        type="button"
+        class="sidebar-toggle"
+        id="sidebar-toggle"
+        aria-label="Toggle history"
+        aria-controls="sidebar"
+        aria-expanded="true"
+        title="Toggle history"
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <a href="/" class="brand" aria-label="NeMoBriefing home">
       <span class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 40 40" width="30" height="30">
           <defs>
@@ -30,49 +44,62 @@
         </span>
         <span class="brand-tagline">New Model Briefing</span>
       </span>
-    </a>
+      </a>
+    </div>
     <div id="mode-badge" class="mode-badge" title="backend mode">…</div>
   </header>
 
-  <main id="chat" class="chat" aria-live="polite">
-    <section id="welcome" class="welcome">
-      <div class="welcome-hero">
-        <span class="brand-mark brand-mark-lg" aria-hidden="true">
-          <svg viewBox="0 0 40 40" width="64" height="64">
-            <defs>
-              <linearGradient id="brand-grad-lg" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#8bd100"/>
-                <stop offset="100%" stop-color="#5a8c00"/>
-              </linearGradient>
-            </defs>
-            <rect width="40" height="40" rx="11" fill="url(#brand-grad-lg)"/>
-            <path d="M20 9 L22.2 17.8 L31 20 L22.2 22.2 L20 31 L17.8 22.2 L9 20 L17.8 17.8 Z"
-                  fill="#0f1115"/>
-          </svg>
-        </span>
-        <h1 class="hero-name">
-          <span class="brand-nemo">NeMo</span><span class="brand-brief">Briefing</span>
-        </h1>
-        <p class="hero-tagline">New Model Briefing</p>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="History">
+      <div class="sidebar-head">
+        <span class="sidebar-title">History</span>
+        <button type="button" class="sidebar-new" id="new-chat-btn" title="New chat" aria-label="New chat">+</button>
       </div>
-      <div class="welcome-divider" aria-hidden="true"></div>
-      <div class="welcome-head">
-        <div class="welcome-title">What would you like to brief on?</div>
-        <div class="welcome-sub">Recently released AI models — click a card to get started</div>
-      </div>
-      <div id="suggest-grid" class="suggest-grid"></div>
-    </section>
-  </main>
+      <ul class="history-list" id="history-list" role="list"></ul>
+    </aside>
 
-  <form id="input-form" class="input-bar" autocomplete="off">
-    <textarea
-      id="query"
-      placeholder="e.g. Brief me on Gemma 4"
-      rows="1"
-      required
-    ></textarea>
-    <button type="submit" id="send-btn">Send</button>
-  </form>
+    <div class="main-col">
+      <main id="chat" class="chat" aria-live="polite">
+        <section id="welcome" class="welcome">
+          <div class="welcome-hero">
+            <span class="brand-mark brand-mark-lg" aria-hidden="true">
+              <svg viewBox="0 0 40 40" width="64" height="64">
+                <defs>
+                  <linearGradient id="brand-grad-lg" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#8bd100"/>
+                    <stop offset="100%" stop-color="#5a8c00"/>
+                  </linearGradient>
+                </defs>
+                <rect width="40" height="40" rx="11" fill="url(#brand-grad-lg)"/>
+                <path d="M20 9 L22.2 17.8 L31 20 L22.2 22.2 L20 31 L17.8 22.2 L9 20 L17.8 17.8 Z"
+                      fill="#0f1115"/>
+              </svg>
+            </span>
+            <h1 class="hero-name">
+              <span class="brand-nemo">NeMo</span><span class="brand-brief">Briefing</span>
+            </h1>
+            <p class="hero-tagline">New Model Briefing</p>
+          </div>
+          <div class="welcome-divider" aria-hidden="true"></div>
+          <div class="welcome-head">
+            <div class="welcome-title">What would you like to brief on?</div>
+            <div class="welcome-sub">Recently released AI models — click a card to get started</div>
+          </div>
+          <div id="suggest-grid" class="suggest-grid"></div>
+        </section>
+      </main>
+
+      <form id="input-form" class="input-bar" autocomplete="off">
+        <textarea
+          id="query"
+          placeholder="e.g. Brief me on Gemma 4"
+          rows="1"
+          required
+        ></textarea>
+        <button type="submit" id="send-btn">Send</button>
+      </form>
+    </div>
+  </div>
 
   <script src="/static/app.js"></script>
 </body>

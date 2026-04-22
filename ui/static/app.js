@@ -6,6 +6,34 @@
   const input = document.getElementById("query");
   const sendBtn = document.getElementById("send-btn");
   const modeBadge = document.getElementById("mode-badge");
+  const historyList = document.getElementById("history-list");
+  const newChatBtn = document.getElementById("new-chat-btn");
+  const sidebar = document.getElementById("sidebar");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+
+  const SIDEBAR_STORAGE_KEY = "nemo.sidebar.collapsed";
+
+  function setSidebarCollapsed(collapsed) {
+    sidebar.classList.toggle("is-collapsed", collapsed);
+    sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+    try {
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? "1" : "0");
+    } catch {
+      // storage unavailable — ignore
+    }
+  }
+
+  sidebarToggle.addEventListener("click", () => {
+    setSidebarCollapsed(!sidebar.classList.contains("is-collapsed"));
+  });
+
+  try {
+    if (localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1") {
+      setSidebarCollapsed(true);
+    }
+  } catch {
+    // ignore
+  }
 
   const POLL_INTERVAL_MS = 1500;
 
@@ -131,8 +159,59 @@
 
   marked.setOptions({ gfm: true, breaks: false });
 
+  const RUN_ID_RE = /^\d{8}-\d{6}-[0-9a-f]{8}$/;
+
   function render(text) {
     return DOMPurify.sanitize(marked.parse(text ?? ""));
+  }
+
+  // Escape parens/backslashes for markdown URL destinations, and quotes for the
+  // title string inside `"..."`.
+  function escapeMdUrl(s) {
+    return String(s).replace(/[\\()]/g, (c) => "\\" + c);
+  }
+  function escapeMdTitle(s) {
+    return String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  }
+
+  // Turn 【N】 / [^N] markers into markdown links before parsing, using the
+  // citation URL. Code-block contents are untouched because this runs on the
+  // raw markdown and marked itself preserves fenced/indented blocks verbatim.
+  function linkifyCitations(md, citations) {
+    if (!citations || citations.length === 0) return md;
+    const cmap = {};
+    citations.forEach((c) => {
+      if (c && typeof c.id === "number" && c.url) cmap[c.id] = c;
+    });
+    const replace = (match, id, openCh, closeCh) => {
+      const c = cmap[parseInt(id, 10)];
+      if (!c) return match;
+      const title = c.quote || c.title || c.url;
+      return `[${openCh}${id}${closeCh}](${escapeMdUrl(c.url)} "${escapeMdTitle(title)}")`;
+    };
+    return md
+      .replace(/【(\d+)】/g, (m, id) => replace(m, id, "【", "】"))
+      .replace(/\[\^(\d+)\]/g, (m, id) => replace(m, id, "[", "]"));
+  }
+
+  function renderProduct(product, isFirst) {
+    const linked = linkifyCitations(product.markdown || "", product.citations || []);
+    let html = marked.parse(linked);
+    // Open citation/source links in a new tab.
+    html = html.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ');
+    const clean = DOMPurify.sanitize(html, { ADD_ATTR: ["target"] });
+    return (isFirst ? "" : '<hr class="product-divider">') + clean;
+  }
+
+  function renderRun(run) {
+    const products = Array.isArray(run?.products) ? run.products : [];
+    return products.map((p, i) => renderProduct(p, i === 0)).join("");
+  }
+
+  async function fetchRun(runId) {
+    const res = await fetch(`/api/runs/${encodeURIComponent(runId)}`);
+    if (!res.ok) throw new Error(`GET /api/runs/${runId} failed: ${res.status}`);
+    return await res.json();
   }
 
   function scrollToBottom() {
@@ -344,7 +423,7 @@
     meta.innerHTML = `<span class="spinner"></span>${label} running… (${doneCount}/${agents.length})`;
   }
 
-  function setAssistantDone(el, markdown, reportName) {
+  function setAssistantDone(el, contentHtml, reportName) {
     el.classList.remove("error");
     // Hide internal file extension from the user-facing label.
     const cleanName = reportName
@@ -358,7 +437,7 @@
     if (agents) agents.classList.add("is-hidden");
     const bubble = el.querySelector(".bubble");
     bubble.classList.remove("hidden");
-    bubble.innerHTML = render(markdown);
+    bubble.innerHTML = contentHtml;
     scrollToBottom();
   }
 
@@ -370,6 +449,118 @@
     bubble.textContent = error;
     scrollToBottom();
   }
+
+  // ── history sidebar ────────────────────────────────────────────────
+
+  function runIdToTimeLabel(runId) {
+    const m = runId.match(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/);
+    if (!m) return runId.slice(0, 15);
+    return `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}`;
+  }
+
+  function renderHistory(items) {
+    historyList.innerHTML = "";
+    if (!items || items.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "history-empty";
+      empty.textContent = "No history yet.";
+      historyList.appendChild(empty);
+      return;
+    }
+    items.forEach((item) => {
+      const li = document.createElement("li");
+      li.className = "history-item";
+      li.dataset.runId = item.run_id;
+
+      const query = document.createElement("div");
+      query.className = "history-query";
+      query.textContent = item.user_query || "(no query)";
+
+      const meta = document.createElement("div");
+      meta.className = "history-meta";
+      const time = document.createElement("span");
+      time.className = "history-time";
+      time.textContent = runIdToTimeLabel(item.run_id);
+      const products = document.createElement("span");
+      products.className = "history-products";
+      const ps = Array.isArray(item.products) ? item.products : [];
+      products.textContent =
+        ps.length === 0
+          ? ""
+          : ps.length <= 2
+            ? ps.join(" · ")
+            : `${ps.slice(0, 2).join(" · ")} +${ps.length - 2}`;
+      meta.appendChild(time);
+      meta.appendChild(products);
+
+      li.appendChild(query);
+      li.appendChild(meta);
+      li.addEventListener("click", () => openHistoryRun(item));
+      historyList.appendChild(li);
+    });
+  }
+
+  async function fetchHistory() {
+    try {
+      const res = await fetch("/api/history");
+      if (!res.ok) return;
+      const items = await res.json();
+      renderHistory(items);
+    } catch {
+      // silent — sidebar just stays empty
+    }
+  }
+
+  function setActiveHistoryItem(runId) {
+    historyList
+      .querySelectorAll(".history-item")
+      .forEach((el) => el.classList.remove("is-active"));
+    if (runId) {
+      const el = historyList.querySelector(`.history-item[data-run-id="${runId}"]`);
+      if (el) el.classList.add("is-active");
+    }
+  }
+
+  function clearChat() {
+    chat.querySelectorAll(".msg").forEach((m) => m.remove());
+  }
+
+  async function openHistoryRun(item) {
+    setActiveHistoryItem(item.run_id);
+    clearChat();
+    hideWelcome();
+
+    addUserMessage(item.user_query || "(no query)");
+    const el = addAssistantPending();
+    // Historical view — no live pipeline, so hide the phase diagram and
+    // show a static meta line referring to this run.
+    const agentsEl = el.querySelector(".agents");
+    if (agentsEl) agentsEl.classList.add("is-hidden");
+    el.querySelector(".meta").textContent = `Briefing · ${runIdToTimeLabel(item.run_id)}`;
+    const bubble = el.querySelector(".bubble");
+
+    try {
+      const run = await fetchRun(item.run_id);
+      bubble.classList.remove("hidden");
+      bubble.innerHTML = renderRun(run);
+    } catch (err) {
+      el.classList.add("error");
+      bubble.classList.remove("hidden");
+      bubble.textContent = `Error loading report: ${err.message || err}`;
+    }
+    scrollToBottom();
+  }
+
+  function startNewChat() {
+    clearChat();
+    setActiveHistoryItem(null);
+    if (welcome) welcome.classList.remove("is-hidden");
+    input.focus();
+  }
+
+  newChatBtn.addEventListener("click", startNewChat);
+
+  // ── config + job ───────────────────────────────────────────────────
 
   async function fetchConfig() {
     try {
@@ -430,8 +621,16 @@
           updateMeta(pendingEl, data.agents, data.status);
         }
       });
-      const markdown = await fetchReport(status.report_name);
-      setAssistantDone(pendingEl, markdown, status.report_name);
+      let contentHtml;
+      if (RUN_ID_RE.test(status.report_name)) {
+        const run = await fetchRun(status.report_name);
+        contentHtml = renderRun(run);
+      } else {
+        const markdown = await fetchReport(status.report_name);
+        contentHtml = render(markdown);
+      }
+      setAssistantDone(pendingEl, contentHtml, status.report_name);
+      fetchHistory();
     } catch (err) {
       setAssistantError(pendingEl, String(err.message || err));
     } finally {
@@ -463,5 +662,6 @@
 
   renderSuggestions();
   fetchConfig();
+  fetchHistory();
   input.focus();
 })();

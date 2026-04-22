@@ -9,3 +9,5 @@ __pycache__/
 *.plan.md
 *.report.md
 runs/
+logs/
+scripts/local/
