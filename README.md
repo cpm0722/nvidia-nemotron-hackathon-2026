@@ -133,16 +133,13 @@ No API key is required — set `api_key: empty` in `config.yml`.
 
 ### Run via `docker compose` (recommended)
 
-Brings up all 17 A2A agents (7 extractors + 7 validators + query-generator + reporter + e2e) in the correct dependency order from a single shared image.
+Brings up all 17 A2A agents + the browser UI in the correct dependency order. The UI (`ui/Dockerfile`) is a standalone FastAPI service; the 17 agents share `docker/Dockerfile`.
 
 ```bash
 cp .env.example .env             # edit model endpoints if yours differ
-docker compose up -d --build     # first run builds the shared image
+docker compose up -d --build     # first run builds both images
 docker compose ps                # wait until every service is 'healthy'
-curl http://localhost:10000/.well-known/agent-card.json  # e2e is up
-
-# send a query
-cd agents/e2e && ./scripts/a2a_client.sh "GPT5와 Gemma4 비교해줘"
+open http://localhost:8080       # open the chat UI in a browser
 ```
 
 Startup order is enforced by `depends_on: condition: service_healthy`:
@@ -151,9 +148,25 @@ Startup order is enforced by `depends_on: condition: service_healthy`:
 L1: 7 validators + query-generator + reporter   (talk to Brev NIM only)
 L2: 7 extractors                                  (each depends on its own validator)
 L3: e2e                                           (depends on every L1/L2 service)
+L4: ui                                            (depends on e2e)
 ```
 
-Only the e2e front-end (port `10000`) is published to the host. Intra-stack traffic stays on the `ari-net` bridge via compose DNS (`http://arcalive-validator:10020`, etc.). Override the host port with `E2E_HOST_PORT` in `.env`.
+Published host ports:
+
+| Service | Host port (env override)     | Purpose                       |
+|---------|------------------------------|-------------------------------|
+| `ui`    | `${UI_HOST_PORT:-8080}`      | browser chat at `/`           |
+| `e2e`   | `${E2E_HOST_PORT:-10000}`    | direct A2A access (CLI/debug) |
+
+All other agents stay on the `ari-net` bridge (accessible only via compose DNS, e.g. `http://arcalive-validator:10020`).
+
+**Live progress streaming.** Each tool/agent POSTs progress events to the UI at `${NAT_UI_PUBLIC_EVENT_BASE}/api/events/{job_id}` (defaults to `http://ui:8080` in compose). The browser subscribes via Server-Sent Events at `/api/chat/{job_id}/stream` and renders per-pill status + a live subtext under each agent pill (e.g. "arcalive: 12 scraped, 8 validated"). No polling, no file watching.
+
+Optional: send a query directly to the e2e agent without the UI:
+
+```bash
+cd agents/e2e && ./scripts/a2a_client.sh "GPT5와 Gemma4 비교해줘"
+```
 
 ### Run the full e2e pipeline manually
 
