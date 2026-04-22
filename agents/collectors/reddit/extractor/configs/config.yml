@@ -20,4 +20,4 @@ workflow:
   max_comment_chars: 1500
   comment_workers: 3
   validator_url: ${VALIDATOR_URL:-http://localhost:10026}
-  validator_timeout_seconds: 120
+  validator_timeout_seconds: 180

@@ -18,4 +18,4 @@ workflow:
     - ${OPENAI_EXTRACTOR_URL:-http://localhost:10015}
     - ${REDDIT_EXTRACTOR_URL:-http://localhost:10016}
   reporter_url: ${REPORTER_URL:-http://localhost:10002}
-  timeout_seconds: 180
+  timeout_seconds: 300
