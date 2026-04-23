@@ -1,0 +1,76 @@
+{
+  "product": "Nemotron 3",
+  "summary": "Nemotron 3 is NVIDIA's series of small language models, with the Nemotron 3 Nano 4B variant positioned as an edge‑ready SLM for agentic AI applications. Official benchmark results show strong reasoning and language abilities, such as an Intelligence Index of 14.68 and BFCL v3 scores above 60 %.[^1][^2] Community discussions reveal mixed experiences: users report low token‑per‑second rates when running the model with NVIDIA’s VLLM container but higher throughput with alternative inference engines like LM Studio.[^3][^4] Overall, the model delivers solid accuracy for its size, yet real‑world deployment performance depends heavily on the chosen inference stack.",
+  "official_performance": {
+    "text": "The Nemotron 3 Nano 4B model achieves an Intelligence Index of 14.68, a Coding Index of 10.02, and an Agentic Index of 9.75 according to Artificial Analysis benchmarks.[^1] On knowledge‑intensive tasks it scores 51.3 % on GPQA Diamond, 4.8 % on Humanity’s Last Exam (HLE), and 16.4 % on SciCode, reflecting solid reasoning capabilities.[^1] Instruction‑following benchmarks from the Hugging Face model card show BFCL v3 at 61.1 %, IFEval‑Prompt at 82.8 %, and IFEval‑Instruction at 88.0 %, while the RULER (128k) reach 91.1 %.[^2] In reasoning‑off mode the model records 58.2 % on IFBench and 16.7 % on LCR, and in reasoning‑on mode it improves to 56.5 % on IFBench‑Prompt and 59.3 % on IFBench‑Instruction.[^2] NVIDIA positions the Nano 4B as an edge‑ready SLM for agentic AI, targeting AI gaming NPCs, local voice assistants, and IoT automation on platforms such as Jetson Thor and GeForce RTX.[^5] Compared with its BF16 counterpart, the FP8 quantization yields slightly lower scores on some reasoning tests (e.g., AIME25 drops from 78.5 to 76.3) but retains comparable performance on most instruction‑following tasks.[^2]",
+    "citations": [
+      1,
+      2,
+      5
+    ]
+  },
+  "community_reactions": {
+    "text": "Reddit users experimenting with the Nemotron Nano NVFP4 version in NVIDIA’s VLLM container report only about 15 tokens per second on Blackwell GPUs, far below expectations.[^3] The same users note that switching to Unsloth’s MXFP4 quantization in LM Studio yields roughly 30 tokens per second, suggesting the inference engine heavily influences observed speed.[^3] Another thread highlights that running a RotorQuant‑GGUF Q4_K_M variant of the model takes a very long time to process a single lengthy document, prompting questions about prompt‑processing acceleration.[^4] Commenters advise increasing batch size or using faster hardware to mitigate long document latency, while acknowledging that the model’s architecture is not the primary bottleneck.[^4] Some participants point out that VLLM’s multi‑token prediction feature can help narrow the gap with llama.cpp‑based inference when context windows grow large.[^3] Overall, community sentiment praises the model’s accuracy and edge‑readiness but cautions that real‑world throughput depends on selecting an optimized quantization and serving stack.[^3][^4]",
+    "citations": [
+      3,
+      4
+    ]
+  },
+  "key_takeaways": [
+    "Validate the Nemotron 3 Nano 4B’s accuracy on your own reasoning and instruction‑following benchmarks before committing to production use.",
+    "Benchmark token‑per‑second performance with both VLLM and LM Studio (or llama.cpp) to identify the optimal inference engine for your hardware.",
+    "If you need sub‑second response times for long documents, increase batch size or upgrade GPU memory to reduce prompt‑processing latency.",
+    "Leverage the model’s edge‑ready design for agentic AI use cases such as gaming NPCs or local voice assistants on Jetson Thor or GeForce RTX platforms.",
+    "Monitor updates to NVIDIA’s VLLM container and NVFP4 support, as maturity of the 4‑bit pathway may improve throughput over time.",
+    "Consider hybrid quantization strategies (e.g., MXFP4 in LM Studio) when deploying Nemotron 3 Nano 4B on Blackwell GPUs to balance accuracy and speed."
+  ],
+  "disagreements": [],
+  "sources_used": [
+    "benchmark",
+    "reddit"
+  ],
+  "items_analyzed": 4,
+  "citations": [
+    {
+      "id": 1,
+      "source": "benchmark",
+      "url": "https://artificialanalysis.ai/models/nvidia-nemotron-3-nano-4b",
+      "title": "NVIDIA Nemotron 3 Nano 4B",
+      "quote": "Intelligence Index=14.68, Coding Index=10.02, Agentic Index=9.75, GPQA Diamond=51.3%, HLE=4.8%, SciCode=16.4%, TAU-2=28.1%, IFBench=58.2%, LCR=16.7%",
+      "timestamp": null
+    },
+    {
+      "id": 2,
+      "source": "benchmark",
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-FP8",
+      "title": "NVIDIA-Nemotron-3-Nano-4B-FP8",
+      "quote": "BFCL v3=61.1, IFBench-Prompt=43.2, IFBench-Instruction=44.2, Orak=22.9, IFEval-Prompt=82.8, IFEval-Instruction=88.0, HaluEval=62.2, RULER (128k)=91.1, Tau2-Airline=28.0, Tau2-Retail=34.8",
+      "timestamp": null
+    },
+    {
+      "id": 3,
+      "source": "reddit",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1soz8en/should_i_be_seeing_more_of_a_performance_leap/",
+      "title": "Should I be seeing more of a performance leap when using NVFP4, INT4, FP8 with VLLM over MXFP4, Q4, and Q8 with llama.cpp based inference on Blackwell based GPUs?",
+      "quote": "I was surprised I was only getting 15-ish t/s with Nemotron Nano NVFP4 in VLLM with Nvidia’s recommended settings and getting 30 t/s using Unsloths MXFP4 of Nemotron Nano in LM Studio.",
+      "timestamp": "2026-04-18T14:33:27Z"
+    },
+    {
+      "id": 4,
+      "source": "reddit",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1sopb70/how_to_optimize_quantized_llm_model_to_read_very/",
+      "title": "How to optimize quantized LLM model to read very long texts?",
+      "quote": "I am currently run Nemotron-3-Nano-4B-RotorQuant-GGUF-Q4_K_M model made by [https://huggingface.co/majentik] ... it takes very long time only to process 1 doc!",
+      "timestamp": "2026-04-18T05:58:45Z"
+    },
+    {
+      "id": 5,
+      "source": "benchmark",
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-FP8",
+      "title": "NVIDIA-Nemotron-3-Nano-4B-FP8",
+      "quote": "NVIDIA-Nemotron-3-Nano-4B is an edge-ready small language model intended for Agentic AI in edge platforms (Jetson Thor, GeForce RTX, DGX Spark). It targets key-uses including AI gaming NPCs (teammates / companions), local voice assistants (for devices, apps, and games), and IoT automation.",
+      "timestamp": null
+    }
+  ],
+  "run_id": "20260422-045727-58d9edc0"
+}

@@ -1,0 +1,101 @@
+{
+  "source": "reddit",
+  "ok": true,
+  "items": [
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1sgex6u/new_model_lgaiexaoneexaone4533b/",
+      "author": "KvAk_AKPlaysYT",
+      "title": "New Model! LGAI-EXAONE/EXAONE-4.5-33B",
+      "text": "",
+      "body_full": null,
+      "timestamp": "2026-04-09T03:55:27Z",
+      "score": 68,
+      "metadata": {
+        "num_comments": 14,
+        "upvote_ratio": 0.87,
+        "link_flair_text": "New Model",
+        "comments": [
+          {
+            "author": "last_llm_standing",
+            "body": "maybe share something about the model instead of just posting the link?",
+            "score": 31
+          },
+          {
+            "author": "silenceimpaired",
+            "body": "Lame license. Semi-competitive model. LG always a Lost Great for me.",
+            "score": 24
+          },
+          {
+            "author": "Pentium95",
+            "body": "Qwen 3.5 and Gemma 4 made models like this obsolete before their release. \n\nQwen team really released something amazing",
+            "score": 14
+          },
+          {
+            "author": "KvAk_AKPlaysYT",
+            "body": "Here's a quick summary from Good ol' Qwen 3.5:\n\n---\n\n**EXAONE 4.5 33B - LG AI Research's first open-weight VLM**\n\n- **Developer:** LG AI Research\n- **Params:** 33B total (31.7B language + 1.29B vision encoder), dense architecture\n- **Context:** 262K tokens\n- **License:** EXAONE 1.2 - **Non-Commercial**\n- **Modality:** Vision-Language (image + text input)\n\n**Architecture highlights:** Hybrid attention pattern (3 sliding-window + 1 global per block, 128-token sliding window), GQA, 1 MTP speculative decoding layer built in, 2D RoPE for vision. Global attention layers use no positional embedding (NoPE).\n\n**Benchmarks (reasoning mode):**\n- AIME 2025: 92.9 / AIME 2026: 92.6 (beats GPT-5 mini)\n- LiveCodeBench v6: 81.4\n- MMLU-Pro: 83.3\n- GPQA-Diamond: 80.5\n- Vision: strong on document understanding (OCRBench v2: 63.2, OmniDocBench: 81.2)\n\nCompared against GPT-5 mini, Qwen3-VL 32B/235B, and Qwen3.5 27B. Competitive with GPT-5 mini across the board, trades blows with Qwen3-VL 32B on vision tasks.\n\n**How to run:** Requires forked vLLM/SGLang + forked Transformers (not yet in mainline). Fits on a single H200 or 4x A100-40GB with TP. Reasoning mode is on by default (think tokens, similar to Qwen3).\n\n**Gotchas:** NC license kills commercial use. Needs custom forks for now - no native vLLM/SGLang/llama.cpp support yet. No GGUF available at time of writing.\n\n{GGUF is actually available btw, bad Qwen!}",
+            "score": 15
+          },
+          {
+            "author": "i-eat-kittens",
+            "body": "The license sucks. No reason to even look at this thing when we have plenty of great models released under Apache 2.0 and MIT.",
+            "score": 8
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.95,
+        "validator_reason": "direct announcement"
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1sgc8ir/exaone_45_released/",
+      "author": "Secure_Smoke_4280",
+      "title": "EXAONE 4.5 released",
+      "text": "[https://huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B](https://huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B)  \n\n\n[https://huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B-FP8](https://huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B-FP8)  \n\n\n[https://huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B-GGUF](https://huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B-GGUF)  ",
+      "body_full": null,
+      "timestamp": "2026-04-09T01:49:46Z",
+      "score": 162,
+      "metadata": {
+        "num_comments": 41,
+        "upvote_ratio": 0.96,
+        "link_flair_text": "New Model",
+        "comments": [
+          {
+            "author": "sunshinecheung",
+            "body": "Qwen 3.5 27B still win, lol",
+            "score": 38
+          },
+          {
+            "author": "toomanypubes",
+            "body": "Qwen3.5 27b still reigning champ by a long shot…",
+            "score": 35
+          },
+          {
+            "author": "SingleProgress8224",
+            "body": "The license is very restrictive. No commercial use, and don't you dare look inside our \"open weight\" model.",
+            "score": 31
+          },
+          {
+            "author": "Eden1506",
+            "body": "Benchmarks are nowadays hard to fully trust with all the data contamination taking place whether the researchers want it or not. At the end of the day personal testing is the only way to find out how good it is for your own use-case.",
+            "score": 11
+          },
+          {
+            "author": "Technical-Earth-3254",
+            "body": "Alibaba even mocks the competition in their own marketing material, insane",
+            "score": 8
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.96,
+        "validator_reason": "release post"
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 5518,
+  "fetched_at": "2026-04-22T06:47:32.438963Z"
+}

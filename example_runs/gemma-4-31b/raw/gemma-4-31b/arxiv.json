@@ -1,0 +1,189 @@
+{
+  "source": "arxiv",
+  "ok": true,
+  "items": [
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19747v1",
+      "author": "Yutian Chen, Shi Guo, Renbiao Jin, Tianshuo Yang, Xin Cai, Yawen Luo, Mingxin Yang, Mulin Yu, Linning Xu, Tianfan Xue",
+      "title": "AnyRecon: Arbitrary-View 3D Reconstruction with Video Diffusion Model",
+      "text": "Sparse-view 3D reconstruction is essential for modeling scenes from casual captures, but remain challenging for non-generative reconstruction. Existing diffusion-based approaches mitigates this issues by synthesizing novel views, but they often condition on only one or two capture frames, which restricts geometric consistency and limits scalability to large or diverse scenes. We propose AnyRecon, a scalable framework for reconstruction from arbitrary and unordered sparse inputs that preserves explicit geometric control while supporting flexible conditioning cardinality. To support long-range conditioning, our method constructs a persistent global scene memory via a prepended capture view cache, and removes temporal compression to maintain frame-level correspondence under large viewpoint changes. Beyond better generative model, we also find that the interplay between generation and reconstruction is crucial for large-scale 3D scenes. Thus, we introduce a geometry-aware conditioning strategy that couples generation and reconstruction through an explicit 3D geometric memory and geometry-driven capture-view retrieval. To ensure efficiency, we combine 4-step diffusion distillation with context-window sparse attention to reduce quadratic complexity. Extensive experiments demonstrate robust and scalable reconstruction across irregular inputs, large viewpoint gaps, and long trajectories.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:59:47Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19747v1",
+        "categories": [
+          "cs.CV"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19745v1",
+      "author": "B. Hadzhiyska, S. Ferraro, F. J. Qu, B. Ried Guachalla, E. Schaan, J. Aguilar, S. Ahlen, D. Bianchi, D. Brooks, F. J. Castander, E. Chaussidon, T. Claybaugh, A. de la Macorra, Arjun Dey, Biprateep Dey, P. Doel, J. E. Forero-Romero, E. Gaztañaga, S. Gontcho A Gontcho, G. Gutierrez, J. Guy, K. Honscheid, C. Howlett, D. Huterer, M. Ishak, R. Joyce, R. Kehoe, T. Kisner, A. Kremin, O. Lahav, M. Landriau, L. Le Guillou, A. Leauthaud, M. Manera, P. Martini, A. Meisner, R. Miquel, S. Nadathur, N. Palanque-Delabrouille, W. J. Percival, F. Prada, I. Pérez-Ràfols, G. Rossi, L. Samushia, E. Sanchez, E. F. Schlafly, D. Schlegel, J. Silber, D. Sprayberry, G. Tarlé, B. A. Weaver, R. Zhou, H. Zou",
+      "title": "Precision Kinematic Sunyaev--Zel'dovich Measurements Across Halo Mass and Redshift with DESI DR2 and ACT DR6: Part II. Bright Galaxy Survey and Emission-Line Galaxies",
+      "text": "We present the first high-significance spectroscopic stacked kinetic Sunyaev-Zel'dovich (kSZ) measurements of circumgalactic gas profiles for both Bright Galaxy Survey (BGS) and Emission Line Galaxy (ELG) tracers, combining DESI Data Release 2 with ACT Data Release 6. Using reconstructed line-of-sight velocities from the DESI galaxies and high-resolution ACT temperature maps, we detect the kSZ signal at high significance, reaching signal-to-noise ratios of up to $\\sim$9 for BGS and $\\sim$7.5 for ELGs in optimal stellar-mass selections. Together with the LRG measurements presented in Paper I, these constitute the most significant kSZ detections from any spectroscopic survey to date. We perform the analysis in both real and harmonic space, obtaining consistent results. By splitting both tracers into stellar-mass bins, we study the scaling of the kSZ amplitude with galaxy properties. Combining the kSZ measurements with ACT Data Release 6 (DR6) CMB lensing maps enables a joint calibration of the galaxy-halo connection and the gas fractions of host halos. For the BGS galaxies, we observe low gas fractions around the virial radius relative to standard expectations, likely attributable to active galactic nuclei (AGN) activity. We find some evidence for higher-mass halos retaining a larger fraction of their baryons, consistent with more efficient feedback in lower-mass systems. For the ELG sample, dominated by blue, star-forming galaxies, we provide the first detection of the gas distribution in ELG host halos. The ELGs appear to exhibit relatively high gas fractions, which points to the possibility of weaker feedback (due to e.g. low AGN and supernova feedback activity) at their mass scale. Finally, we present generalized Navarro-Frenk-White (GNFW) fits to the harmonic-space measurements, providing a compact parametrization of gas profiles for forward modeling in large-scale structure analyses.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:59:30Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19745v1",
+        "categories": [
+          "astro-ph.CO",
+          "astro-ph.GA"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19727v1",
+      "author": "Bo Ning",
+      "title": "On Scott's odd induced subgraph conjecture and a related problem",
+      "text": "For a graph $G$, let $f_o(G)$ denote the maximum order of an induced subgraph of $G$ all of whose vertices have odd degree, and let $χ(G)$ denote the chromatic number of $G$. Scott (CPC, 1992) proved that $f_o(G) \\ge |V(G)|/(2χ(G))$ for every graph without isolated vertices, and conjectured that the factor $2$ can be removed. Wang and Wu (JGT, 2024) showed that this conjecture fails for bipartite graphs, but holds for line graphs. In this article, we confirm Scott's conjecture for claw-free graphs without isolated vertices, thereby strengthening the result of Wang and Wu. We also construct $K_{1,r}$-free graphs of arbitrarily large order to show that the conjecture fails for this broader class, for every integer $r \\ge 4$.\n  Wang and Wu also asked whether $f_o(L(G)) \\ge n/2$ holds for every connected regular graph $G$ of order $n \\ge 3$. We show that $C_5$ is the smallest counterexample to this problem. On the positive side, we prove that if $G$ is a connected $k$-regular $C_5$-free graph on $n$ vertices with $k \\ge 2$, then $f_o(L(G)) \\ge n/2$.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:51:49Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19727v1",
+        "categories": [
+          "math.CO"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19722v1",
+      "author": "Jake Lee",
+      "title": "Adaptive MSD-Splitting: Enhancing C4.5 and Random Forests for Skewed Continuous Attributes",
+      "text": "The discretization of continuous numerical attributes remains a persistent computational bottleneck in the induction of decision trees, particularly as dataset dimensions scale. Building upon the recently proposed MSD-Splitting technique -- which bins continuous data using the empirical mean and standard deviation to dramatically improve the efficiency and accuracy of the C4.5 algorithm -- we introduce Adaptive MSD-Splitting (AMSD). While standard MSD-Splitting is highly effective for approximately symmetric distributions, its rigid adherence to fixed one-standard-deviation cutoffs can lead to catastrophic information loss in highly skewed data, a common artifact in real-world biomedical and financial datasets. AMSD addresses this by dynamically adjusting the standard deviation multiplier based on feature skewness, narrowing intervals in dense regions to preserve discriminative resolution. Furthermore, we integrate AMSD into ensemble methods, specifically presenting the Random Forest-AMSD (RF-AMSD) framework. Empirical evaluations on the Census Income, Heart Disease, Breast Cancer, and Forest Covertype datasets demonstrate that AMSD yields a 2-4% accuracy improvement over standard MSD-Splitting, while maintaining near-identical O(N) time complexity reductions compared to the O(N log N) exhaustive search. Our Random Forest extension achieves state-of-the-art accuracy at a fraction of standard computational costs, confirming the viability of adaptive statistical binning in large-scale ensemble learning architectures.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:48:27Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19722v1",
+        "categories": [
+          "cs.LG",
+          "cs.AI"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19717v1",
+      "author": "Arianne Meijer-van de Griend",
+      "title": "Qubit Routing for (Almost) Free",
+      "text": "In this paper, we give a mathematical proof that bounds the number of CNOT gates required to synthesize an $n$ qubit phase polynomial with $g$ terms to be at least $O(\\frac{gn}{\\max (\\log g, 1)})$ and at most $O(gn)$. However, when targeting restricted hardware, not all CNOTs are allowed. If we were to use SWAP-based methods to route the qubits on the architecture such that the earlier synthesized gates are natively allowed, we increase the number of CNOTs by a routing overhead factor of $O(\\log n) \\leq α\\leq O(n \\log^2 n)$. However, if we only synthesize allowed gates, we do not need to route any qubits. Moreover, in that case the routing overhead factor is $1 \\leq α\\leq 4 \\simeq O(1)$. Additionally, since phase polynomials and Hadamard gates together form a universal gate set, we get qubit routing for almost free.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:43:44Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19717v1",
+        "categories": [
+          "quant-ph",
+          "cs.CC"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19712v1",
+      "author": "Mihailo Stojnic",
+      "title": "Ultrametric OGP - parametric RDT \\emph{symmetric} binary perceptron connection",
+      "text": "In [97,99,100], an fl-RDT framework is introduced to characterize \\emph{statistical computational gaps} (SCGs). Studying \\emph{symmetric binary perceptrons} (SBPs), [100] obtained an \\emph{algorithmic} threshold estimate $α_a\\approx α_c^{(7)}\\approx 1.6093$ at the 7th lifting level (for $κ=1$ margin), closely approaching $1.58$ local entropy (LE) prediction [18].\n  In this paper, we further connect parametric RDT to overlap gap properties (OGPs), another key geometric feature of the solution space. Specifically, for any positive integer $s$, we consider $s$-level ultrametric OGPs ($ult_s$-OGPs) and rigorously upper-bound the associated constraint densities $α_{ult_s}$. To achieve this, we develop an analytical union-bounding program consisting of combinatorial and probabilistic components. By casting the combinatorial part as a convex problem and the probabilistic part as a nested integration, we conduct numerical evaluations and obtain that the tightest bounds at the first two levels, $\\barα_{ult_1} \\approx 1.6578$ and $\\barα_{ult_2} \\approx 1.6219$, closely approach the 3rd and 4th lifting level parametric RDT estimates, $α_c^{(3)} \\approx 1.6576$ and $α_c^{(4)} \\approx 1.6218$. We also observe excellent agreement across other key parameters, including overlap values and the relative sizes of ultrametric clusters.\n  Based on these observations, we propose several conjectures linking $ult$-OGP and parametric RDT. Specifically, we conjecture that algorithmic threshold $α_a=\\lim_{s\\rightarrow\\infty} α_{ult_s} = \\lim_{s\\rightarrow\\infty} \\barα{ult_s} = \\lim_{r\\rightarrow\\infty} α_{c}^{(r)}$, and $α_{ult_s} \\leq α_{c}^{(s+2)}$ (with possible equality for some (maybe even all) $s$). Finally, we discuss the potential existence of a full isomorphism connecting all key parameters of $ult$-OGP and parametric RDT.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:36:33Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19712v1",
+        "categories": [
+          "cs.LG",
+          "cond-mat.dis-nn",
+          "cs.IT",
+          "math.PR",
+          "stat.ML"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19703v1",
+      "author": "Leon Haag-Fank, Andreas Mielke",
+      "title": "The bosonic Hubbard model on a three dimensional flat band lattice",
+      "text": "The lowest eigenstates of the hopping matrix on the line graph of a cubic lattice with periodic boundary conditions are highly degenerate, they form a lowest flat band. Further, these states are localized. If one considers a repulsive bosonic Hubbard model on this lattice it is possible to construct exact multi-particle ground states simply by putting particles in the localized single particle ground states such that they avoid each other. This can be done up to a certain critical particle number $N_c$. We prove that at this particle number the ground state entropy is subextensive $\\propto N_c^{2/3}$. For lower densities the entropy is extensive. We further show that the problem is related to the number of 4-cycle decompositions of the cubic lattice with periodic boundary conditions.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:22:47Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19703v1",
+        "categories": [
+          "math-ph",
+          "cond-mat.stat-mech",
+          "math.CO"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19701v1",
+      "author": "Yacine Ali-Haïmoud",
+      "title": "A practical theorem on gravitational-wave background statistics",
+      "text": "Inspiralling supermassive black-hole binaries (SMBHBs) are expected to be the main source of the nanohertz gravitational-wave background (GWB) targeted by pulsar timing arrays (PTAs). We provide a simple and general analytic expression for the probability distribution function (PDF) of the GWB characteristic strain squared $h_c^2$ in the limit of a large but finite effective number of sources, $N$, relevant for the lowest-frequency bands where PTAs are most sensitive. Explicitly, we show that for $N \\gg 1$, the PDF of the rescaled variable $y \\equiv h_c^2/\\overline{h_c^2}$ takes the universal self-similar form $P(y) \\simeq N^{1/3} \\mathcal{P}(N^{1/3} (y -1))$, where $\\mathcal{P}$ is the reflected map-Airy distribution. The effective number of in-band sources $N$ is fully specified by the mean $\\overline{h_c^2}$ and the cubic shot-noise strain scale $\\overline{h_0^3}$, a new summary statistic of the GWB that depends only on the local properties of the SMBHB population. This result is universal: it applies to any population of SMBHBs, regardless of whether they are circular or eccentric, and of the mechanism dominating orbital hardening. We explicitly quantify the accuracy of the large-source-count PDF for a simple but physically realistic SMBHB model, and outline its practical application to PTA data analysis.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:20:51Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19701v1",
+        "categories": [
+          "astro-ph.CO",
+          "gr-qc"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19695v1",
+      "author": "Jean-Bastien Grill, Omar Darwiche Domingues, Pierre Ménard, Rémi Munos, Michal Valko",
+      "title": "Planning in entropy-regularized Markov decision processes and games",
+      "text": "We propose SmoothCruiser, a new planning algorithm for estimating the value function in entropy-regularized Markov decision processes and two-player games, given a generative model of the environment. SmoothCruiser makes use of the smoothness of the Bellman operator promoted by the regularization to achieve problem-independent sample complexity of order O~(1/epsilon^4) for a desired accuracy epsilon, whereas for non-regularized settings there are no known algorithms with guaranteed polynomial sample complexity in the worst case.",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:17:33Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19695v1",
+        "categories": [
+          "cs.LG"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.19691v1",
+      "author": "Anil Belli, Ugur Gul, William T. Ross, Aristomenis G. Siskakis",
+      "title": "The Cesaro operator on L^2(0, 1)",
+      "text": "This paper explores a version of the classical Ces`aro integral operator for the Lebesgue space L2(0, 1) where we discuss its norm, adjoint, spectral properties, and invariant subspaces. An important tool will be semigroups of weighted composition operators on L2(0, 1).",
+      "body_full": null,
+      "timestamp": "2026-04-21T17:12:46Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.19691v1",
+        "categories": [
+          "math.FA"
+        ]
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 105,
+  "fetched_at": "2026-04-22T06:21:25.615071Z"
+}

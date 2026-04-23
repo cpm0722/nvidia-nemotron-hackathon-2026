@@ -1,0 +1,37 @@
+{
+  "source": "geeknews",
+  "ok": true,
+  "items": [
+    {
+      "source": "geeknews",
+      "source_detail": "news.hada.io",
+      "url": "https://blog.cloudflare.com/ai-platform/",
+      "author": null,
+      "title": "Cloudflare의 AI 플랫폼: 에이전트를 위한 추론 계층",
+      "text": "다양한 모델과 제공자를 통합해 에이전트형 애플리케이션의 복잡성 을 줄이는 통합 추론 계층 을 구축 AI Gateway 와 Workers AI 를 통해 70개 이상의 모델과 12개 이상의 제공자를 하나의 API 로 호출 가능하며, 비용과 사용량을 중앙에서 관리 사용자 정의 모델 을 직접 배포할 수 있도록 Replicate의 Cog 기술 을 활용해 컨테이너 기반 모델 실행을 지원 전 세계 330개 도시의 인프라를 활용해 지연시간을 최소화 하고, 장애 발생 시 자동 라우팅 으로 안정적 추론 보장 Replicate 팀이 Cloudflare에 합류해 모델 호스팅과 배포를 완전 통합, 에이전트 개발을 위한 단일 플랫폼 으로 확장 중 Cloudflare AI Platform 개요 AI 모델의 빠른 변화 와 제공자 간 차이로 인해, 여러 모델을 조합해 사용하는 에이전트형 애플리케이션 의 복잡성이 증가함 예를 들어 고객지원 에이전트는 메시지 분류에 빠른 모델, 계획 수립에 대형 모델, 실행에 경량 모델을 각각 사용 단일 제공자에 종속되지 않으면서 비용·신뢰성·지연시간 을 통합 관리할 필요가 있음 Cloudflare는 AI Gateway 와 Workers AI 를 기반으로, 모든 모델을 하나의 API로 호출할 수 있는 통합 추론 계층 을 구축함 최근 대시보드 개편, 기본 게이트웨이 자동 설정, 업스트림 장애 자동 재시도, 세분화된 로깅 제어 기능을 추가 하나의 카탈로그, 하나의 통합 엔드포인트 AI.run() 바인딩을 통해 Cloudflare Workers에서 타사 모델(OpenAI, Anthropic 등)을 직접 호출 가능 Cloudflare 호스팅 모델에서 타사 모델로 전환 시 코드 한 줄만 수정하면 됨 REST API 지원도 곧 제공 예정으로, 어떤 환경에서도 전체 모델 카탈로그 접근 가능 70개 이상의 모델 , 12개 이상의 제공자 를 하나의 API와 결제 단위로 이용 가능 주요 제공자: Alibaba Cloud, AssemblyAI, Bytedance, Google, InWorld, MiniMax, OpenAI, Pixverse, Recraft, Runway, Vidu 이미지·비디오·음성 모델을 포함해 멀티모달 애플리케이션 구축 가능 모든 모델 호출이 하나의 API로 통합되어 AI 사용량과 비용을 중앙에서 관리 가능 평균적으로 기업은 3.5개의 모델을 여러 제공자에서 호출하고 있으나, AI Gateway는 이를 단일 대시보드에서 추적 가능 요청 시 사용자 정의 메타데이터 를 포함해 고객별·워크플로별 비용 분석 가능 사용자 모델 직접 배포 (Bring Your Own Model) AI Gateway는 모든 제공자의 모델을 통합 제공하지만, 사용자 데이터로 미세조정된 모델 을 직접 배포할 수 있도록 준비 중 현재 엔터프라이즈 고객은 전용 인스턴스에서 커스텀 모델을 실행 중이며, 이를 일반 사용자에게 확장 예정 Cloudflare는 Replicate의 Cog 기술 을 활용해 머신러닝 모델을 컨테이너화 cog.yaml 파일에 의존성 정의, predict.py 파일에 추론 코드를 작성하면 자동으로 패키징 Cog는 CUDA, Python 버전, 가중치 로딩 등 복잡한 설정을 추상화 cog build 명령으로 컨테이너 이미지를 빌드 후 Workers AI에 업로드하면, Cloudflare가 배포 및 서비스 수행 향후 wrangler 명령어 , GPU 스냅샷 기반 빠른 콜드 스타트 , 고객용 API 제공 예정 내부 및 일부 외부 고객과 테스트 중이며, 누구나 자체 모델을 Workers AI에서 사용할 수 있도록 확장 계획 첫 토큰까지의 속도 최적화 AI Gateway + Workers AI 조합은 실시간 응답이 중요한 라이브 에이전트 에 특히 유리 전체 추론 시간이 3초라도, 첫 토큰이 50ms 빨리 도착하면 사용자 체감 속도 향상 Cloudflare는 전 세계 330개 도시의 데이터센터 를 통해 사용자와 추론 엔드포인트 간 네트워크 지연을 최소화 Workers AI는 Kimi K2.5 및 실시간 음성 모델 등 에이전트 특화 오픈소스 모델 을 호스팅 AI Gateway를 통해 호출 시 코드와 추론이 동일 네트워크에서 실행되어 최저 지연시간 달성 자동 장애 조치 기반의 신뢰성 에이전트 워크플로는 단계 간 의존성이 높아 추론 안정성 이 핵심 AI Gateway는 동일 모델이 여러 제공자에 존재할 경우, 한 곳이 장애 시 자동으로 다른 제공자로 라우팅 개발자가 별도의 장애 처리 로직을 작성할 필요 없음 Agents SDK 를 사용하는 장기 실행형 에이전트의 경우, 스트리밍 추론이 연결 끊김에도 복원 가능 AI Gateway가 스트리밍 응답을 독립적으로 버퍼링해, 중단 시 재연결 후 동일 응답을 재사용 가능 중복 과금 없이 동일 토큰을 복원하며, SDK의 체크포인트 기능과 결합 시 사용자에게 중단이 감지되지 않음 Replicate 통합 Replicate 팀이 Cloudflare AI Platform 팀에 합류 하여 완전한 통합 진행 중 Replicate의 모든 모델을 AI Gateway로 이관하고, 호스팅 모델을 Cloudflare 인프라로 재플랫폼화 사용자는 기존 Replicate 모델을 AI Gateway에서 호출하거나, Replicate에 배포한 모델을 Workers AI에서 호스팅 가능 시작하기 개발자는 AI Gateway 문서 또는 Workers AI 문서 에서 시작 가능 Agents SDK 를 통해 Cloudflare 상에서 에이전트 구축 가능 Cloudflare의 역할 Cloudflare는 연결 중심 클라우드(connectivity cloud) 로서 기업 네트워크 보호, 대규모 애플리케이션 구축, 웹 성능 가속, DDoS 방어 및 Zero Trust 보안 지원 무료 앱 1.1.1.1 을 통해 더 빠르고 안전한 인터넷 사용 가능 Cloudflare의 사명은 더 나은 인터넷 구축 이며, 관련 정보와 채용은 공식 웹사이트에서 확인 가능",
+      "body_full": null,
+      "timestamp": null,
+      "score": 2,
+      "metadata": {
+        "feed_title": "GeekNews - 개발/기술/스타트업 뉴스 서비스",
+        "topic_id": "28616",
+        "topic_url": "https://news.hada.io/topic?id=28616",
+        "comments_count": 1,
+        "discovery": "id_scan",
+        "site": "blog.cloudflare.com",
+        "upvotes": 2,
+        "comments": [
+          {
+            "cid": "55647",
+            "author": "GN⁺",
+            "body": "Hacker News 의견들 결국 이건 openrouter 에 Cloudflare Argo networking 을 붙인 형태로 보임 Replicate 인수를 활용해 더 흥미로운 걸 만들 수 있을 것 같음 application-specific RL 이 점점 좋아지고 있지만, 이를 scalable하게 배포 할 방법이 부족함 Fireworks 같은 곳도 LORA를 확장 배포한다고 하지만 실제로는 잘 안 됨 그래서 지금은 내 앱의 기본 부하를 차고에 있는 3090 여러 대로 직접 호스팅 중임. 웃기지만 한 달에 1천 달러를 아끼는 셈임 어떤 모델들을 돌리고 있고, 규모 확장 시 3090이 몇 대 필요한지 궁금함 이건 꽤 유용해 보임. Cloudflare가 좋은 도구들을 잘 모으고 있음 특히 D2 는 사실상 유일한 sqlite-as-a-service 로, 안정성도 좋고 무료 플랜 한도도 넉넉함 문서와 마케팅에서는 “사용자별, 테넌트별 DB” 같은 활용을 강조하지만, 실제로는 Workers와 함께 쓰기 어렵음 새 DB를 바인딩하려면 Worker를 다시 배포해야 해서 사실상 불가능함 우리 경험상 D1의 안정성 은 좋지 않았음 내부 네트워크 계층에서 쿼리가 몇 초, 심하면 수십 초씩 멈춤 일부 쿼리는 observability 대시보드 에도 안 잡혀서 직접 타임아웃 감지를 넣지 않으면 문제를 모름 트랜잭션도 지원하지 않고, 이슈 스레드 에서 PM이 구현 계획이 없다고 밝힘 데이터 일관성을 보장하려면 Durable Object 를 써야 하는데, 그건 또 다른 비용과 트레이드오프가 있음 아이디어는 좋지만 프로덕션용으로는 신뢰하기 어려움 , 취미 프로젝트엔 괜찮음 D1-R2 백업 시스템 을 Cloudflare가 기본 제공했으면 좋겠음 지금은 Worker에서 커스텀 코드로만 가능함 D1의 10GB 제한 은 너무 작음. 장난감 수준의 프로젝트 외엔 어렵다고 봄 REST API를 곧 출시한다지만, Cloudflare lock-in 을 유도하는 구조 같음 OpenRouter를 만든다면서 자체 런타임 바인딩만 지원하는 건 이해하기 어려움 Workers AI 모델 목록 과 AI 모델 카탈로그 의 모델 구성이 다름 “workers-ai/*” 네임스페이스에는 훨씬 적은 모델이 있음. 의도된 건지 궁금함 예를 들어 “workers-ai/@cf/google/gemma-4-26b-a4b-it”이나 “workers-ai/@cf/nvidia/nemotron-3-120b-a12b” 같은 모델은 gateway.ai.cloudflare.com의 /models 엔드포인트에는 없음. 그런데 호스티드 모델로는 존재함 나는 openrouter 를 Cloudflare Workers에서 잘 쓰고 있음 모델이 오프라인일 때 cascading과 waterfalling 기능도 훨씬 뛰어남 V1에서는 그게 아직 안 되는 듯함 openrouter의 모든 점이 마음에 들어서 거의 팬 수준임 추론(inference) 계층 문제는 빠르게 해결되고 있음 다음으로 어려운 건 governance 계층 , 즉 에이전트",
+            "depth": 0
+          }
+        ]
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 2922,
+  "fetched_at": "2026-04-22T04:57:32.159848Z"
+}

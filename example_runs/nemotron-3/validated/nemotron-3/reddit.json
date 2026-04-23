@@ -1,0 +1,81 @@
+{
+  "source": "reddit",
+  "ok": true,
+  "items": [
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1soz8en/should_i_be_seeing_more_of_a_performance_leap/",
+      "author": "aaronr_90",
+      "title": "Should I be seeing more of a performance leap when using NVFP4, INT4, FP8 with VLLM over MXFP4, Q4, and Q8 with llama.cpp based inference on Blackwell based GPUs?",
+      "text": "I hope I am doing something wrong here but I am seeing about almost double the t/s using LM studio with Qwen3.5 and Nemotron models than I am seeing with Nvidia’s own vLLM containers built for Spark.\n\nI was surprised I was only getting 15-ish t/s with Nemotron Nano NVFP4 in VLLM with Nvidia’s recommended settings and getting 30 t/s using Unsloths MXFP4 of Nemotron Nano in LM Studio.\n\nI have two RTX Pro 6000’s. One is dedicated to Ollama for on demand switching, the other is dedicated to a single model running with, vLLM. \n\nI get 40+ t/s using Mistral Small 3 24B Q8 in Ollama and around 20-30 t/s with Qwen3.5 27B FP8.\n\nPlus the models load in LM-Studio 10x as fast. Seriously, VLLM takes like 10-15 minutes to load a model. LM-Studio and Ollama are about 90 seconds for the larger ones like Qwen3.5 122B and Devstral 2 123B.\n\nOne thing VLLM does have going for it is being able to take advantage of multi-token prediction, and this brings up to par  with running with llama.cpp inference.\n\nI would really like to see the performance benefit of taking advantage of the native 4bit cores in the Blackwell architectures but I am not seeing it. \n\nNote: I am not as much of a fan of Ollama as the next guy but when I was first building a setup for a small team it just worked and I could set it up with a couple models and forget about it. Plus llama.cpp, Ollama and LM-Studio allow you to load multiple models on a single GPU where VLLM does. It support this withoutout additional config of Nvidia/docker GPU sharing.",
+      "body_full": null,
+      "timestamp": "2026-04-18T14:33:27Z",
+      "score": 12,
+      "metadata": {
+        "num_comments": 7,
+        "upvote_ratio": 0.87,
+        "link_flair_text": "Question | Help",
+        "comments": [
+          {
+            "author": "laterbreh",
+            "body": "NVFP4 is still young on VLLM and AWQ/W4A16/FP8 is the way to go for VLLM. \n\nAs someone that runs models at 150k+ context windows Ill tell you the defining feature of VLLM over LLamacpp. \n\nVllm at 0 context may be slightly slower than llama. But as soon as you start loading that context window llama is going to fall on its face with increased prompt processing times and inference will substantially slow down as the context window fills. \n\nIf your workflows are not sensitive to latency and context baggage as it accumulates then stick with what you got. SGLang should also be considered as i believe its nvfp4 implementation is more mature.",
+            "score": 9
+          },
+          {
+            "author": "Karyo_Ten",
+            "body": "I can reach almost 200tok/s with Nemotron Super NVFP4, tensor parallelism and MTP on 2x RTX 6000 with vLLM so on the nano that's 4 times smaller you should be around 300 tok/s.\n\nAnd the theoretical maximum for 8-bit is 1800 (GB/s) / 3 (GB for 3B active param 1B/8bit per param) is 600 tok/s, so NVFP4 around 900 since it's ~4.5bit per param.",
+            "score": 3
+          },
+          {
+            "author": "jwpbe",
+            "body": "> One is dedicated to Ollama\n\n\\*extremely loud incorrect buzzer\\*",
+            "score": 3
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.85,
+        "validator_reason": "discusses Nemotron Nano/Super"
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1sopb70/how_to_optimize_quantized_llm_model_to_read_very/",
+      "author": "JiaHajime",
+      "title": "How to optimize quantized LLM model to read very long texts?",
+      "text": "I am currently run Nemotron-3-Nano-4B-RotorQuant-GGUF-Q4\\_K\\_M model made by [https://huggingface.co/majentik](https://huggingface.co/majentik)\n\nI am using 12GB VRAM and I am so delighted to use local AI models to read big markdown files from notebookLM. So I tested it with long text document from [https://docingest.com/docs/geminicli.com](https://docingest.com/docs/geminicli.com)\n\nhttps://preview.redd.it/oqwgwg4k2wvg1.jpg?width=817&format=pjpg&auto=webp&s=071844c0af24a08a3163f28d2e4004cda9082d03\n\nI have used Rotorquant with custom Llamacpp, however, it takes very long time only to process 1 doc! Is there any way to accelerate this? Thank you  \n",
+      "body_full": null,
+      "timestamp": "2026-04-18T05:58:45Z",
+      "score": 1,
+      "metadata": {
+        "num_comments": 4,
+        "upvote_ratio": 0.67,
+        "link_flair_text": "Discussion",
+        "comments": [
+          {
+            "author": "tmvr",
+            "body": "The only way to speed up prompt processing is faster compute hardware.",
+            "score": 4
+          },
+          {
+            "author": "computehungry",
+            "body": "The first trick is to increase batch size. By default it's 512. In the llama-server settings, increase both batch and ubatch size to 1024, 2048, or 4096, and see what happens. (Will use a lot more vram.) Should become a lot faster, depending on your hardware maybe 2-4x+.\n\nOtherwise, your prompt processing isn't really terribly slow. It's just a huge document, and it's a few minutes it's not that bad. If you need to read like a thousand of these then sure you could splurge on a new gpu, but otherwise it's normal.",
+            "score": 1
+          },
+          {
+            "author": "ag789",
+            "body": "there are some stuff in the 'advanced' and 'research' domain such as RAG (retrevial augmented generation) and vector graph embeddings based stuff e.g.  \n[https://github.com/DataArcTech/GraphSearch](https://github.com/DataArcTech/GraphSearch)\n\nthe 'easy' way out is to use 'bigger' more expensive hardware, and just load it into the context / prompt",
+            "score": 1
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.9,
+        "validator_reason": "uses Nemotron-3-Nano-4B model"
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 3335,
+  "fetched_at": "2026-04-22T04:57:32.565440Z"
+}

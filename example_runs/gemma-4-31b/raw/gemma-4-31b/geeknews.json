@@ -1,0 +1,193 @@
+{
+  "source": "geeknews",
+  "ok": true,
+  "items": [
+    {
+      "source": "geeknews",
+      "source_detail": "news.hada.io",
+      "url": "https://blog.danielvaughan.com/i-ran-gemma-4-as-a-local-model-in-codex-cli-7fda754dc0d4",
+      "author": null,
+      "title": "Gemma 4를 Codex CLI에서 로컬 모델로 실행하기",
+      "text": "Gemma 4 를 클라우드 대신 로컬 Codex CLI 환경 에서 실행해 도구 호출 성능과 안정성을 검증한 사례로, GPT-5.4 대비 비용·프라이버시 이점 을 확인 Mac(M4 Pro) 24GB 에서 26B MoE 와 NVIDIA GB10 128GB 에서 31B Dense 로 각각 llama.cpp 와 Ollama 를 사용해 동일한 코드 생성 작업을 수행, 설정 차이에 따른 성능을 비교 도구 호출 성공률이 6.6%에서 86.4%로 향상 되어 로컬 모델의 실용 가능성이 입증되었으며, GB10 환경에서는 완전한 코드 생성을 달성 Mac은 5.1배 빠른 토큰 생성 속도 를 보였으나, 메모리 제약과 양자화 설정으로 인해 반복 시도가 필요했고, GB10은 느리지만 첫 시도에 성공 결과적으로 로컬 모델도 실무 수준 코드 생성이 가능 하며, 프라이버시 중심의 로컬 처리와 복잡 작업의 클라우드 전환을 병행하는 하이브리드 접근 을 추천 로컬 모델 전환 동기 비용 문제로, Codex CLI를 하루 여러 세션, 때로는 병렬로 실행하면서 API 비용이 누적 프라이버시 요구로, 일부 코드베이스는 외부 서버로 전송되면 안 됨 안정성 확보 필요로, 클라우드 API는 스로틀링·장애·가격 변경 리스크 존재 이전에 로컬 모델을 시도하지 않은 이유는 도구 호출(tool calling) 불가 때문이었으며, Codex CLI의 핵심 가치는 모델이 파일 읽기, 코드 작성, 테스트 실행, 패치 적용을 수행하는 데 있음 이전 Gemma 세대는 tau2-bench 함수 호출 벤치마크에서 6.6% (100번 중 93번 실패)였으나, Gemma 4 31B는 86.4% 로 도약하여 테스트 가치가 생김 Mac 설정 과정 Ollama 로 시작했으나, v0.20.3에서 Gemma 4의 도구 호출 응답이 tool_calls 배열 대신 reasoning output 으로 잘못 라우팅되는 스트리밍 버그 발생 Apple Silicon에서 Gemma 4 사용 시 약 500 토큰 이상의 프롬프트에서 Flash Attention freeze 발생, Codex CLI의 시스템 프롬프트는 약 27,000 토큰이므로 사실상 사용 불가 llama.cpp 로 전환 후 Homebrew로 설치, 작동하는 서버 명령에 6개의 핵심 플래그 필요 -np 1 : 슬롯 1개로 제한, 다중 슬롯은 KV 캐시 메모리를 배수로 증가시킴 -ctk q8_0 -ctv q8_0 : KV 캐시 양자화로 940MB에서 499MB 로 감소 --jinja : Gemma 4의 도구 호출 템플릿에 필수 -m 에 직접 GGUF 경로 지정 필요, -hf 플래그 사용 시 1.1GB 비전 프로젝터 가 자동 다운로드되어 OOM 크래시 유발 Codex CLI 설정에서 web_search = \"disabled\" 필수, llama.cpp가 거부하는 web_search_preview 도구 타입을 Codex CLI가 전송하기 때문 GB10 설정 과정 vLLM 0.19.0은 PyTorch 2.10.0 기반으로 컴파일되어 있으나, aarch64 Blackwell(compute capability sm_121)용 CUDA 지원 PyTorch는 2.11.0+cu128뿐이라 ABI 불일치 로 ImportError 발생 llama.cpp 를 CUDA로 소스 빌드하면 컴파일과 벤치마크는 통과하지만, Codex CLI의 wire_api = \"responses\" 가 보내는 비함수 도구 타입을 llama.cpp가 거부 Ollama v0.20.5 에서 성공, Apple Silicon에서 발생한 스트리밍 버그가 NVIDIA에서는 재현되지 않음 ollama pull gemma4:31b 실행 후, SSH 터널로 포트 11434를 Mac으로 포워딩(Codex CLI의 --oss 모드가 localhost만 확인하기 때문) codex --oss -m gemma4:31b 로 텍스트 생성과 도구 호출 모두 첫 시도에 작동 Mac 설정에 오후 대부분 소요, GB10은 모델 다운로드 대기 포함 약 1시간 소요 벤치마크 결과 세 구성 모두에 동일한 작업 부여: codex exec --full-auto 로 parse_csv_summary Python 함수 작성, 에러 핸들링 포함, 테스트 작성 및 실행 GPT-5.4 (클라우드): 타입 힌트, 적절한 예외 체이닝, 불리언 타입 감지, 깔끔한 헬퍼 함수 포함 코드 생성, 5개 테스트 첫 시도 통과, 65초 완료, 후속 정리 불필요 GB10 31B Dense : 타입 힌트나 불리언 감지 없지만 견고한 에러 핸들링, 데드 코드 없음, 3번의 도구 호출로 5개 테스트 첫 시도 통과, 7분 소요 Mac 26B MoE : 구현부에 데드 코드 잔존, 타입 추론 루프를 작성 후 방치하고 아래에 'Actually, let's simplify' 주석과 함께 재작성, 테스트 파일 작성에 5번 시도 필요 매번 다른 heredoc 오류 발생: filerypt → file_path , encoding=' 'utf-8' (공백 삽입), fileint(file_path) 등 GB10이 3번 만에 완료한 작업에 10번의 도구 호출 소요 이 결과는 24GB Q4_K_M Codex CLI 환경의 결과이며, Gemma 4 Apple Silicon 전반에 대한 보편적 판단이 아님 속도 분석: Mac이 예상보다 빠른 이유 llama-bench로 동일한 컨텍스트 길이에서 양쪽 머신 측정, Mac이 GB10보다 토큰 생성 5.1배 빠름 두 머신 모두 273 GB/s LPDDR5X 메모리 대역폭이지만, 토큰 생성은 메모리 대역폭 제한 작업 31B Dense는 매 토큰마다 312억 개 전체 파라미터 읽기(약 17.4GB) 26B MoE는 매 토큰마다 38억 개 만 활성화(약 1.9GB) 동일한 대역폭에서 Mac은 52 tok/s , GB10은 10 tok/s 기록 프롬프트 처리 속도는 예상과 달리 Mac이 선전: 8K 컨텍스트에서 Mac 531 tok/s vs GB10 548 tok/s , MoE의 희소 활성화 가 프롬프트 처리에도 유리하게 작용 핵심 교훈: 토큰 속도보다 첫 시도 성공률 Mac이 토큰 생성 5.1배 빠르지만 최종 완료 시간은 30%만 단축 (4분 42초 vs 6분 59초) 시간 차이의 원인은 재시도 : 10번의 도구 호출 vs 3번, 5번의 테스트 작성 실패, 모델이 정리하지 않은 데드 코드 클라우드 모델이 이를 더 극명히 입증: 가장 빠르고 토큰 사용 최소, 수리 패스 불필요, 5/5 65초 완료 그러나 로컬도 실용적 , 양쪽 머신 모두 테스트 통과하는 작동 코드 생성 Gemma 3(도구 호출 6.6%)에서 Gemma 4(86.4%)로의 품질 격차가 핵심적인 전환점이며, '작동하지 않음'에서 '작동함'으로의 단계가 로컬 에이전틱 코딩을 실용화 하는 전환 Mac 결과에 대한 단서: Q4_K_M 이 24GB 머신에서 메모리에 맞는 최고 양자화였으며, 더 넉넉한 Apple Silicon에서 더 높은 양자화로 재실행 시 결과가 달라질 수 있음 하이브리드 접근 가능: codex --profile local 로 반복 작업 및 프라이버시 민감 작업 처리, 복잡한 작업은 클라우드 기본값 사용, Codex CLI의 프로필 시스템으로 전환은 플래그 하나 설정 시 실용 팁 Apple Silicon : Ollama는 Gemma 4에서 사용 불가했으며, llama.cpp + --jinja 권장 Codex CLI 프로필에서 web_search = \"disabled\" 설정 -m 으로 직접 GGUF 경로 지정, -hf 사용 금지 컨텍스트 32,768 설정(Codex CLI 시스템 프롬프트에 최소 27,000 토큰 필요) KV 캐시 양자화: -ctk q8_0 -ctv q8_0 NVIDIA GB10 : Ollama v0.20.5가 첫 번째로 안정적 작동한 경로, codex --oss -m gemma4:31b 사용, 원격 머신이면 SSH로 포트 11434 터널링 프로바이더 설정에서 stream_idle_timeout_ms 를 최소 1,800,000 으로 설정 필요, Mac에서 단일 도구 호출 사이클이 1분 39초 소요되어 기본 타임아웃 시 세션 종료 llama.cpp 버전 고정 권장, 빌드 간 3.3배 속도 저하 가 보고되어 벤치마크가 하룻밤 사이에 변동 가능",
+      "body_full": null,
+      "timestamp": null,
+      "score": 40,
+      "metadata": {
+        "feed_title": "GeekNews - 개발/기술/스타트업 뉴스 서비스",
+        "topic_id": "28510",
+        "topic_url": "https://news.hada.io/topic?id=28510",
+        "comments_count": 6,
+        "discovery": "id_scan",
+        "site": "blog.danielvaughan.com",
+        "upvotes": 40,
+        "comments": [
+          {
+            "cid": "55294",
+            "author": "tsboard",
+            "body": "제가 회사에서 H100 2장으로 Gemma4-31B 운영을 해보니 답변 품질이 나름 준수하고 한국어 잘됩니다. 도구 실행에 대한 판단이나 실행 후 결과 정리도 잘합니다. 하지만 어디까지나 31B 파라미터를 감안했을 때 놀랍다! 수준인거고 당연히 더 큰 파라미터를 가지는 모델 (예: MiniMax-M2.5)과 비교할 때는 답변의 종합적인 품질 등에서 떨어지는 건 사실입니다. 전반적으로 작고 빠릿한 동작을 원하면 Gemma4로 충분할 것 같습니다. 저는 GPT-OSS-120B → Qwen3.5-35B-A3B로 교체했다가 이제 Gemma4-31B로 정착했는데 꽤 만족스러웠습니다. 계속 유지할 것 같네요.",
+            "depth": 0
+          },
+          {
+            "cid": "55302",
+            "author": "kaydash",
+            "body": "헐 웹서치를 못 쓴다니! searxng 구성해도 못 쓰나요",
+            "depth": 0
+          },
+          {
+            "cid": "55306",
+            "author": "ysm0622",
+            "body": "https://github.com/ysm-dev/skills/blob/main/skills/web-search/SKILL.md 이 스킬 대용으로 써보세요 ㅎㅎ",
+            "depth": 1
+          },
+          {
+            "cid": "55288",
+            "author": "yangeok",
+            "body": "한국어도 잘 되나 확인해보고싶네요",
+            "depth": 0
+          },
+          {
+            "cid": "55271",
+            "author": "GN⁺",
+            "body": "Hacker News 의견들 Gemma 4 26B는 같은 파라미터 규모 의 모델 중 정말 예외적인 성능을 보였음 내부 벤치마크에서 GPT 5.2, Gemini 3 Pro Preview와 비슷한 점수를 냈지만, 에이전트형 코딩 과 비코딩 의사결정 영역에서는 약했음 툴 사용, 반복적 개선, 대규모 컨텍스트 관리 등에서 점수가 떨어졌고, 오히려 툴을 써야 하는 상황에서는 성능이 낮아졌음 아마도 흔한 하니스나 벤치마크에 오버피팅 된 듯함. 그래도 M 시리즈 Macbook에서의 속도는 놀라움 벤치마크는 gertlabs.com 에서 확인 가능함 내 ‘hello world’ 테스트에서는 실패했음 “1차원 bin fitting 계산기를 웹페이지 하나로 구현하라”는 문제였는데, Qwen3.5, Nematron, Step 3.5, gpt-oss는 통과했지만 Gemma는 못했음 전반적으로는 좋은 오픈 가중치 모델 임 다만 내 M5에서 GPT-OSS보다 단순한 코딩 실수를 더 자주 했음. 그래도 전체적으로는 근접한 수준임 Gemma 31B가 26B-A4B보다 점수가 낮게 나온 게 의외였음 “모델 품질이 토큰 속도보다 중요하다”는 결과가 놀랍다는 말이 있었음 사실 당연한 얘기처럼 들림. 컨텍스트 크기를 32k로 제한하는 대신 --cpu-moe 옵션으로 MoE 연산을 CPU로 오프로드할 수도 있음 토큰 속도는 결국 작업 완료 속도 에만 영향을 주는 것 아닌가 생각함 피곤할 때 커피 마시는 느낌임. 여전히 피곤하지만 단지 “빠르게” 움직이는 것뿐인 느낌임 Codex를 매일 쓰는 입장에서 보면, 속도보다 모델이 쓸데없는 루프에 빠지지 않는 것 이 훨씬 중요함 토큰 속도만 빠르면 결국 ‘AI 슬롭 코드베이스’가 폭증할 것임 나는 현재 M3 Ultra(48GB RAM)에서 LM Studio 와 Opencode로 google/gemma-4-26b-a4b 를 돌려보고 있음 컨텍스트를 65536으로 늘려야 했지만 잘 작동함. Zed와 ACP로도 쉽게 연동됨 주로 간단한 코드 리뷰나 프론트엔드 코드 생성에 사용 중임 나도 비슷한 환경임. pi-coding-agent 를 써보면 좋음 시스템 프롬프트와 툴 오버헤드가 2k 토큰 미만이라 프리필 지연이 훨씬 짧음 AMD RX7900XTX(24GB VRAM)에서 4개 채팅을 동시에 돌리며 512K 컨텍스트로 사용 중임 속도는 약 100t/s로 거의 즉각적이고, Claude Code 를 점점 덜 쓰게 됨 M1 Macbook에서 MLX 버전으로 XCode에 통합해 돌려봤는데, 작은 iOS 코드베이스에서는 중간에 멈춰버렸음 챗봇으로는 괜찮지만 XCode 연동에는 부적합했음 Runpod GPU에서 31B 풀 버전을 돌려봤는데 인상적이었음 지금은 Google API로 하루 1500회 무료 요청을 활용 중임 M4 Max(64GB) MacBook Pro에서 같은 설정을 사용 중임 LM Studio 0.4.11+1 업데이트 전에는 툴 호출이 작동하지 않았지만 , 지금은 Codex와 Opencode 모두 잘 됨 “로컬 모델은 툴 호출이 불가능하다”는",
+            "depth": 0
+          },
+          {
+            "cid": "55358",
+            "author": "boolsee",
+            "body": "ollama로 local LLM 구성이 쉽긴 한데 오픈 소스 모델별 도구 호출이 실패할 가능성이 높다고 합니다. ollama 내부적으로 느슨한 규정과 모델별 도구 호출 Parser 문제가 얽혀있기 때문이라고 하네요. 정작 Local LLM의 가장 근원 문제는 중대형 모델 실행하기 위해서는 고가의 하드웨어가 필요하다는 것입니다. MAC Studio 32GB짜리가 3백 중반, GB10은 5~6백 정도라서 개인이 취미(?)를 위해 구입하기에는 부담스럽습니다. Local LLM은 작은 모델로, 중대형 모델은 Cloud 밖엔 답이 없습니다.",
+            "depth": 1
+          }
+        ]
+      }
+    },
+    {
+      "source": "geeknews",
+      "source_detail": "news.hada.io",
+      "url": "https://huggingface.co/Jiunsong/supergemma4-26b-uncensored-mlx-4bit-v2",
+      "author": null,
+      "title": "SuperGemma4 - 구글 Gemma 4 26B의 비검열/속도개선/양자화 모델",
+      "text": "Gemma 4 26B IT 를 기반으로 애플 실리콘 MLX 최적화/4비트 양자화한 텍스트 전용 모델로, 약 13GB 크기 원본보다 똑똑 하고, 동일 머신에서 더 빠르며 , 코드·도구 사용·한국어에서 안정적인 비검열 모델 텍스트 전용 플래그십으로, 멀티모달이 아닌 빠른 텍스트 처리 에 초점 퀵벤치 95.8점 (원본 91.4)으로 개선 및 8.7% 빠른 생성 속도 (46.2 tok/s), 체감상 응답 대기 시간 확연히 줄어듦 비검열(uncensored) 특성을 핵심 속성으로 유지하면서도 코드, 도구 사용, 한국어 프롬프트에서 안정적 출력을 냄 코드 생성 점수 98.6 (+6.3)으로, 로컬에서 Python 함수 작성·리팩토링 시킬 때 원본보다 훨씬 정확한 결과를 보임 한국어 프롬프트 점수 95.0 (+4.3)으로, 한국어로 질문해도 깨지지 않고 바로 쓸 수 있음 한국어 및 에이전트 스타일 프롬프트 처리 성능이 원본보다 우수 비검열 모델이라 콘텐츠 필터에 막히는 답변 제로 , 그러면서도 출력이 불안정하거나 깨지지 않음 브라우저 자동화·도구 호출·계획 수립 등 로컬 에이전트 워크로드/파이프라인 에 바로 투입 가능 실행하기: mlx_lm.server --model Jiunsong/supergemma4-26b-uncensored-mlx-4bit-v2 --port 8080 OpenAI 호환 서빙 자동 지원, 별도 템플릿 설정 불필요(오히려 --chat-template 에 경로 넣으면 응답 손상) MLX 4-bit, BF16·U32 텐서, Safetensors 포맷",
+      "body_full": null,
+      "timestamp": null,
+      "score": 39,
+      "metadata": {
+        "feed_title": "GeekNews - 개발/기술/스타트업 뉴스 서비스",
+        "topic_id": "28584",
+        "topic_url": "https://news.hada.io/topic?id=28584",
+        "comments_count": 8,
+        "discovery": "id_scan",
+        "site": "huggingface.co",
+        "upvotes": 39,
+        "comments": [
+          {
+            "cid": "55702",
+            "author": "kohs100",
+            "body": "허깅페이스에 올라와있는 31b 헤레틱 사용중이었는데 이것도 써봐야겠네요",
+            "depth": 0
+          },
+          {
+            "cid": "55618",
+            "author": "jjangdww",
+            "body": "저도 한번 시도해봐야겠네요 좋은정보 감사합니다.",
+            "depth": 0
+          },
+          {
+            "cid": "55584",
+            "author": "asdfg",
+            "body": "이거 원본인 gemma4랑 라이선스가 다르네요",
+            "depth": 0
+          },
+          {
+            "cid": "55586",
+            "author": "fanotify",
+            "body": "그러게요 Apache 2.0이 아니네요",
+            "depth": 1
+          },
+          {
+            "cid": "55708",
+            "author": "caniel",
+            "body": "라이선스 탭에는 Gemma 4로 링크가 걸려있는데, 어디서 확인할 수 있나요?",
+            "depth": 2
+          },
+          {
+            "cid": "55576",
+            "author": "adieuxmonth",
+            "body": "대박 ㄷㄷ",
+            "depth": 0
+          },
+          {
+            "cid": "55569",
+            "author": "xguru",
+            "body": "Ollama 에도 있습니다 https://ollama.com/0xIbra/supergemma4-26b-uncensored-gguf-v2 좀 더 큰 31b 모델도 https://huggingface.co/Jiunsong/SuperGemma4-31b-abliterated-mlx-4bit https://huggingface.co/Jiunsong/SuperGemma4-31b-abliterated-GGUF",
+            "depth": 0
+          },
+          {
+            "cid": "55565",
+            "author": "sea715",
+            "body": "허헣 국내 커뮤니티에서 만든 모델이라 신기하네요",
+            "depth": 0
+          }
+        ]
+      }
+    },
+    {
+      "source": "geeknews",
+      "source_detail": "news.hada.io",
+      "url": "https://qwen.ai/blog?id=qwen3.6-35b-a3b",
+      "author": null,
+      "title": "Qwen3.6-35B-A3B: 모든 사용자를 위한 에이전트형 코딩 성능 공개",
+      "text": "총 350억 파라미터 중 30억만 활성화되는 희소 Mixture-of-Experts(MoE) 구조로, 효율성과 성능을 동시에 달성한 오픈소스 모델임 이전 세대 대비 에이전트형 코딩 능력 이 크게 향상되어, Qwen3.5-27B나 Gemma4-31B 같은 대형 밀집 모델과 경쟁 가능한 수준을 보임 SWE-bench, Terminal-Bench, Claw-Eval 등 주요 코딩 벤치마크 에서 높은 점수를 기록하고, 멀티모달 과제에서도 Claude Sonnet 4.5급 성능을 달성함 Alibaba Cloud Model Studio API, Hugging Face, ModelScope를 통해 공개 가중치와 API 접근 이 가능하며, OpenClaw·Claude Code 등 다양한 코딩 도구와 통합 지원함 활성 파라미터 30억 개로 대형 모델에 필적하는 효율적 오픈 모델의 새로운 기준 을 제시함 Qwen3.6-35B-A3B 개요 Qwen3.6-35B-A3B 는 총 350억 파라미터 중 30억만 활성화되는 희소 Mixture-of-Experts(MoE) 모델로, 효율성과 성능을 동시에 갖춘 오픈소스 모델임 이전 버전인 Qwen3.5-35B-A3B보다 에이전트형 코딩(agentic coding) 성능이 크게 향상되었으며, Qwen3.5-27B나 Gemma4-31B 같은 대형 밀집 모델과 경쟁 가능한 수준을 보임 멀티모달 추론과 비추론 모드 를 모두 지원하며, Qwen Studio, API, Hugging Face, ModelScope를 통해 공개됨 모델은 Qwen Studio 에서 대화형으로 사용 가능하며, Alibaba Cloud Model Studio API( qwen3.6-flash )를 통해 호출하거나 직접 호스팅 가능 성능 평가 언어 및 코딩 성능 Qwen3.6-35B-A3B는 활성 파라미터 30억 개만으로 Qwen3.5-27B(밀집형 270억 파라미터)를 여러 주요 코딩 벤치마크에서 능가함 SWE-bench Verified 73.4, Terminal-Bench 51.5, Claw-Eval 평균 68.7 등에서 높은 점수를 기록 QwenWebBench(웹 코드 생성 벤치마크)에서는 1397점을 기록해 동급 모델 중 최고 수준 일반 에이전트 벤치마크(MCPMark, MCP-Atlas, WideSearch 등)에서도 경쟁 모델 대비 우수한 결과를 보임 지식 및 추론 관련 MMLU-Pro, GPQA, AIME26 등에서도 높은 정확도를 유지 평가 환경 SWE-Bench 시리즈는 내부 에이전트 스캐폴드(bash + file-edit 도구) 기반으로 200K 컨텍스트 윈도우에서 평가 Terminal-Bench 2.0은 3시간 제한, 32 CPU/48GB RAM 환경에서 5회 평균 SkillsBench는 API 의존 작업을 제외한 78개 과제에서 평가 QwenClawBench와 QwenWebBench는 내부 실사용 분포 기반 벤치마크로, 실제 사용자 환경을 반영 비전-언어 성능 Qwen3.6-35B-A3B는 자연 멀티모달 모델 로, 30억 활성 파라미터만으로 Claude Sonnet 4.5 수준의 성능을 달성 RefCOCO(공간 인지) 92.0, ODInW13 50.8로 공간 지능에서 강점을 보임 RealWorldQA 85.3, MMBench EN-DEV 92.8, OmniDocBench1.5 89.9 등 다양한 비전-언어 과제에서 높은 점수 비디오 이해 벤치마크(VideoMME, VideoMMMU, MLVU 등)에서도 80~86대의 점수를 유지하며 안정적 성능을 보임 Qwen3.6-35B-A3B 활용 배포 및 접근 Alibaba Cloud Model Studio API( qwen3.6-flash )를 통해 사용 가능하며, Hugging Face 및 ModelScope에서 오픈 가중치 다운로드 가능 Qwen Studio에서 즉시 체험 가능하며, OpenClaw, Claude Code, Qwen Code 등 서드파티 코딩 도우미 와 통합 지원 API 사용 preserve_thinking 기능을 지원해 이전 대화의 사고(thinking) 내용을 유지하며 에이전트형 작업 에 적합 Alibaba Cloud Model Studio는 OpenAI 및 Anthropic API 규격과 호환되는 chat completions API 를 제공 예시 코드에서는 enable_thinking 옵션을 통해 추론 과정(reasoning trace)과 최종 답변을 구분 출력 가능 OpenClaw 통합 Qwen3.6-35B-A3B는 OpenClaw (구 Moltbot/Clawdbot)와 호환되며, Model Studio와 연결해 터미널 기반 에이전트 코딩 환경 제공 설정 파일( ~/.openclaw/openclaw.json )에 Model Studio API 정보를 병합해 사용 Node.js 22 이상 환경에서 설치 및 실행 가능 Qwen Code 통합 Qwen 시리즈에 최적화된 Qwen Code (터미널용 오픈소스 AI 에이전트)와 완전 호환 Node.js 20 이상에서 설치 후 /auth 명령으로 인증 절차 수행 Claude Code 통합 Anthropic API 프로토콜을 지원해 Claude Code 에서도 직접 사용 가능 환경 변수로 ANTHROPIC_MODEL=\"qwen3.6-flash\" 설정 후 CLI 실행 요약 및 전망 Qwen3.6-35B-A3B는 희소 MoE 구조 로도 대형 밀집 모델에 필적하는 에이전트형 코딩 및 추론 능력 을 입증 활성 파라미터 30억 개로 효율성과 성능을 모두 달성하며, 멀티모달 벤치마크에서도 우수한 결과를 보임 완전한 오픈소스 체크포인트로 공개되어, 효율적 오픈 모델의 새로운 기준 을 제시 Qwen 팀은 Qwen3.6 오픈소스 패밀리를 지속 확장할 예정이며, 커뮤니티의 피드백과 활용을 기대 인용 정보 @misc{qwen36_35b_a3b, title = {Qwen3.6-35B-A3B: Agentic Coding Power, Now Open to All}, url = { https://qwen.ai/blog?id=qwen3.6-35b-a3b }, author = {Qwen Team}, month = {April}, year = {2026}}",
+      "body_full": null,
+      "timestamp": null,
+      "score": 4,
+      "metadata": {
+        "feed_title": "GeekNews - 개발/기술/스타트업 뉴스 서비스",
+        "topic_id": "28621",
+        "topic_url": "https://news.hada.io/topic?id=28621",
+        "comments_count": 1,
+        "discovery": "id_scan",
+        "site": "qwen.ai",
+        "upvotes": 4,
+        "comments": [
+          {
+            "cid": "55651",
+            "author": "GN⁺",
+            "body": "Hacker News 의견들 내 노트북에서 Unsloth 20.9GB GGUF 버전을 LM Studio로 돌려봤음 모델 링크 놀랍게도 Opus 4.7보다 자전거 타는 펠리컨 을 더 잘 그렸음 Simon Willison의 비교 포스트 참고 같은 모델로 재현해봤음 (M1 Max 64GB, 90초 미만) — 결과 이미지 내 결과물은 하늘에 태양과 구름 , 얇은 초록색 선 형태의 잔디, 그리고 후광이 있는 태양 효과가 있었음 Simon의 결과와 비슷한 ‘공기 흐름’ 표현도 있었지만, 결국 중요한 건 펠리컨과 자전거임 GGUF 링크 덕분에 시도해봤음 Shoggoth.db 프로젝트 에서 wiki 탐색 + 자동 DB 구축 작업에 사용했음 Qwen3.5보다 새로운 생물 탐색 능력이 향상된 걸 체감했음 속도도 약 140 token/s로 빨라졌고, RTX 4090에서 메모리 오프로드 없이 안정적으로 작동했음 단, 멀티모달 충돌 방지를 위해 --no-mmproj-offload 옵션을 써야 했음 ‘자전거 타는 펠리컨’ 같은 테스트가 언제쯤 쓸모없어질지 궁금함 원래는 아무도 생각하지 않았던 이상한 프롬프트 로 모델의 창의성을 평가하려는 의도였는데, 이제는 내부 벤치마크처럼 되어버린 느낌임 Qwen의 플라밍고 그림이 왜 이겼는지 모르겠음 타이어 위에 앉아 있고, 부리 위치도 이상하며, 바퀴살과 다리 비율 이 어색함 선글라스도 반투명해서 눈이 하나만 보임 귀엽긴 하지만 요청하지 않은 보타이와 액세서리 때문에 오히려 감점 요인이라 생각함 Opus의 결과가 덜 화려하지만 더 정확했음 이미지를 보면 볼수록 world model 이 여전히 빠진 퍼즐 조각 같음 결국 지금 모델들은 확률적 문장 생성기 에 불과하다는 생각이 듦 Qwen 팀이 오픈 가중치 를 계속 공개하는 걸 보니 다행임 관련 뉴스1 , 뉴스2 Junyang Lin 등 주요 인력 이탈 이후에도 프로젝트가 이어지는 게 인상적임 Qwen 3.6 시리즈 중 하나일 뿐임 작은 사이즈 모델들은 곧 공개될 가능성이 높지만, 주력 397A17B 모델 은 제외된 듯함 개인적으로는 qwen-image 2.0 의 오픈 가중치 공개를 바람 Unsloth가 이미 양자화 및 변환 을 완료한 버전이 있음 Hugging Face 링크 Unsloth는 빠르게 실험용 quants를 올리지만, 출시 직후 버전은 종종 수정됨 일주일쯤 후에 다시 확인해야 안정된 버전을 받을 수 있음 초기 버그 때문에 좋은 모델이 과소평가되는 경우도 있음 Qwen이 직접 quantized 모델을 내지 않는 이유가 궁금함 양자화 과정이 복잡하고 품질 저하 위험 이 있어서, 원 개발자가 직접 하는 게 낫다고 생각함 잘못된 quant 버전이 모델 평판을 망칠 수도 있음 VRAM 요구량이 궁금함. 16GB GPU로도 돌릴 수 있을지 알고 싶음 Qwen의 기본 quantization이 왜 나쁜지, Unsloth가 누구인지, 그리고 좋은 포맷이 주는 이점 이 뭔지 궁금함 quantization 자체의 개념도 함께 설명해주면 좋겠음 ollama run claude 명령으로도",
+            "depth": 0
+          }
+        ]
+      }
+    },
+    {
+      "source": "geeknews",
+      "source_detail": "news.hada.io",
+      "url": "https://qwen.ai/blog?id=qwen3.6-max-preview",
+      "author": null,
+      "title": "Qwen3.6-Max-Preview: 에이전틱 코딩과 세계 지식이 강화된 차세대 모델",
+      "text": "Qwen3.6-Plus의 후속으로, 전작 대비 에이전트형 코딩 과 더 강한 세계 지식 및 지시 이행 성능 향상 6개 주요 코딩 벤치마크에서 최고 점수 를 기록하며 코딩 에이전트 성능의 대폭 향상 확인 preserve_thinking 기능을 지원해 에이전틱 작업 시 이전 턴의 사고 과정을 메시지에 보존하는 방식을 사용 세계 지식 벤치마크에서는 SuperGPQA +2.3 , QwenChineseBench +5.3 등으로 개선됐고, 지시 이행에서는 ToolcallFormatIFBench +2.8 기록 Qwen Studio에서 대화형 테스트가 가능하며, Alibaba Cloud Model Studio API를 통해 qwen3.6-max-preview 로 호출 예정 주요 개선 사항 Qwen3.6-Plus 대비 에이전틱 코딩 역량이 크게 향상: SkillsBench +9.9, SciCode +6.3, NL2Repo +5.0, Terminal-Bench 2.0 +3.8 세계 지식(world knowledge) 강화: SuperGPQA +2.3, QwenChineseBench +5.3 명령어 수행(instruction following) 개선: ToolcallFormatIFBench +2.8 6개 주요 코딩 벤치마크에서 최고 점수 달성: SWE-bench Pro, Terminal-Bench 2.0, SkillsBench, QwenClawBench, QwenWebBench, SciCode 모델 특징 및 접근 방식 Alibaba Cloud Model Studio를 통해 제공되는 호스팅 독점 모델 실제 에이전트(real-world agent) 및 지식 신뢰성(knowledge reliability) 성능 향상 Qwen Studio에서 대화형으로 즉시 테스트 가능 API 모델명은 qwen3.6-max-preview 이며, Alibaba Cloud Model Studio API에서 곧 사용 가능 API 사용 및 기능 OpenAI 호환 chat completions 및 responses API, Anthropic 호환 인터페이스 등 업계 표준 프로토콜 지원 preserve_thinking 기능을 통해 이전 턴의 추론 과정(reasoning content) 을 보존 가능하며, 에이전틱 작업에 권장 enable_thinking: True 설정 시 추론 내용과 응답을 스트리밍 방식 으로 분리 수신 가능 API 지역별 Base URL 제공: 베이징, 싱가포르, 미국(버지니아) 개발 상태 현재 프리뷰 릴리스 단계로 반복 개선 지속 중이며, 이후 버전에서 추가 개선 예정",
+      "body_full": null,
+      "timestamp": null,
+      "score": 1,
+      "metadata": {
+        "feed_title": "GeekNews - 개발/기술/스타트업 뉴스 서비스",
+        "topic_id": "28738",
+        "topic_url": "https://news.hada.io/topic?id=28738",
+        "comments_count": 1,
+        "discovery": "id_scan",
+        "site": "qwen.ai",
+        "upvotes": 1,
+        "comments": [
+          {
+            "cid": "55946",
+            "author": "GN⁺",
+            "body": "Hacker News 의견들 사람들이 SOTA 비교에만 집착하는 게 좀 웃기게 느껴짐. 나는 glm 5.1이 Opus가 못 하던 일을 해낸 경우를 봤고, 코드도 더 잘 짜는 장면을 경험했음. qwen max는 아직 안 써봤지만 로컬 122b 모델이 문서를 더 잘 읽고 더 정확하게 처리하는 모습도 봤음. 결국 벤치마크는 일부일 뿐이고, 실제로는 모델마다 강점 이 다르니 망치와 렌치를 단순 우열로 비교하듯 말하면 안 된다고 생각함 나는 개인 프로젝트에서 Ollama Cloud의 pi.dev로 GLM-5.1 을 쓰고 있는데 꽤 만족 중임. 회사에서는 pi.dev와 Claude Sonnet, Opus 4.6을 함께 씀. Claude Code도 좋지만 최근 업데이트 이후 너무 자주 compact를 해야 해서 불편했음. pi.dev를 쓸 때는 MCP tool calling이 없어도 API 연동이 잘 돼서 아쉽지 않았음. 오히려 웹사이트 제작은 GLM-5.1이 Claude Opus보다 더 잘한다고 느꼈고, 지금 만들고 있는 풀스택 개발 플랫폼 에서도 아주 잘 해주고 있음 GLM 5.1 은 중국 모델이 정말 따라잡았다고 처음 느끼게 해준 모델이었음. 그래서 Claude Max 구독도 취소했고, 솔직히 전혀 아쉽지 않았음. 사람마다 의견이 갈리는 걸 보면 이제는 절대적인 SOTA 우열보다 도메인과 사용 패턴 차이가 더 중요한 단계에 온 것 같음 내가 Claude와 ChatGPT를 계속 쓰는 거의 유일한 이유는 tool calling 때문임. skills 같은 유용한 기능도 있고 말임. qwen이나 deepseek도 써봤지만 문서 출력조차 잘 안 되는 경우가 있었음. 다들 이런 도구로 문서나 Excel 처리는 어떻게 하는지 궁금하고, 가능하면 나도 갈아타고 싶음 몇 달 전에는 Qwen3-Coder 가 Claude Opus나 Google Gemini보다 훨씬 더 나은 Rust 코드를 만들어줬음. 특히 Rust의 x86-64 벡터 확장까지 활용하는 코드를 뽑아줘서 인상적이었음. 나는 Zed editor나 trae CLI 같은 harness에서 호출해 썼는데, 정말 많이 놀랐음 모델들은 벤치마크 점수가 대체로 비슷하고 차이도 작아서, 이런 상황이면 다른 기준으로 고르는 게 합리적이라고 봄. 내 경우에는 JetBrains 플러그인 만 괜찮게 나오면 어느 벤더든 바로 옮길 의향이 있음 회사에서 몇 달째 Claude Code 를 꾸준히 쓰고 있고, 얼마 전에는 작은 개인 웹사이트 프로젝트에도 잘 활용했음. 지난 주말에는 처음으로 self-hosting도 시도해봤음. 비슷하게 CC나 Codex를 충분히 써본 뒤 어느 정도 만족할 만한 자가 호스팅 구성을 찾은 사람이 있는지 궁금함. 나는 32GB DDR5, AMD 7800X3D, RTX 4090, Windows와 WSL 환경에서 ollama, docker desktop model runner, pi-coding-agent, opencode와 Gemma 4, Qwen, GLM-5.1 조합을 이것저것 시험했음. 기본 RA",
+            "depth": 0
+          }
+        ]
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 3475,
+  "fetched_at": "2026-04-22T06:21:28.983090Z"
+}

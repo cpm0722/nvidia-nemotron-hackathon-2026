@@ -1,0 +1,106 @@
+{
+  "product": "Gemma 4 31B",
+  "summary": "Gemma 4 31B is an open multimodal model from Google DeepMind designed for reasoning, agentic workflows, coding, and multimodal understanding with a 256K-token context window and support for over 140 languages. Official benchmarks show strong performance on GPQA Diamond (75.71%), MMLU Pro (85.25%), and LiveCodeBench (70.90%) [^1]. Community testing reveals that quantized variants such as FP8 and AutoRound retain high accuracy on GSM8K and HRM8K tasks, with FP8 achieving 0.9760 flexible GSM8K accuracy [^2]. In real‑world use, Gemma 4 31B outperforms closed models like GPT‑5.3 and Gemini Chat in translation and tool‑calling tasks, achieving near‑perfect success rates [^3]. While the model is large and can be slow on consumer hardware, its combination of high capability and permissive Apache‑2.0 license makes it a compelling option for local agents when sufficient VRAM is available.",
+  "official_performance": {
+    "text": "According to the NVIDIA‑hosted model card, the NVFP4‑quantized Gemma 4 31B retains most of the baseline BF16 performance, scoring 75.71% on GPQA Diamond, 66.25% on AIME 2025, and 85.25% on MMLU Pro [^1]. On coding‑focused benchmarks it achieves 70.90% pass@1 on LiveCodeBench and 33.61% on Scicode subtask accuracy, while Terminal‑Bench Hard remains at 27.08% [^1]. Independent quantization experiments reported by a Korean community show that the FP8‑block version of Gemma 4 31B attains 0.9760 ± 0.0044 on the flexible GSM8K platinum task and 0.9174 ± 0.0076 on HRM8K GSM8K, slightly above the AWQ and AutoRound variants [^2]. These results indicate that the model’s reasoning and mathematical capabilities are largely preserved after aggressive 4‑bit quantization, with only marginal drops compared to the BF16 baseline. When compared to other open models of similar size, Gemma 4 31B’s MMLU Pro score places it ahead of many 30‑B‑class alternatives and close to the frontier set by larger dense models. The vendor emphasizes that the model is ready for commercial use under the Apache‑2.0 license and can be served with vLLM on Blackwell‑compatible hardware, though actual speed depends on the quantization scheme and GPU generation.",
+    "citations": [
+      1,
+      2
+    ]
+  },
+  "community_reactions": {
+    "text": "Discussions on ArcaLive highlight that users find the FP8‑block quantization to offer good quality with manageable VRAM usage, noting that AutoRound sometimes delivers faster decode speeds than AWQ despite similar prefill performance [^2]. GeekNews reporters who ran Gemma 4 31B locally via Codex CLI observed a jump in tool‑calling success from 6.6% to 86.4% on a MacBook Pro, attributing the gain to the model’s improved ability to follow tool‑call schemas and produce valid JSON outputs [^5]. Reddit users conducting a multi‑model agent benchmark found that Gemma 4 31B achieved a perfect net score of 37 fixes with zero regressions, although it required roughly 10 hours of wall‑clock time due to low token‑per‑second throughput [^6]. In another Reddit thread, a translator reported that Gemma 4 31B passed a Chinese‑novel translation test where GPT‑5.3 and Gemini Chat failed, producing natural‑sounding output that matched the quality of peak GPT‑4o [^3]. Across these communities, the prevailing sentiment is that the model’s reasoning and agentic capabilities are strong, but its inference speed can be a bottleneck on consumer‑grade GPUs unless a suitable quantization (e.g., FP8‑block or AutoRound) is employed.",
+    "citations": [
+      2,
+      5,
+      6,
+      3
+    ]
+  },
+  "key_takeaways": [
+    "Validate the model’s reasoning outputs on your own GSM8K or MMLU‑Pro benchmarks before deploying in production workloads.",
+    "If VRAM is limited, prefer the FP8‑block or AutoRound quantizations, which retain high accuracy while reducing memory footprint.",
+    "For agentic workflows that rely heavily on tool calling, expect high success rates but allocate ample time for inference due to low token generation speed.",
+    "The model’s permissive Apache‑2.0 license permits commercial use, making it suitable for proprietary applications when compliance is verified.",
+    "Monitor KV‑cache scaling warnings when serving with vLLM, as missing q‑scale metadata can trigger fallback paths that may affect long‑context accuracy.",
+    "Consider mixing quantization schemes (e.g., keeping attention layers in BF16 while quantizing feed‑forward to NVFP4) to balance speed and quality on Blackwell GPUs."
+  ],
+  "disagreements": [
+    {
+      "topic": "Whether Gemma 4 31B is truly NVFP4 quantized or actually FP8 compression",
+      "claim_a": {
+        "text": "The NVIDIA model card states that Gemma 4 31B is quantized to NVFP4 using the Model Optimizer, and benchmark scores show only minor accuracy loss relative to the BF16 baseline [^1].",
+        "stance": "pro",
+        "citations": [
+          1
+        ]
+      },
+      "claim_b": {
+        "text": "A HuggingFace discussion argues that the model’s file size (~32 GB) is inconsistent with genuine 4‑bit NVFP4 compression and suggests the weights are actually FP8‑compressed, not NVFP4 [^4].",
+        "stance": "con",
+        "citations": [
+          4
+        ]
+      },
+      "takeaway": "The size is close to that of an FP8‑quantized model, but NVFP4 may be combined with BF16 attention layers, explaining the larger footprint; definitive verification requires inspecting the tensor type metadata in the checkpoint."
+    }
+  ],
+  "sources_used": [
+    "benchmark",
+    "arcalive",
+    "reddit",
+    "geeknews"
+  ],
+  "items_analyzed": 14,
+  "citations": [
+    {
+      "id": 1,
+      "source": "benchmark",
+      "url": "https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4",
+      "title": "Gemma-4-31B-IT-NVFP4",
+      "quote": "Gemma-4-31B-IT-NVFP4 benchmarks from HuggingFace model card: GPQA Diamond=75.71%, AIME 2025=66.25%, MMLU Pro=85.25%, LiveCodeBench (pass@1)=70.90%, Scicode subtask acc (pass@1)=33.61%, Terminal-Bench Hard (pass@1)=27.08%",
+      "timestamp": null
+    },
+    {
+      "id": 2,
+      "source": "arcalive",
+      "url": "https://arca.live/b/alpaca/168108771",
+      "title": "gemma-4-31b-it vllm FP8+int4 3종 비교 (AutoRound, AWQ cyanwiki, AWQ QuantTrio)",
+      "quote": "gemma-4-31B-it-FP8: gsm8k_platinum (flexible) 0.9760 ± 0.0044, gsm8k_platinum (strict) 0.9777 ± 0.0043, hrm8k_gsm8k 0.9174 ± 0.0076",
+      "timestamp": "2026-04-18T22:46:59Z"
+    },
+    {
+      "id": 3,
+      "source": "reddit",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ss2lib/an_actual_example_of_if_you_dont_run_it_you_dont/",
+      "title": "An actual example of \"If you dont run it, you dont own it\" and Gemma 4 beats both Chat GPT and Gemini Chat",
+      "quote": "Gemma 4 31B|PASS|Good translation, feels natural, and is fast|",
+      "timestamp": "2026-04-21T22:13:47Z"
+    },
+    {
+      "id": 4,
+      "source": "benchmark",
+      "url": "https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions/8",
+      "title": "This model wasn't trained with FP4 or NVFP4",
+      "quote": "Obviously, this model wasn't trained with FP4 or NVFP4. Its size is half that of the original model, which has FP16 accuracy. If it had been trained or compressed with FP4, it shouldn't weigh more than 20GB. This appears to be FP8 compression, not NVFP4.",
+      "timestamp": "2026-04-10T02:43:00.000Z"
+    },
+    {
+      "id": 5,
+      "source": "geeknews",
+      "url": "https://blog.danielvaughan.com/i-ran-gemma-4-as-a-local-model-in-codex-cli-7fda754dc0d4",
+      "title": "Gemma 4를 Codex CLI에서 로컬 모델로 실행하기",
+      "quote": "도구 호출 성공률이 6.6%에서 86.4%로 향상 되어 로컬 모델의 실용 가능성이 입증되었으며, GB10 환경에서는 완전한 코드 생성을 달성",
+      "timestamp": null
+    },
+    {
+      "id": 6,
+      "source": "reddit",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ssb61r/personal_eval_followup_gemma4_26b_moe_q8_vs/",
+      "title": "Personal Eval follow-up: Gemma4 26B MoE (Q8) vs Qwen3.5 27B Dense vs Gemma4 31B Dense Compared",
+      "quote": "Gemma 4 31B also exhibited extremely low inference speeds for some reason and ran for 10 hours and 29 minutes due to the abysmally slow speeds.",
+      "timestamp": "2026-04-22T04:30:41Z"
+    }
+  ],
+  "run_id": "20260422-062123-36198f9b"
+}

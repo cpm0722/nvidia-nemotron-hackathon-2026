@@ -1,0 +1,218 @@
+{
+  "source": "benchmark",
+  "ok": true,
+  "items": [
+    {
+      "source": "huggingface",
+      "source_detail": "huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B",
+      "url": "https://huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B",
+      "author": null,
+      "title": "EXAONE-4.5-33B",
+      "text": "EXAONE-4.5-33B benchmarks from HuggingFace model card: MMMU=78.7, MMMU-Pro=68.6, MedXpertQA-MM=42.1, MathVision=75.2, MathVista (mini)=85.0, WeMath=79.1, LogicVista=73.8, BabyVision=18.8, AI2D=89.0, ChartQAPro=62.2, ... (+22 more)",
+      "body_full": "---\nlicense: other\nlicense_name: exaone\nlicense_link: LICENSE\nlanguage:\n  - en\n  - ko\n  - es\n  - de\n  - ja\n  - vi\ntags:\n  - lg-ai\n  - exaone\npipeline_tag: image-text-to-text\nlibrary_name: transformers\n---\n\n<br>\n<br>\n<p align=\"center\">\n<img src=\"assets/EXAONE_Symbol+BI_3d.png\" width=\"400\">\n<br>\n<br>\n<br>\n\n<div align=\"center\">\n  <a href=\"https://huggingface.co/collections/LGAI-EXAONE/exaone-45\" style=\"text-decoration: none;\">\n    <img src=\"https://img.shields.io/badge/🤗-HuggingFace-FC926C?style=for-the-badge\" alt=\"HuggingFace\">\n  </a>\n  <a href=\"https://www.lgresearch.ai/blog/view?seq=641\" style=\"text-decoration: none;\">\n    <img src=\"https://img.shields.io/badge/📝-Blog-E343BD?style=for-the-badge\" alt=\"Blog\">\n  </a>\n  <a href=\"http://arxiv.org/abs/2604.08644\" style=\"text-decoration: none;\">\n    <img src=\"https://img.shields.io/badge/📑-Technical_Report-684CF4?style=for-the-badge\" alt=\"Technical Report\">\n  </a>\n  <a href=\"https://github.com/LG-AI-EXAONE/EXAONE-4.5\" style=\"text-decoration: none;\">\n    <img src=\"https://img.shields.io/badge/🖥️-GitHub-2B3137?style=for-the-badge\" alt=\"GitHub\">\n  </a>\n  <!-- <a href=\"#\" style=\"text-decoration: none;\">\n    <img src=\"https://img.shields.io/badge/✈️_API-Try_on_FriendliAI-2649BC?style=for-the-badge\" alt=\"FriendliAI\">\n  </a> -->\n</div>\n\n\n\n\n<br><br>\n\n# EXAONE 4.5\n\nWe introduce EXAONE 4.5, the first open-weight vision language model developed by LG AI Research.\nIntegrating a dedicated visual encoder into the existing EXAONE 4.0 framework, we expand the model's capability toward multimodality.\nEXAONE 4.5 features 33 billion parameters in total, including 1.2 billion parameters from the vision encoder. \nEXAONE 4.5 achieves competitive performance in general benchmark while outperforming SOTA models of similar size in document understanding and Korean contextual reasoning, inheriting powerful language capabilities from our previous language models.\n\nFor more details, please refer to the [technical report](http://arxiv.org/abs/2604.08644), [blog](https://www.lgresearch.ai/blog/view?seq=641) and [GitHub](https://github.com/LG-AI-EXAONE/EXAONE-4.5).\n\n\n### Model Configuration\n\n- Model Type: Causal Language Model + Vision Encoder\n- Number of Parameters (Language Model): 31.7B\n- Number of Parameters (Vision Encoder): 1.29B\n- Hidden Dimension: 5,120\n- Intermediate size: 27,392\n- Number of Layers: 64 Main layers + 1 MTP layers\n  - Hybrid Attention Pattern: 16 x (3 Sliding window attention + 1 Global attention)\n  - Reordered Norm: Apply normalization after Attention/MLP, and before residual connection\n- Sliding Window Attention\n  - Number of Attention Heads: 40 Q-heads and 8 KV-heads\n  - Head Dimension: 128 for both Q/KV\n  - Sliding Window Size: 4096\n- Global Attention\n  - Number of Attention Heads: 40 Q-heads and 8 KV-heads\n  - Head Dimension: 128 for both Q/KV\n  - No Rotary Positional Embedding Used (NoPE)\n- Vision Encoder\n  - Grouped Query Attention (GQA)\n  - 2D RoPE for vision embeddings\n- Vocab Size: 153,600\n- Context Length: 262,144 tokens\n- Knowledge Cutoff: Dec 2024 (2024/12)\n\n\n\n## Evaluation Results\n\n\n\n### Vision-Language Tasks\n\n<table>\n\t<tr>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\"> </th>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\">EXAONE 4.5 33B (Reasoning)</th>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\">GPT-5 mini (Reasoning: high)</th>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\">Qwen3-VL 32B Thinking</th>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\">Qwen3-VL 235B Thinking</th>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\">Qwen3.5 27B (Reasoning)</th>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">Architecture</td>\n\t\t<td align=\"center\">Dense</td>\n\t\t<td align=\"center\">-</td>\n\t\t<td align=\"center\">Dense</td>\n\t\t<td align=\"center\">MoE</td>\n\t\t<td align=\"center\">Dense</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">Total Params</td>\n\t\t<td align=\"center\">33B</td>\n\t\t<td align=\"center\">-</td>\n\t\t<td align=\"center\">33B</td>\n\t\t<td align=\"center\">236B</td>\n\t\t<td align=\"center\">27B</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">Active Params</td>\n\t\t<td align=\"center\">33B</td>\n\t\t<td align=\"center\">-</td>\n\t\t<td align=\"center\">33B</td>\n\t\t<td align=\"center\">22B</td>\n\t\t<td align=\"center\">27B</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\" colspan='7' style=\"background: linear-gradient(90deg, rgba(252,146,108,0.3) 0%, rgba(227,67,189,0.3) 50%, rgba(104,76,244,0.3) 100%); font-weight: bold; height:32px; padding-top:2px; padding-bottom:2px;\"><i>STEM / Puzzle</i></td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">MMMU</td>\n\t\t<td align=\"center\">78.7</td>\n\t\t<td align=\"center\">79.0</td>\n\t\t<td align=\"center\">78.1</td>\n\t\t<td align=\"center\">80.6</td>\n\t\t<td align=\"center\">82.3</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">MMMU-Pro</td>\n\t\t<td align=\"center\">68.6</td>\n\t\t<td align=\"center\">67.3</td>\n\t\t<td align=\"center\">68.1</td>\n\t\t<td align=\"center\">69.3</td>\n\t\t<td align=\"center\">75.0</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">MedXpertQA-MM</td>\n\t\t<td align=\"center\">42.1</td>\n\t\t<td align=\"center\">34.4</td>\n\t\t<td align=\"center\">41.6</td>\n\t\t<td align=\"center\">47.6</td>\n\t\t<td align=\"center\">62.4</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">MathVision</td>\n\t\t<td align=\"center\">75.2</td>\n\t\t<td align=\"center\">71.9</td>\n\t\t<td align=\"center\">70.2</td>\n\t\t<td align=\"center\">74.6</td>\n\t\t<td align=\"center\">86.0</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">MathVista (mini)</td>\n\t\t<td align=\"center\">85.0</td>\n\t\t<td align=\"center\">79.1</td>\n\t\t<td align=\"center\">85.9</td>\n\t\t<td align=\"center\">85.8</td>\n\t\t<td align=\"center\">87.8</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">WeMath</td>\n\t\t<td align=\"center\">79.1</td>\n\t\t<td align=\"center\">70.3</td>\n\t\t<td align=\"center\">71.6</td>\n\t\t<td align=\"center\">74.8</td>\n\t\t<td align=\"center\">84.0</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">LogicVista</td>\n\t\t<td align=\"center\">73.8</td>\n\t\t<td align=\"center\">70.3</td>\n\t\t<td align=\"center\">70.9</td>\n\t\t<td align=\"center\">72.2</td>\n\t\t<td align=\"center\">77.0</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">BabyVision</td>\n\t\t<td align=\"center\">18.8</td>\n\t\t<td align=\"center\">20.9</td>\n\t\t<td align=\"center\">17.4</td>\n\t\t<td align=\"center\">22.2</td>\n\t\t<td align=\"center\">44.6</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\" colspan='7' style=\"background: linear-gradient(90deg, rgba(252,146,108,0.3) 0%, rgba(227,67,189,0.3) 50%, rgba(104,76,244,0.3) 100%); font-weight: bold; height:32px; padding-top:2px; padding-bottom:2px;\"><i>Document Understanding</i></td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">AI2D</td>\n\t\t<td align=\"center\">89.0</td>\n\t\t<td align=\"center\">88.2</td>\n\t\t<td align=\"center\">88.9</td>\n\t\t<td align=\"center\">89.2</td>\n\t\t<td align=\"center\">92.9</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">ChartQAPro</td>\n\t\t<td align=\"center\">62.2</td>\n\t\t<td align=\"center\">60.9</td>\n\t\t<td align=\"center\">61.4</td>\n\t\t<td align=\"center\">61.2</td>\n\t\t<td align=\"center\">66.8</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">CharXiv (RQ)</td>\n\t\t<td align=\"center\">71.7</td>\n\t\t<td align=\"center\">68.6</td>\n\t\t<td align=\"center\">65.2</td>\n\t\t<td align=\"center\">66.1</td>\n\t\t<td align=\"center\">79.5</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">OCRBench v2</td>\n\t\t<td align=\"center\">63.2</td>\n\t\t<td align=\"center\">55.8</td>\n\t\t<td align=\"center\">68.4</td>\n\t\t<td align=\"center\">66.8</td>\n\t\t<td align=\"center\">67.3</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">OmniDocBench v1.5</td>\n\t\t<td align=\"center\">81.2</td>\n\t\t<td align=\"center\">77.0</td>\n\t\t<td align=\"center\">83.1</td>\n\t\t<td align=\"center\">84.5</td>\n\t\t<td align=\"center\">88.9</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\" colspan='7' style=\"background: linear-gradient(90deg, rgba(252,146,108,0.3) 0%, rgba(227,67,189,0.3) 50%, rgba(104,76,244,0.3) 100%); font-weight: bold; height:32px; padding-top:2px; padding-bottom:2px;\"><i>General</i></td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">MMStar</td>\n\t\t<td align=\"center\">74.9</td>\n\t\t<td align=\"center\">74.1</td>\n\t\t<td align=\"center\">79.4</td>\n\t\t<td align=\"center\">78.7</td>\n\t\t<td align=\"center\">81.0</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">BLINK</td>\n\t\t<td align=\"center\">68.8</td>\n\t\t<td align=\"center\">67.7</td>\n\t\t<td align=\"center\">68.5</td>\n\t\t<td align=\"center\">67.1</td>\n\t\t<td align=\"center\">71.6</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">HallusionBench</td>\n\t\t<td align=\"center\">63.7</td>\n\t\t<td align=\"center\">63.2</td>\n\t\t<td align=\"center\">67.4</td>\n\t\t<td align=\"center\">66.7</td>\n\t\t<td align=\"center\">70.0</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\" colspan='7' style=\"background: linear-gradient(90deg, rgba(252,146,108,0.3) 0%, rgba(227,67,189,0.3) 50%, rgba(104,76,244,0.3) 100%); font-weight: bold; height:32px; padding-top:2px; padding-bottom:2px;\"><i>Korean</i></td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">KMMMU</td>\n\t\t<td align=\"center\">42.7</td>\n\t\t<td align=\"center\">42.6</td>\n\t\t<td align=\"center\">37.8</td>\n\t\t<td align=\"center\">42.1</td>\n\t\t<td align=\"center\">51.7</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">K-Viscuit</td>\n\t\t<td align=\"center\">80.1</td>\n\t\t<td align=\"center\">78.5</td>\n\t\t<td align=\"center\">78.5</td>\n\t\t<td align=\"center\">83.9</td>\n\t\t<td align=\"center\">84.0</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">KRETA</td>\n\t\t<td align=\"center\">91.9</td>\n\t\t<td align=\"center\">94.8</td>\n\t\t<td align=\"center\">90.3</td>\n\t\t<td align=\"center\">92.8</td>\n\t\t<td align=\"center\">96.5</td>\n\t</tr>\n</table>\n\n\n### Language-only Tasks\n\n<table>\n\t<tr>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\"> </th>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\">EXAONE 4.5 33B (Reasoning)</th>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\">GPT-5 mini (Reasoning: high)</th>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\">K-EXAONE 236B (Reasoning)</th>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\">Qwen3-VL 235B Thinking</th>\n\t\t<th style=\"background: rgba(128,128,128,0.1); text-align: center;\">Qwen3.5 27B (Reasoning)</th>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">Architecture</td>\n\t\t<td align=\"center\">Dense</td>\n\t\t<td align=\"center\">-</td>\n\t\t<td align=\"center\">MoE</td>\n\t\t<td align=\"center\">MoE</td>\n\t\t<td align=\"center\">Dense</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">Total Params</td>\n\t\t<td align=\"center\">33B</td>\n\t\t<td align=\"center\">-</td>\n\t\t<td align=\"center\">236B</td>\n\t\t<td align=\"center\">236B</td>\n\t\t<td align=\"center\">27B</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">Active Params</td>\n\t\t<td align=\"center\">33B</td>\n\t\t<td align=\"center\">-</td>\n\t\t<td align=\"center\">23B</td>\n\t\t<td align=\"center\">22B</td>\n\t\t<td align=\"center\">27B</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\" colspan='7' style=\"background: linear-gradient(90deg, rgba(252,146,108,0.3) 0%, rgba(227,67,189,0.3) 50%, rgba(104,76,244,0.3) 100%); font-weight: bold; height:32px; padding-top:2px; padding-bottom:2px;\"><i>Reasoning</i></td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">AIME 2025</td>\n\t\t<td align=\"center\">92.9</td>\n\t\t<td align=\"center\">91.1</td>\n\t\t<td align=\"center\">92.8</td>\n\t\t<td align=\"center\">89.7</td>\n\t\t<td align=\"center\">93.5</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">AIME 2026</td>\n\t\t<td align=\"center\">92.6</td>\n\t\t<td align=\"center\">92.4</td>\n\t\t<td align=\"center\">92.2</td>\n\t\t<td align=\"center\">89.4</td>\n\t\t<td align=\"center\">90.8</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">GPQA-Diamond</td>\n\t\t<td align=\"center\">80.5</td>\n\t\t<td align=\"center\">82.3</td>\n\t\t<td align=\"center\">79.1</td>\n\t\t<td align=\"center\">77.1</td>\n\t\t<td align=\"center\">85.5</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">LiveCodeBench v6</td>\n\t\t<td align=\"center\">81.4</td>\n\t\t<td align=\"center\">78.1</td>\n\t\t<td align=\"center\">80.7</td>\n\t\t<td align=\"center\">70.1</td>\n\t\t<td align=\"center\">80.7</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">MMLU-Pro</td>\n\t\t<td align=\"center\">83.3</td>\n\t\t<td align=\"center\">83.3</td>\n\t\t<td align=\"center\">83.8</td>\n\t\t<td align=\"center\">83.8</td>\n\t\t<td align=\"center\">86.1</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\" colspan='7' style=\"background: linear-gradient(90deg, rgba(252,146,108,0.3) 0%, rgba(227,67,189,0.3) 50%, rgba(104,76,244,0.3) 100%); font-weight: bold; height:32px; padding-top:2px; padding-bottom:2px;\"><i>Agentic Tool Use</i></td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">τ<sup>2</sup>-Bench (Retail)</td>\n\t\t<td align=\"center\">77.9</td>\n\t\t<td align=\"center\">78.3</td>\n\t\t<td align=\"center\">78.6</td>\n\t\t<td align=\"center\">67.0</td>\n\t\t<td align=\"center\">84.7</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">τ<sup>2</sup>-Bench (Airline)</td>\n\t\t<td align=\"center\">56.5</td>\n\t\t<td align=\"center\">60.0</td>\n\t\t<td align=\"center\">60.4</td>\n\t\t<td align=\"center\">62.0</td>\n\t\t<td align=\"center\">67.5</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">τ<sup>2</sup>-Bench (Telecom)</td>\n\t\t<td align=\"center\">73.0</td>\n\t\t<td align=\"center\">74.1</td>\n\t\t<td align=\"center\">73.5</td>\n\t\t<td align=\"center\">44.7</td>\n\t\t<td align=\"center\">99.3</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\" colspan='7' style=\"background: linear-gradient(90deg, rgba(252,146,108,0.3) 0%, rgba(227,67,189,0.3) 50%, rgba(104,76,244,0.3) 100%); font-weight: bold; height:32px; padding-top:2px; padding-bottom:2px;\"><i>Instruction Following</i></td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">IFBench</td>\n\t\t<td align=\"center\">62.6</td>\n\t\t<td align=\"center\">74.0</td>\n\t\t<td align=\"center\">67.3</td>\n\t\t<td align=\"center\">59.2</td>\n\t\t<td align=\"center\">76.5</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">IFEval</td>\n\t\t<td align=\"center\">89.6</td>\n\t\t<td align=\"center\">92.8</td>\n\t\t<td align=\"center\">89.7</td>\n\t\t<td align=\"center\">88.2</td>\n\t\t<td align=\"center\">95.0</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\" colspan='7' style=\"background: linear-gradient(90deg, rgba(252,146,108,0.3) 0%, rgba(227,67,189,0.3) 50%, rgba(104,76,244,0.3) 100%); font-weight: bold; height:32px; padding-top:2px; padding-bottom:2px;\"><i>Long Context Understanding</i></td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">AA-LCR</td>\n\t\t<td align=\"center\">50.6</td>\n\t\t<td align=\"center\">68.0</td>\n\t\t<td align=\"center\">53.5</td>\n\t\t<td align=\"center\">58.7</td>\n\t\t<td align=\"center\">67.3</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\" colspan='7' style=\"background: linear-gradient(90deg, rgba(252,146,108,0.3) 0%, rgba(227,67,189,0.3) 50%, rgba(104,76,244,0.3) 100%); font-weight: bold; height:32px; padding-top:2px; padding-bottom:2px;\"><i>Korean</i></td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">KMMLU-Pro</td>\n\t\t<td align=\"center\">67.6</td>\n\t\t<td align=\"center\">72.5</td>\n\t\t<td align=\"center\">67.3</td>\n\t\t<td align=\"center\">71.1</td>\n\t\t<td align=\"center\">73.0</td>\n\t</tr>\n\t<tr>\n\t\t<td align=\"center\">KoBALT</td>\n\t\t<td align=\"center\">52.1</td>\n\t\t<td align=\"center\">63.6</td>\n\t\t<td align=\"center\">61.8</td>\n\t\t<td align=\"center\">51.1</td>\n\t\t<td align=\"center\">54.9</td>\n\t</tr>\n</table>\n\n\n\n\n## Quickstart\n\n\n### Serving EXAONE 4.5\n\nFor better inference speed and memory usage, it is preferred to serve the model using optimized inference engines. The EXAONE 4.5 model is supported by various frameworks, including TensorRT-LLM, vLLM, SGLang, and llama.cpp. Support will be expanded in the future.\n\nPractically, you can serve the EXAONE 4.5 model with 256K context length on **single H200 GPU**, or **4x A100-40GB GPUs** by using a tensor-parallelism.\n\n\n### TensorRT-LLM\n\nTensorRT-LLM provides zero day support for EXAONE 4.5. Transformers library of our fork is required to utilize EXAONE 4.5 model.\nYou can install Transformers by running the following commands:\n\n```bash\npip install git+https://github.com/nuxlear/transformers.git@add-exaone4_5\n```\n\nPlease refer to the official [installation guide](https://github.com/NVIDIA/TensorRT-LLM?tab=readme-ov-file#getting-started), and [EXAONE documentations](https://github.com/NVIDIA/TensorRT-LLM/tree/main/examples/models/core/exaone), and [EXAONE 4.5 PR](https://github.com/NVIDIA/TensorRT-LLM/pull/12873) for the detail.\n\nAfter you install the TensorRT-LLM, you can launch the server with the following code snippet. You can remove unnecessary arguments from the snippet.\n\n```bash\ntrtllm-serve LGAI-EXAONE/EXAONE-4.5-33B \\\n    —tp_size 2 \\\n    —port 8000 \\\n    —reasoning_parser qwen3\n\n```\n\nAn OpenAI-compatible API server will be available at http://localhost:8000/v1.\n\n\n### vLLM\n\nBoth Transformers and vLLM of our forks are required to utilize EXAONE 4.5 model.\nYou can install the requirements by running the following commands:\n\n```bash\nuv pip install git+https://github.com/lkm2835/vllm.git@add-exaone4_5\nuv pip install git+https://github.com/nuxlear/transformers.git@add-exaone4_5\n```\n\nAfter you install the vLLM, you can launch the server with the following code snippet. You can remove unnecessary arguments from the snippet.\n\n```bash\nvllm serve LGAI-EXAONE/EXAONE-4.5-33B \\\n    --served-model-name EXAONE-4.5-33B \\\n    --port 8000 \\\n    --tensor-parallel-size 2 \\\n    --max-model-len 262144 \\\n    --reasoning-parser qwen3 \\\n    --enable-auto-tool-choice \\\n    --tool-call-parser hermes \\\n    --limit-mm-per-prompt '{\"image\": 64}' \\\n    --speculative_config '{\n        \"method\": \"mtp\", \n        \"num_speculative_tokens\": 3\n    }'\n\n```\n\nAn OpenAI-compatible API server will be available at http://localhost:8000/v1.\n\n\n### SGLang\n\nBoth Transformers and SGLang of our forks are required to utilize EXAONE 4.5 model. \nYou can install the requirements by running the following commands:\n\n```bash\nuv pip install 'git+https://github.com/lkm2835/sglang.git@add-exaone4_5#subdirectory=python&egg=sglang[all]'\nuv pip install git+https://github.com/nuxlear/transformers.git@add-exaone4_5\n```\n\nAfter you install the SGLang, you can launch the server with the following code snippet. You can remove unnecessary arguments from the snippet.\n\n```bash\npython -m sglang.launch_server \\\n    --model-path LGAI-EXAONE/EXAONE-4.5-33B \\\n    --served-model-name EXAONE-4.5-33B \\\n    --port 8000 \\\n    --tp-size 2 \\\n    --mem-frac 0.81 \\\n    --reasoning-parser qwen3 \\\n    --tool-call-parser hermes \\\n    --speculative-algorithm EAGLE \\\n    --speculative-num-steps 3 \\\n    --speculative-eagle-topk 1 \\\n    --speculative-num-draft-tokens 4\n\n```\n\nAn OpenAI-compatible API server will be available at http://localhost:8000/v1.\n\n\n\n### Using EXAONE 4.5\n\nAfter launching the OpenAI-compatible server with EXAONE 4.5, you can seamlessly use the model via API with a single code integration, even though the serving framework has changed. To use OpenAI Python SDK and following examples, you should install the `openai` library on your environment.\n\n\n> [!IMPORTANT]\n> To achieve the expected performance, we recommend using the following configurations:\n> - We recommend to use `temperature=1.0`, `top_p=0.95`, `presence_penalty=1.5` for general purpose.\n> - We recommend to use `temperature=0.6`, `top_p=0.95`, `presence_penalty=1.5`, `top_k=20` for OCR/document-related tasks, and Korean inputs.\n> - We recommend to use `temperature=1.0`, `top_p=0.95` for text-only inputs.\n> - Different from EXAONE-4.0, EXAONE 4.5 uses `enable_thinking=True` as default. Thus, you need to set `enable_thinking=False` when you want to use non-reasoning mode.\n> - EXAONE 4.5 prefers using `\\boxed{}` format to answer the question. We recommend using this format with the corresponding format instruction for better parsing accuracy. \n>\n\n\n\nYou can easily try model's chat completions by using OpenAI Python SDK. For your server in local machine, you will need to change your `base_url` and `api_key` for the OpenAI client.\n\n\n### Image-Text QA\n\n#### Reasoning mode\n\nFor tasks that require accurate results, you can run the EXAONE 4.5 model in reasoning mode as follows.\n\n```python\nfrom openai import OpenAI\n\nclient = OpenAI(\n    base_url=\"http://localhost:8000/v1\",\n    api_key=\"EMPTY\",\n)\n\nmessages = [\n    {\n        \"role\": \"user\",\n        \"content\": [\n            {\n                \"type\": \"image_url\",\n                \"image_url\": {\n                    \"url\": \"https://github.com/Aim-Highest/EXAONE-4.5/blob/main/assets/exaone45_input2.png?raw=true\",\n                },\n            },\n            {\n                \"type\": \"text\",\n                \"text\": \"How much larger is the model released in winter 2025 compared with the one released in summer 2024?\",\n            },\n        ]\n    }\n]\n\nresponse = client.chat.completions.create(\n    model=\"EXAONE-4.5-33B\",\n    messages=messages,\n    max_tokens=32768,\n    temperature=1.0,\n    top_p=0.95,\n    presence_penalty=1.5,\n    extra_body={\n        \"chat_template_kwargs\": {\n            \"enable_thinking\": True,  # default: True\n        }\n    }, \n)\nprint(response)\n```\n\n#### Non-reasoning mode\n\nFor tasks where latency matters more than accuracy, you can run the EXAONE 4.5 model in non-reasoning mode as follows.\n\n```python\nfrom openai import OpenAI\n\nclient = OpenAI(\n    base_url=\"http://localhost:8000/v1\",\n    api_key=\"EMPTY\",\n)\n\nmessages = [\n    {\n        \"role\": \"user\",\n        \"content\": [\n            {\n                \"type\": \"image_url\",\n                \"image_url\": {\n                    \"url\": \"https://github.com/Aim-Highest/EXAONE-4.5/blob/main/assets/exaone45_input1.jpg?raw=true\",\n                },\n            },\n            {\n                \"type\": \"text\",\n                \"text\": \"What dish is the person preparing, and how is it made?\",\n            },\n        ]\n    }\n]\n\nresponse = client.chat.completions.create(\n    model=\"EXAONE-4.5-33B\",\n    messages=messages,\n    max_tokens=32768,\n    temperature=1.0,\n    top_p=0.95,\n    presence_penalty=1.5,\n    extra_body={\n        \"chat_template_kwargs\": {\n            \"enable_thinking\": False,  # default: True\n        }\n    }, \n)\nprint(response)\n\n```\n\n\n### Text-only QA\n\n```python\nfrom openai import OpenAI\n\nclient = OpenAI(\n    base_url=\"http://localhost:8000/v1\",\n    api_key=\"EMPTY\",\n)\n\nmessages = [\n    {\n        \"role\": \"user\",\n        \"content\": \"Explain how useful you are.\",\n    }\n]\n\nresponse = client.chat.completions.create(\n    model=\"EXAONE-4.5-33B\",\n    messages=messages,\n    max_tokens=32768,\n    temperature=1.0,\n    top_p=0.95,\n    extra_body={\n        \"chat_template_kwargs\": {\n            \"enable_thinking\": True,  # default: True\n        }\n    }, \n)\nprint(response)\n\n```\n\n\n### Agentic Use\n\nThe following example demonstrates the agentic capability of EXAONE 4.5 for image-text inputs. You can use your own agents, skills, or other harnesses with the EXAONE 4.5 model.\n\n```python\n# If needed:\n# pip install langchain langchain-openai langchain-mcp-adapters\n# curl -LsSf https://astral.sh/uv/install.sh | sh\n# sudo apt-get update && sudo apt-get install -y nodejs npm\n\nimport os\nimport asyncio\nfrom langchain_openai import ChatOpenAI\nfrom langchain.agents import create_agent\nfrom langchain_mcp_adapters.client import MultiServerMCPClient\n\ndef print_message(msg):\n    parts = msg.content if isinstance(msg.content, list) else [{\"type\": \"text\", \"text\": msg.content or \"\"}]\n    text_out, reasoning_out = [], []\n\n    for p in parts:\n        if isinstance(p, dict):\n            if p.get(\"type\") in (\"text\", \"output_text\") and p.get(\"text\"):\n                text_out.append(p[\"text\"])\n            elif p.get(\"type\") in (\"reasoning\", \"reasoning_text\") and p.get(\"text\"):\n                reasoning_out.append(p[\"text\"])\n\n    if reasoning_out:\n        print(\"\\n[assistant_reasoning_content]\")\n        print(\"\\n\".join(reasoning_out))\n    if text_out:\n        print(\"\\n[assistant_content]\")\n        print(\"\\n\".join(text_out))\n\nasync def main():\n    model = ChatOpenAI(\n        model=\"EXAONE-4.5-33B\",\n        base_url=\"http://localhost:8000/v1\",\n        api_key=\"EMPTY\",\n        temperature=1.0,\n        model_kwargs={\"top_p\": 0.95},\n    )\n\n    client = MultiServerMCPClient({\n        \"filesystem\": {\n            \"transport\": \"stdio\",\n            \"command\": \"npx\",\n            \"args\": [\"-y\", \"@modelcontextprotocol/server-filesystem\", \"/tmp\"],\n        },\n        \"fetch\": {\n            \"transport\": \"stdio\",\n            \"command\": \"uvx\",\n            \"args\": [\"mcp-server-fetch\"],\n        },\n        \"duckduckgo\": {\n            \"transport\": \"stdio\",\n            \"command\": \"uvx\",\n            \"args\": [\"duckduckgo-mcp-server\"],\n        },\n    })\n\n    agent = create_agent(model, await client.get_tools())\n\n    inputs = {\n        \"messages\": [{\n            \"role\": \"user\",\n            \"content\": [\n                {\n                    \"type\": \"text\",\n                    \"text\": (\n                        \"Look at the image and identify the landmark. \"\n                        \"Use the DuckDuckGo MCP tool to verify its name, height, and location. \"\n                        \"Then use the fetch tool to read a fuller article page about it. \"\n                        \"Create /tmp/mcp-demo and write a short markdown file to \"\n                        \"/tmp/mcp-demo/landmark.md with: name, location, height, and a one-sentence summary of the article. \"\n                        \"Finally, return only the exact file content.\"\n                    ),\n                },\n                {\n                    \"type\": \"image_url\",\n                    \"image_url\": {\n                        \"url\": \"https://upload.wikimedia.org/wikipedia/commons/a/a8/Tour_Eiffel_Wikimedia_Commons.jpg\"\n                    },\n                },\n            ],\n        }]\n    }\n\n    async for step in agent.astream(inputs, stream_mode=\"values\"):\n        msg = step[\"messages\"][-1]\n        if getattr(msg, \"type\", \"\") == \"ai\":\n            print_message(msg)\n            for tc in getattr(msg, \"tool_calls\", []) or []:\n                print(f\"\\n[tool call] {tc['name']}({tc['args']})\")\n\nif __name__ == \"__main__\":\n    asyncio.run(main())\n\n```\n\n\n\n\n\n## Limitation\n\nEXAONE 4.5 models, like all existing multimodal models, have certain limitations and may occasionally generate\ninappropriate responses. The multimodal model generates responses based on the output probability of tokens, and it\nis determined during learning from training data. While we make every effort to exclude personal, harmful, and biased\ninformation from the training data, some problematic content may still be included, potentially leading to undesirable\nresponses. Please note that the text generated by EXAONE 4.5 models does not reflect the views of LG AI Research.\n\n- Inappropriate answers may be generated, which contain personal, harmful or other inappropriate information.\n- Biased responses may be generated, which are associated with age, gender, race, and so on.\n- The generated responses rely heavily on statistics from the training data, which can result in the generation of\nsemantically or syntactically incorrect sentences.\n- Since the models do not reflect the latest information, the responses may be false or contradictory.\n\nLG AI Research strives to reduce potential risks that may arise from EXAONE 4.5 models. Users are not allowed to\nengage in any malicious activities (e.g., keying in illegal information) that may induce the creation of inappropriate\noutputs violating LG AI’s ethical principles when using EXAONE 4.5 models.\n\n\n\n## License\n\nThe model is licensed under [EXAONE AI Model License Agreement 1.2 - NC](./LICENSE)\n\n\n\n## Citation\n\n```\n@article{exaone-4.5,\n  title={EXAONE 4.5 Technical Report},\n  author={{LG AI Research}},\n  journal={arXiv preprint arXiv:2604.08644},\n  year={2026}\n}\n```\n\n\n## Contact\n\nLG AI Research Technical Support: contact_us@lgresearch.ai\n\n",
+      "timestamp": null,
+      "score": null,
+      "metadata": {
+        "kind": "benchmark_scores",
+        "provider": "LGAI-EXAONE",
+        "model_id": "LGAI-EXAONE/EXAONE-4.5-33B",
+        "model_name": "EXAONE-4.5-33B",
+        "benchmarks": [
+          {
+            "name": "MMMU",
+            "score_str": "78.7",
+            "score": 78.7
+          },
+          {
+            "name": "MMMU-Pro",
+            "score_str": "68.6",
+            "score": 68.6
+          },
+          {
+            "name": "MedXpertQA-MM",
+            "score_str": "42.1",
+            "score": 42.1
+          },
+          {
+            "name": "MathVision",
+            "score_str": "75.2",
+            "score": 75.2
+          },
+          {
+            "name": "MathVista (mini)",
+            "score_str": "85.0",
+            "score": 85.0
+          },
+          {
+            "name": "WeMath",
+            "score_str": "79.1",
+            "score": 79.1
+          },
+          {
+            "name": "LogicVista",
+            "score_str": "73.8",
+            "score": 73.8
+          },
+          {
+            "name": "BabyVision",
+            "score_str": "18.8",
+            "score": 18.8
+          },
+          {
+            "name": "AI2D",
+            "score_str": "89.0",
+            "score": 89.0
+          },
+          {
+            "name": "ChartQAPro",
+            "score_str": "62.2",
+            "score": 62.2
+          },
+          {
+            "name": "CharXiv (RQ)",
+            "score_str": "71.7",
+            "score": 71.7
+          },
+          {
+            "name": "OCRBench v2",
+            "score_str": "63.2",
+            "score": 63.2
+          },
+          {
+            "name": "OmniDocBench v1.5",
+            "score_str": "81.2",
+            "score": 81.2
+          },
+          {
+            "name": "MMStar",
+            "score_str": "74.9",
+            "score": 74.9
+          },
+          {
+            "name": "BLINK",
+            "score_str": "68.8",
+            "score": 68.8
+          },
+          {
+            "name": "HallusionBench",
+            "score_str": "63.7",
+            "score": 63.7
+          },
+          {
+            "name": "KMMMU",
+            "score_str": "42.7",
+            "score": 42.7
+          },
+          {
+            "name": "K-Viscuit",
+            "score_str": "80.1",
+            "score": 80.1
+          },
+          {
+            "name": "KRETA",
+            "score_str": "91.9",
+            "score": 91.9
+          },
+          {
+            "name": "AIME 2025",
+            "score_str": "92.9",
+            "score": 92.9
+          },
+          {
+            "name": "AIME 2026",
+            "score_str": "92.6",
+            "score": 92.6
+          },
+          {
+            "name": "GPQA-Diamond",
+            "score_str": "80.5",
+            "score": 80.5
+          },
+          {
+            "name": "LiveCodeBench v6",
+            "score_str": "81.4",
+            "score": 81.4
+          },
+          {
+            "name": "MMLU-Pro",
+            "score_str": "83.3",
+            "score": 83.3
+          },
+          {
+            "name": "τ2-Bench (Retail)",
+            "score_str": "77.9",
+            "score": 77.9
+          },
+          {
+            "name": "τ2-Bench (Airline)",
+            "score_str": "56.5",
+            "score": 56.5
+          },
+          {
+            "name": "τ2-Bench (Telecom)",
+            "score_str": "73.0",
+            "score": 73.0
+          },
+          {
+            "name": "IFBench",
+            "score_str": "62.6",
+            "score": 62.6
+          },
+          {
+            "name": "IFEval",
+            "score_str": "89.6",
+            "score": 89.6
+          },
+          {
+            "name": "AA-LCR",
+            "score_str": "50.6",
+            "score": 50.6
+          },
+          {
+            "name": "KMMLU-Pro",
+            "score_str": "67.6",
+            "score": 67.6
+          },
+          {
+            "name": "KoBALT",
+            "score_str": "52.1",
+            "score": 52.1
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.95,
+        "validator_reason": "model card"
+      }
+    },
+    {
+      "source": "huggingface",
+      "source_detail": "huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B/discussions",
+      "url": "https://huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B/discussions/1",
+      "author": "hyunw55",
+      "title": "Hello, thanks for releasing a great model.",
+      "text": "I'm testing EXAONE 4.5 for research purposes. I have a few questions:\n\n1. Are there any plans to release a smaller multimodal MoE version of EXAONE 4.5\n2. Are there any plans to provide official quantized versions (e.g., AWQ,MXFP4,NVFP4)?\n\nThank you.",
+      "body_full": null,
+      "timestamp": "2026-04-13T00:23:50.000Z",
+      "score": 2,
+      "metadata": {
+        "kind": "discussion",
+        "model_id": "LGAI-EXAONE/EXAONE-4.5-33B",
+        "discussion_num": 1,
+        "status": "open",
+        "comments": [
+          {
+            "author": "nicoboss",
+            "text": "Thanks a lot for creating this amazing model. I'm currently extensively testing it and am really happy with the responses I get. The knowledge it has is quite remarkable. This is not that surprising considering that I also absolutely loved `EXAONE 4.0`. I'm currently using it for OpenClaw and it handles antigenic workloads really well. It adheres well to the system prompt following its instructions and adapting the desired style. Vision is surprisingly good considering that the recommended vllm configurations limit it to 64 vision tokens.  I would say vision is at the level of `gemma-4-31B-it` for my use cases. `Qwen3.5-27B` beets it in vision but its not a fair comparison as it also uses far more tokens per image.\n\n> Are there any plans to provide official quantized versions (e.g., AWQ,MXFP4,NVFP4)?\n\n- Official FP8 bitsandbytes quants are available under https://huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B-FP8\n- Official GGUFs quants are available under https://huggingface.co/LGAI-EXAONE/EXAONE-4.5-33B-GGUF\n  - BF16\n  - Q8_0\n  - Q6_K\n  - Q5_K_M\n  - Q4_K_M\n  - IQ4_XS\n- Nothing stops you from creating your own quants for whatever format you need. There is no real benefit of using official quants.",
+            "created_at": "2026-04-14T09:35:13.000Z"
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.7,
+        "validator_reason": "user discussion"
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 4262,
+  "fetched_at": "2026-04-22T06:47:31.180308Z"
+}

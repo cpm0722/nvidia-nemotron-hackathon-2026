@@ -1,0 +1,186 @@
+{
+  "source": "arxiv",
+  "ok": true,
+  "items": [
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.18944v1",
+      "author": "Jiang Xiaobo, Dinghong Lai, Song Qiu, Yadong Deng, Xinkai Zhan",
+      "title": "A Mechanism and Optimization Study on the Impact of Information Density on User-Generated Content Named Entity Recognition",
+      "text": "Named Entity Recognition (NER) models trained on clean, high-resource corpora exhibit catastrophic performance collapse when deployed on noisy, sparse User-Generated Content (UGC), such as social media. Prior research has predominantly focused on point-wise symptom remediation -- employing customized fine-tuning to address issues like neologisms, alias drift, non-standard orthography, long-tail entities, and class imbalance. However, these improvements often fail to generalize because they overlook the structural sparsity inherent in UGC. This study reveals that surface-level noise symptoms share a unified root cause: low Information Density (ID). Through hierarchical confounding-controlled resampling experiments (specifically controlling for entity rarity and annotation consistency), this paper identifies ID as an independent key factor. We introduce Attention Spectrum Analysis (ASA) to quantify how reduced ID causally leads to ``attention blunting,'' ultimately degrading NER performance. Informed by these mechanistic insights, we propose the Window-Aware Optimization Module (WOM), an LLM-empowered, model-agnostic framework. WOM identifies information-sparse regions and utilizes selective back-translation to directionally enhance semantic density without altering model architecture. Deployed atop mainstream architectures on standard UGC datasets (WNUT2017, Twitter-NER, WNUT2016), WOM yields up to 4.5\\% absolute F1 improvement, demonstrating robustness and achieving new state-of-the-art (SOTA) results on WNUT2017.",
+      "body_full": null,
+      "timestamp": "2026-04-21T00:46:48Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.18944v1",
+        "categories": [
+          "cs.CL"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.18715v1",
+      "author": "Mashrekur Rahman, Samuel J. Barrett, Christina Last",
+      "title": "Characterizing AlphaEarth Embedding Geometry for Agentic Environmental Reasoning",
+      "text": "Earth observation foundation models encode land surface information into dense embedding vectors, yet the geometric structure of these representations and its implications for downstream reasoning remain underexplored. We characterize the manifold geometry of Google AlphaEarth's 64-dimensional embeddings across 12.1 million Continental United States samples (2017--2023) and develop an agentic system that leverages this geometric understanding for environmental reasoning. The manifold is non-Euclidean: effective dimensionality is 13.3 (participation ratio) from 64 raw dimensions, with local intrinsic dimensionality of approximately 10. Tangent spaces rotate substantially, with 84\\% of locations exceeding 60\\textdegree{} and local-global alignment (mean$|\\cosθ| = 0.17$) approaching the random baseline of 0.125. Supervised linear probes indicate that concept directions rotate across the manifold, and compositional vector arithmetic using both PCA-derived and probe-derived directions yields poor precision. Retrieval instead produces physically coherent results, with local geometry predicting retrieval coherence ($R^2 = 0.32$). Building on this characterization, we introduce an agentic system with nine specialized tools that decomposes environmental queries into reasoning chains over a FAISS-indexed embedding database. A five-condition ablation (120 queries, three complexity tiers) shows that embedding retrieval dominates response quality ($μ= 3.79 \\pm 0.90$ vs.\\ $3.03 \\pm 0.77$ parametric-only; scale 1--5), with peak performance on multi-step comparisons ($μ= 4.28 \\pm 0.43$). A cross-model benchmark show that geometric tools reduce Sonnet 4.5's score by 0.12 points but improve Opus 4.6's by 0.07, with Opus achieving higher geometric grounding (3.38 vs.\\ 2.64), suggesting that the value of geometric characterization scales with the reasoning capability of the consuming model.",
+      "body_full": null,
+      "timestamp": "2026-04-20T18:14:33Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.18715v1",
+        "categories": [
+          "cs.CL",
+          "cs.AI"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.18170v1",
+      "author": "Ziyang Liu",
+      "title": "Copy-as-Decode: Grammar-Constrained Parallel Prefill for LLM Editing",
+      "text": "LLMs edit text and code by autoregressively regenerating the full output, even when most tokens appear verbatim in the input. We study Copy-as-Decode, a decoding-layer mechanism that recasts edit generation as structured decoding over a two-primitive grammar: <copy lines=\"i-j\"/> references an input line range, <gen>...</gen> emits new content. A token-level FSM guarantees syntactic validity, and a serving-layer primitive updates the KV cache for each copy span via a single parallel-prefill forward rather than $N$ autoregressive steps -- sharing the parallel-forward kernel of speculative decoding but with input tokens as the draft and program-enforced acceptance replacing probabilistic verification. We report an upper-bound analysis that requires no end-to-end training. (i) Kernel speedup: on Qwen2.5-{1.5B, 7B}, copying $N$ tokens via parallel prefill is $6.8\\times$--$303\\times$ faster than autoregressive ($N \\in [8, 512]$, A100 80GB bf16). (ii) Copy ceiling: on ProbeEdit and HumanEvalPack-Fix (Py/JS), $74$--$98\\%$ of gold tokens are reachable under the line-level primitive; composed with the empirical kernel over each corpus's span histogram this yields a closed-form wall-clock bound of $29.0\\times / 3.4\\times / 4.2\\times$ ($13.0\\times$ pooled). A token-level extension reaches $91$--$99\\%$ coverage with $4.5\\times$--$6.5\\times$ floors. (iii) Pipeline losslessness: oracle programs round-trip through the deterministic resolver on all $482$ cases, localizing any downstream failure to span selection rather than the mechanism. A perturbation study shows pooled EM drops from $100\\%$ to $15.48\\%$ under off-by-one noise. A fine-tuning pilot on Qwen2.5-Coder-1.5B lifts HEvalFix-Py EM from $0/33$ (untrained) to $12$--$17\\%$, a learnability signal, not a production selector. Batched-serving integration and multi-file coverage are scoped as follow-up.",
+      "body_full": null,
+      "timestamp": "2026-04-20T12:29:53Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.18170v1",
+        "categories": [
+          "cs.CL",
+          "cs.AI"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.18662v1",
+      "author": "Priyank Singh",
+      "title": "Coherence-gated quantum devices via real-time weak measurement",
+      "text": "Single-photon routers in cavity and circuit QED direct photons based on which energy eigenstate a qubit occupies -- a projective decision that destroys coherence. We propose \\emph{coherence-gated routing}, where the routing decision depends on the magnitude of quantum coherence, estimated in real time from simultaneous weak measurements of $σ_x$ and $σ_z$. A photon is accepted depending on whether $S(T) = \\sqrt{\\langleσ_x\\rangle_c^2 + \\langleσ_y\\rangle_c^2}$ exceeds a tunable threshold~$S_{\\mathrm{th}}$.\n  Because coherence is certified at emission, the protocol enables two applications beyond conventional heralded sources: (i)~a quantum random number generator with min-entropy bounded by Bloch-sphere geometry, $H_\\infty \\geq -\\log_2\\bigl(\\frac{1+\\sqrt{1-S_{\\mathrm{th}}^2}}{2}\\bigr)$, and (ii)~a phase-tracked photon source where independent certification at two nodes bounds the matter-matter entanglement fidelity after Bell-state measurement.\n  The real-time estimator is a security primitive, not merely a numerical tool. We benchmark seven configurations across 3000 trajectories and show that deliberately underestimating detector efficiency ($η_{\\mathrm{a}} < η_{\\mathrm{true}}$) simultaneously stabilizes the numerics and suppresses overcertification. We trace this analytically through a purity monotonicity result, identify a geometric loophole amplifying purity undercertification into coherence overcertification by~$45\\times$, and develop two pointwise bounds: an Ornstein-Uhlenbeck comparison yielding $4.5\\%$ operational overcertification (validated at $3.6\\%$ from $10^6$ trajectories), and an exponential supermartingale establishing an exponential tail. The gap -- a single polynomial optimization -- defines a path to fully composable security.",
+      "body_full": null,
+      "timestamp": "2026-04-20T12:19:54Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.18662v1",
+        "categories": [
+          "quant-ph"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.17931v1",
+      "author": "Wanli Li, Bince Qu, Bo Pan, Jianyu Zhang, Zheng Liu, Pan Zhang, Wei Chen, Bo Zhang",
+      "title": "LiteResearcher: A Scalable Agentic RL Training Framework for Deep Research Agent",
+      "text": "Reinforcement Learning (RL) has emerged as a powerful training paradigm for LLM-based agents. However, scaling agentic RL for deep research remains constrained by two coupled challenges: hand-crafted synthetic data fails to elicit genuine real-world search capabilities, and real-world search dependency during RL training introduces instability and prohibitive cost, which limits the scalability of Agentic RL. LiteResearcher is a training framework that makes Agentic RL scalable: by constructing a lite virtual world that mirrors real-world search dynamics, we enable a continuously improving training recipe that empowers a tiny search agent to outperform large-scale open-source and commercial models (e.g., Tongyi DeepResearch and Claude-4.5 Sonnet). Specifically, on common benchmarks such as GAIA and Xbench, our LiteResearcher-4B achieves open-source state-of-the-art results of 71.3% and 78.0% respectively, demonstrating that scalable RL training is a key enabler for Deep Research Agents.",
+      "body_full": null,
+      "timestamp": "2026-04-20T08:11:09Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.17931v1",
+        "categories": [
+          "cs.AI"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.17715v1",
+      "author": "Khang Tran, Khoa Nguyen, Cristian Borcea, NhatHai Phan",
+      "title": "Program Structure-aware Language Models: Targeted Software Testing beyond Textual Semantics",
+      "text": "Recent advances in large language models for test case generation have improved branch coverage via prompt-engineered mutations. However, they still lack principled mechanisms for steering models toward specific high-risk execution branches, limiting their effectiveness for discovering subtle bugs and security vulnerabilities. We propose GLMTest, the first program structure-aware LLM framework for targeted test case generation that seamlessly integrates code property graphs and code semantics using a graph neural network and a language model to condition test case generation on execution branches. This structured conditioning enables controllable and branch-targeted test case generation, thereby potentially enhancing bug and security risk discovery. Experiments on real-world projects show that GLMTest built on a Qwen2.5-Coder-7B-Instruct model improves branch accuracy from 27.4% to 50.2% on TestGenEval benchmark compared with state-of-the-art LLMs, i.e., Claude-Sonnet-4.5 and GPT-4o-mini.",
+      "body_full": null,
+      "timestamp": "2026-04-20T01:54:01Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.17715v1",
+        "categories": [
+          "cs.SE",
+          "cs.LG"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.17159v1",
+      "author": "Tyler H. Merves, Michael H. Conaway, Joseph M. Escobar, Hakan T. Otal, Unal Tatar",
+      "title": "Systematic Capability Benchmarking of Frontier Large Language Models for Offensive Cyber Tasks",
+      "text": "We present, to our knowledge, the most comprehensive cross-model evaluation of LLM agents on offensive cybersecurity tasks, benchmarking 10 frontier models from 7 providers on all 200 challenges of the NYU CTF Bench. Building on the D-CIPHER multi-agent framework, we extend it with multi-provider backend support, a custom Kali Linux environment with over 100 pre-installed penetration testing tools, and runtime tool-discovery agents. Through a controlled factorial study, we find that the Kali Linux environment yields a +9.5 percentage-point improvement over Ubuntu, while auto-prompting and category-specific tips often degrade performance in well-equipped environments. Among models, Claude 4.5 Opus achieves the highest solve rate (59%), followed by Gemini 3 Pro (52%), with Gemini 3 Flash offering the best cost-efficiency at $0.05 per solve. Asymmetric planner/executor model assignments provide no meaningful benefit while coherent same-model configurations consistently outperform mixed-tier pairings. Our results indicate that environment tooling and model selection emerge as the strongest drivers of performance, whereas prompt engineering interventions show diminishing or negative returns in well-equipped environments. Reported performance reflects both model reasoning ability and compatibility with agent tooling and API integration.",
+      "body_full": null,
+      "timestamp": "2026-04-18T22:13:23Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.17159v1",
+        "categories": [
+          "cs.CR",
+          "cs.AI",
+          "cs.CL"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.17056v1",
+      "author": "Andrea Volpini, Elie Raad",
+      "title": "RLM-on-KG: Heuristics First, LLMs When Needed: Adaptive Retrieval Control over Mention Graphs for Scattered Evidence",
+      "text": "When does an LLM controller outperform rule-based traversal for knowledge graph exploration? We study this question through RLM-on-KG, a retrieval system that treats an LLM as an autonomous navigator over an RDF-encoded mention graph for grounded question answering. Unlike GraphRAG pipelines that rely on offline LLM indexing, RLM-on-KG performs entity-first, multi-hop exploration at query time using deterministic graph construction and a fixed tool set. Our central finding is a conditional advantage: the value of LLM control depends on evidence scatter and tool-calling sophistication. The paper's core claim is LLM control versus heuristic traversal, not a generic win over GraphRAG. On GraphRAG-Bench Novel (519 questions), Gemini 2.0 Flash achieves +2.47 pp F1 over a rule-based heuristic baseline (p < 0.0001), but only +0.16 pp over a GraphRAG-local variant (not significant). With a stronger controller, Claude Haiku 4.5, the gain over heuristic grows to +4.37 pp (p < 0.001) and extends to a +2.42 pp significant improvement over GraphRAG-local (p < 0.001). The gain is largest when gold evidence is scattered across 6-10 chunks (+3.21 pp) and smallest for concentrated evidence (+1.85 pp). Cross-scale validation on MuSiQue confirms that the LLM-over-heuristic advantage transfers, with expected attenuation on smaller per-question graphs. The core architectural insight is the separation of candidate discovery from ranking: the LLM adds value through exploration breadth, while final evidence selection is best handled by pure vector re-ranking. Beyond retrieval, exploration traces provide a proposed stress-test harness for structured data quality, yielding diagnostics for coverage, connectivity, provenance, and queryability.",
+      "body_full": null,
+      "timestamp": "2026-04-18T16:25:39Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.17056v1",
+        "categories": [
+          "cs.IR",
+          "cs.AI"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.16846v1",
+      "author": "Haskelle T. White-Gianella, Joshua Krissansen-Totton",
+      "title": "Carbon Cycle Imbalances on Arid Terrestrial Planets with Implications for Venus",
+      "text": "Arid terrestrial exoplanets are potentially abundant and are thus interesting targets in the search for life. In particular, M-dwarf planets such as those in the TRAPPIST-1 system may possess limited surface water, whereas early solar system terrestrials may have had small surface water inventories postmagma ocean solidification. On modern Earth, there is enough surface water for a balanced geologic carbon cycle, meaning silicate weathering balances the volcanic outgassing of CO2. However, on arid planets, there may not be enough surface water for this silicate weathering thermostat to maintain habitable conditions. Here, we show that arid planets enter a regime where weathering cannot keep up with volcanic degassing of CO2. Using a coupled model of the geologic carbon cycle, we find that terrestrial Earth-like planets require an initial surface water inventory of at least ~20-50% of Earth's ocean mass to maintain a balanced geologic carbon cycle and temperate surface temperature over 4.5 Gyr of evolution. Arid planets with less than ~20-50% of Earth's oceans cannot maintain high silicate weathering fluxes, potentially causing a runaway increase in atmospheric CO2. In addition, we explore Venus-like instellations and find that limited surface water could have destabilized Venus's carbon cycle, triggering a transition from temperate to uninhabitable. Even if a planet resides in the habitable zone of its star, if arid, it may transition to an uninhabitable state due to an unbalanced carbon cycle. More broadly, arid terrestrial exoplanets are less likely to remain habitable on long timescales, and may thus be poor candidates for biosignature searches.",
+      "body_full": null,
+      "timestamp": "2026-04-18T05:33:35Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.16846v1",
+        "categories": [
+          "astro-ph.EP"
+        ]
+      }
+    },
+    {
+      "source": "arxiv",
+      "source_detail": "arxiv.org",
+      "url": "https://arxiv.org/abs/2604.16729v1",
+      "author": "Ayhan Can Erdur, Daniel Scholz, Jiazhen Pan, Benedikt Wiestler, Daniel Rueckert, Jan C. Peeken",
+      "title": "Agentic Large Language Models for Training-Free Neuro-Radiological Image Analysis",
+      "text": "State-of-the-art large language models (LLMs) show high performance in general visual question answering. However, a fundamental limitation remains: current architectures lack the native 3D spatial reasoning required for direct analysis of volumetric medical imaging, such as CT or MRI. Emerging agentic AI offers a new solution, eliminating the need for intrinsic 3D processing by enabling LLMs to orchestrate and leverage specialized external tools. Yet, the feasibility of such agentic frameworks in complex, multi-step radiological workflows remains underexplored. In this work, we present a training-free agentic pipeline for automated brain MRI analysis. Validating our methodology on several LLMs (GPT-5.1, Gemini 3 Pro, Claude Sonnet 4.5) with off-the-shelf domain-specific tools, our system autonomously executes complex end-to-end workflows, including preprocessing (skull stripping, registration), pathology segmentation (glioma, meningioma, metastases), and volumetric analysis. We evaluate our framework across increasingly complex radiological tasks, from single-scan segmentation and volumetric reporting to longitudinal response assessment requiring multi-timepoint comparisons. We analyze the impact of architectural design by comparing single-agent models against multi-agent \"domain-expert\" collaborations. Finally, to support rigorous evaluation of future agentic systems, we introduce and release a benchmark dataset of image-prompt-answer tuples derived from public BraTS data. Our results demonstrate that agentic AI can solve highly neuro-radiological image analysis tasks through tool use without the need for training or fine-tuning.",
+      "body_full": null,
+      "timestamp": "2026-04-17T22:04:16Z",
+      "score": null,
+      "metadata": {
+        "arxiv_id": "2604.16729v1",
+        "categories": [
+          "cs.CV",
+          "cs.AI"
+        ]
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 289,
+  "fetched_at": "2026-04-22T06:47:27.207725Z"
+}

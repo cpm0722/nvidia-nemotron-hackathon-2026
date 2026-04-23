@@ -1,0 +1,320 @@
+{
+  "source": "reddit",
+  "ok": true,
+  "items": [
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ssb61r/personal_eval_followup_gemma4_26b_moe_q8_vs/",
+      "author": "Lowkey_LokiSN",
+      "title": "Personal Eval follow-up: Gemma4 26B MoE (Q8) vs Qwen3.5 27B Dense vs Gemma4 31B Dense Compared",
+      "text": "This is a follow-up update to my [previous post comparing Qwen 3.6 35B vs Gemma 4 26B](https://www.reddit.com/r/LocalLLaMA/comments/1soc98n/qwen_36_35b_crushes_gemma_4_26b_on_my_tests/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button). \n\nI wanted to particularly follow-up with the following:\n1. Gemma 4 26B could've suffered the quantization tax and perform drastically better with an 8-bit quant. So I wanted to put that to the test with UD's Q8_K_XL this time\n2. A lot of people (including myself) were curious to see how the Qwen 3.5 27B dense would perform in these tests.\n3. Speaking of dense models, I also wanted to include the Gemma 4 31B to see how it performs. \n\nSharing results consolidated with previous run for a complete comparison\n\n---\n## 1. Test Results\n\n| Metric                  | Qwen3.6-35B Q4 | Gemma4-26B Q4 | Gemma4-26B Q8 | Qwen3.5-27B Q4 | **Gemma4-31B Q4** |\n| ----------------------- | -------------- | ------------- | ------------- | -------------- | ----------------- |\n| Baseline failures       | 37             | 37            | 37            | 37             | 37                |\n| **Tests fixed**         | 32 (86.5%)     | 28 (75.7%)    | 17 (45.9%)    | **37 (100%)**  | **37 (100%)**     |\n| **Regressions**         | **0**          | 8             | **0**         | **0**          | **0**             |\n| **Net score**           | 32             | 20            | 17            | **37**         | **37**            |\n| Still failing (of 37)   | 5              | 9             | 20            | **0**          | **0**             |\n| Post-run total failures | 5              | 17            | 20            | **0**          | **0**             |\n| Guardrail violations    | 0              | 0             | 0             | 0              | 0                 |\n\n---\n\n## 2. Token Usage\n\n| Metric | Qwen3.6 Q4 | Gemma4 26B Q4 | Gemma4 26B Q8 | Qwen3.5-27B Q4 | **Gemma4 31B Q4** |\n|---|---|---|---|---|---|\n| Input tokens | 634,965 | 1,005,964 | 703,732 | 553,137 | 1,115,666 |\n| Output tokens | 39,476 | 89,750 | 68,055 | 42,183 | 62,465 |\n| **Grand total (I+O)** | 674,441 | 1,095,714 | 771,787 | **595,320** | 1,178,131 |\n| Cache read tokens | 4,241,502 | 3,530,520 | 3,044,400 | **7,518,047** | 3,335,808 |\n| Output/Input ratio | 1:16 | 1:11 | 1:10 | 1:13 | 1:17 |\n| **Tokens per fix** | ~21K | ~39K | ~45K | **~16K** | ~32K |\n| **Tokens per net score point** | ~21K | ~55K | ~45K | **~16K** | ~32K |\n\n---\n\n## 3. Tool Calls\n\n| Tool | Qwen3.6 Q4 | Gemma4 26B Q4 | Gemma4 26B Q8 | Qwen3.5-27B Q4 | **Gemma4 31B Q4** |\n|---|---|---|---|---|---|\n| read | 46 | 39 | 25 | **91** (1 err) | 37 |\n| bash | **33** | 30 | 31 | 23 | 29 |\n| edit | 14 | 13 | 12 (1 err) | **31** | 21 |\n| grep | 16 | 10 | 6 | **33** | 6 |\n| write | 1 | 0 | 4 | 1 | 1 |\n| glob | 1 | 1 | 3 | 1 | 2 |\n| todowrite | 4 | 3 | 1 | 1 | 4 |\n| **Total** | 115 | 96 | 82 | **181** | 100 |\n| Successful | 115 (100%) | 96 (100%) | 81 (98.8%) | 180 (99.4%) | **100 (100%)** |\n| Failed | 0 | 0 | 1 | 1 | 0 |\n\n| Derived Metric | Qwen3.6 Q4 | Gemma4 26B Q4 | Gemma4 26B Q8 | Qwen3.5-27B Q4 | **Gemma4 31B Q4** |\n|---|---|---|---|---|---|\n| Unique files read | 18 | 27 | 19 | 23 | 27 |\n| Unique files edited | 7 | 13 | 9 | 9 | 12 |\n| Reads per unique file | 2.6 | 1.4 | 1.3 | **4.0** | 1.4 |\n| Tool calls per minute | **2.3** | 1.1 | 1.2 | 1.2 | 0.16 |\n| Edits per fix | 0.44 | 0.46 | 0.65 | 0.84 | 0.57 |\n| Bash (pytest) runs | **33** | 30 | 31 | 23 | 29 |\n\n---\n\n## 4. Timing & Efficiency\n\n| Metric                | Qwen3.6 Q4       | Gemma4 26B Q4 | Gemma4 26B Q8 | Qwen3.5-27B Q4 | **Gemma4 31B Q4** |\n| --------------------- | ---------------- | ------------- | ------------- | -------------- | ----------------- |\n| **Wall clock**        | **2,950s (49m)** | 5,129s (85m)  | 4,142s (69m)  | 8,698s (145m)  | 37,748s (629m)    |\n| Total steps           | 120              | 104           | 88            | 186            | 109               |\n| **Avg step duration** | **10.0s**        | 21.7s         | 24.0s         | 15.9s          | **82.2s**         |\n\n---\n\n## 5. Model & Server Configuration\n\n| Property          | Qwen3.6-35B Q4 | Gemma4-26B Q4 | Gemma4-26B Q8 | Qwen3.5-27B Q4 | **Gemma4-31B Q4** |\n| ----------------- | -------------- | ------------- | ------------- | -------------- | ----------------- |\n| Total parameters  | 35B            | 26B           | 26B           | 27B            | 31B               |\n| Active parameters | **3B**         | 4B            | 4B            | 27B            | 31B               |\n| Quantization      | Q4_K_XL        | Q4_K_XL       | Q8_K_XL       | Q4_K_XL        | Q4_K_XL           |\n| Context           | 100,000        | 100,000       | 100,000       | 100,000        | 100,000           |\n| temperature       | 0.6            | 1.0           | 1.0           | **0.6**        | 1.0               |\n| top_p             | 0.95           | 0.95          | 0.95          | 0.95           | 0.95              |\n| top_k             | 20             | 64            | 64            | **20**         | 64                |\n\n---\n## Key Observations\n\n- Gemma 4 26B's performance remains in the same ballpark even with Q8. It performed slightly worse than Q4 in this run but that variance is likely noise. I'll stick with my Q4_K_XL quant\n- Both Qwen 3.5 27B and Gemma 4 31B aced the test. The dense models are in a different league from the MoE ones. (Especially the Gemma 31B)\n- Gemma 4 31B is the most efficient when it comes to tool calling. It fixed all issues in 100 error-free tool calls\n- Qwen 3.5 27B is the most token-efficient expending an average of 16k tokens per fix.\n- Gemma 4 31B also exhibited extremely low inference speeds for some reason and ran ***for 10 hours and 29 minutes*** due to the abysmally slow speeds. DRAM also bloated upto 70GB even with -cram and -ctkcp flags. I'm not sure if this is expected.\n\nI'd say Gemma4 31B is objectively the most capable in my tests but it's also the slowest of the bunch with my setup. Qwen 3.5 27B follows up with comparable performance at a lot more tolerable speeds. Qwen 3.6 35B remains the speed-to-performance champ and will remain being my daily driver for the same reason.",
+      "body_full": null,
+      "timestamp": "2026-04-22T04:30:41Z",
+      "score": 42,
+      "metadata": {
+        "num_comments": 14,
+        "upvote_ratio": 0.96,
+        "link_flair_text": "Discussion",
+        "comments": [
+          {
+            "author": "Reactor-Licker",
+            "body": "What hardware are you using?",
+            "score": 4
+          },
+          {
+            "author": "onil_gova",
+            "body": "Did you, by any chance, ensure that `preserve_thinking` was on for the Qwen3.6 model?",
+            "score": 3
+          },
+          {
+            "author": "Worried-Squirrel2023",
+            "body": "the qwen 3.6 35B-A3B vs dense 31B comparison is the real signal here. if MoE 3B-active beats a dense 31B at coding tasks, the dense models below 70B are basically obsolete for local agents. throughput plus quality at the same vram budget.",
+            "score": 3
+          },
+          {
+            "author": "Sadman782",
+            "body": "Can you try gemma 4 26B with topk 20, topk 64 doesn't make sense for coding even if google recommended it specially for a quantized MoE model, I find it does significantly better with topk 20.",
+            "score": 2
+          },
+          {
+            "author": "Alternative_Win_6154",
+            "body": "Cloud you try the Q8 of the Qwen 3.6 35b? because the Q4 affects much more the moe models.",
+            "score": 2
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ssb4ys/please_recommend_a_small_local_model_for/",
+      "author": "CrowKing63",
+      "title": "Please recommend a small local model for maintenance purposes.",
+      "text": "Hello. I'm ordering a small piece of software for personal needs (like a virtual keyboard or an expression recognition action app). I asked models like Claude Opus (that was in the past) or GPT-5.4 for implementation plans, but I ended up using open-source models with more generous usage limits for the actual coding. Since it has the basic structure and I've fixed any critical or annoying bugs, now I think there will just be very minor tweaks or additions. Because I don't know much about coding, even though I can read through the code and have an idea of where to fix things, I hesitate to touch it, so I end up asking AI again: \"Is this right?\"\n\nI feel like I need to maintain this flow until I'm somewhat confident myself, but in this situation, I wonder if subscribing to a paid plan is overkill. So, can smaller local models satisfy my needs? Currently, I'm using the Gemma 4 e4b model through LM Studio for translation purposes. My computer specs are 32GB RAM / 16GB VRAM, so it feels a bit restrictive for larger models. I am willing to push further. Could you recommend a suitable model and configuration settings for my situation? Thank you.",
+      "body_full": null,
+      "timestamp": "2026-04-22T04:29:16Z",
+      "score": 1,
+      "metadata": {
+        "num_comments": 2,
+        "upvote_ratio": 0.67,
+        "link_flair_text": "Question | Help",
+        "comments": [
+          {
+            "author": "lundrog",
+            "body": "Swap to lamma.cpp and a smaller model perhaps a 2B or 1B if that or qwen 3.x so you can still run a 4b for other things.",
+            "score": 2
+          },
+          {
+            "author": "General-Cookie6794",
+            "body": "Am also planning to drop paid services for Gemma 4 e4b q8 that I can comfortably stretch to 13gb vram",
+            "score": 2
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ssadey/youtuber_tries_qwen_35_35b_qwen_36_35b_and_gemma/",
+      "author": "mr_zerolith",
+      "title": "Youtuber tries Qwen 3.5 35B, Qwen 3.6 35B, and Gemma 4 27b to reverse engineer some large JS, with good results for Qwen 3.6",
+      "text": "Found this interesting and thought i'd share.\n\nA big problem i've had with Qwen 3 MoE is how bad at instruction following it was, and also, it's 'dumb point' in the context window was really low. I was so turned off by it that i never tried Qwen 3.5 and kept using SEED OSS 36B for coding.\n\n3.6 appears to have better instruction following than prior models, do you find this to be the case yourself?",
+      "body_full": null,
+      "timestamp": "2026-04-22T03:52:12Z",
+      "score": 10,
+      "metadata": {
+        "num_comments": 5,
+        "upvote_ratio": 0.73,
+        "link_flair_text": "Discussion",
+        "comments": [
+          {
+            "author": "Express_Quail_1493",
+            "body": "i love this guys videos. he does real test on projects the LLM would stumble on to intentially feel out the models without relying heavily on benchmarks. Most youtubers are lazy zero-shot single file HTML edits which doesn't say much since pretty much all models can do that LOL",
+            "score": 6
+          },
+          {
+            "author": "vulcan4d",
+            "body": "We need more of these and different quant testing to validate the information that we are basically sold to.  Everything on paper looks good but everyone seems focussed on testing extremely large models that many simply just dream of running.",
+            "score": 2
+          },
+          {
+            "author": "nikhilprasanth",
+            "body": "Intresting to see that the lm studio quants are performing better than unsloth ones across the three models.",
+            "score": 0
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ss9nf8/why_does_ai_fail_to_generate_simple_ascii_images/",
+      "author": "ConcernedIndInvestor",
+      "title": "Why does AI fail to generate simple ASCII images ?",
+      "text": "I saw a post earlier about MineBench. I was impressed to see that the latest models can produce such realistic outputs. Their ability to understand the prompt and make spatial modifications were impressive.   \nBut when I asked the models to generate simple ascii images, they failed spectacularly.  \n   \nPrompt: Draw simple ascii image of a person touching his eyes.\n\n**gemma-4-31b-it**\n\n    O /\n      /|/\n      / \\\n\n(looks like someone hung themselves to me)  \n  \n**grok-4.1-thinking**\n\n        (=⌵=)\n       ( x x )\n        ( ─ )\n         ||||\n         ||||\n        /    \\    (=⌵=)\n       ( x x )\n        ( ─ )\n         ||||\n         ||||\n        /    \\\n\n**deepseek-v3.2-exp-thinking**\n\n    ( ͡° ͜ʖ ͡°)( ͡° ͜ʖ ͡°)\n\nI also tried Qwen 3.6 Plus  gemini-3-flash-preview and free version of ChatGPT. All the models failed and produced absurd outputs. Do the latest local models produce any better results ? I don't understand how AI can solve advance math and fail at such a trivial task!",
+      "body_full": null,
+      "timestamp": "2026-04-22T03:18:11Z",
+      "score": 4,
+      "metadata": {
+        "num_comments": 7,
+        "upvote_ratio": 0.7,
+        "link_flair_text": "Discussion",
+        "comments": [
+          {
+            "author": "Queasy_Dentist3903",
+            "body": "The models don't \"see\" text like you or me, so they can't really craft images when they don't know what images look like. They are really just pattern matching existing ascii art.",
+            "score": 9
+          },
+          {
+            "author": "Slaghton",
+            "body": "https://preview.redd.it/ctsyqbntznwg1.png?width=724&format=png&auto=webp&s=d9da47f2cb0045fdf21c4348141a7d9b8634f7ac\n\nDoes ascii fine for me! lol",
+            "score": 3
+          },
+          {
+            "author": "Elusive_Spoon",
+            "body": "MineBench gives the models a lot of additional context about how to “draw” with voxels. If you wanted to do something similar for ASCII art, you might make an MCP or skill and then compare what different models can do with it.",
+            "score": 2
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ss9lt4/is_there_a_place_to_searchsubmit_an/",
+      "author": "alex20_202020",
+      "title": "Is there a place to search/submit an error/hallucination I saw running local LLM?",
+      "text": "I'm tagging it 'Discussion' cause at the same time if there is no such commonly known place (and I was not able to find one via websearch), I propose to create one.\n\nI have just unexpectedly observed that Crow Qwen 3.5 9B Q5 hallucinated how to change wiki page for a git project, whereas Gemma 4 26B seems to have given correct answer.\n\nTo the sake of evaluation of local models, I want to see a list of mistakes models have made and ready to contribute my observations.",
+      "body_full": null,
+      "timestamp": "2026-04-22T03:16:12Z",
+      "score": 0,
+      "metadata": {
+        "num_comments": 3,
+        "upvote_ratio": 0.25,
+        "link_flair_text": "Discussion",
+        "comments": [
+          {
+            "author": "dark-light92",
+            "body": "AI models are not software in the sense you can track issues and bugs. \n\nWhat you call hallucination is just normal working of the LLM. It's not an error. It predicted the most probable next token just like it always does. \n\nA place to track hallucinations would not be useful because if you run the same prompt again against the same model, you might get different result. You change temperature or sampling settings, the responses will change again.",
+            "score": 5
+          },
+          {
+            "author": "Song-Historical",
+            "body": "Unless they have access to your stack there's no real way for them to determine how or why the hallucination occurred.",
+            "score": 2
+          },
+          {
+            "author": "SM8085",
+            "body": ">hallucinated how to change wiki page for a git project\n\nAs in working with a specific tool?  Or hallucinated the wiki format?",
+            "score": 1
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ss9cj1/turboquanth_a_technique_for_quantizing_models/",
+      "author": "Henrie_the_dreamer",
+      "title": "TurboQuant-H: A Technique For Quantizing Models Like Gemma 4 E2B/E4B to 2-bit",
+      "text": "Embedding layers are sensitive to quantization and Gemma 4 E2B/E4B have a ton of those which bloat the model parameter counts to 5B/10B. Makes the model challenging for the resource-constrained devices they were designed for.   \n  \nTurboQuant-H shares the core insight with TurboQuant; rotation concentrates coordinates into a well-behaved distribution, enabling aggressive scalar quantization, but simplifies the pipeline for offline weight quantization. Follow the link deeper dive into the technique.   \n  \nCactus baseline used INT4 linears + INT8 embedding, yielding 4.8GB for E2B (5B total params). TurboQuant-H squishes this to INT4 linears + INT2 embeddings, reducing to 2.9GB. The perplexity on our calibration went from 1.8547 to 1.9111, complete evaluation coming in the paper. ",
+      "body_full": null,
+      "timestamp": "2026-04-22T03:04:21Z",
+      "score": 4,
+      "metadata": {
+        "num_comments": 0,
+        "upvote_ratio": 0.7,
+        "link_flair_text": "Discussion"
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ss78s5/why_cant_i_get_any_model_to_readanalyze_pdfs_in/",
+      "author": "samorado",
+      "title": "Why can't I get any model to read/analyze PDFs in LM Studio??",
+      "text": "I've tried Mistral 3 3B, Qwen 3.5 2B, and Gemma 4 e2B. Attach a 56 page 1.8MB machine readable PDF. LM Studio gives me a popup introducing its RAG feature saying \"You can now chat with your own documents using Retrieval Augmented Generation (RAG).\"\n\nI ask very specific questions to the model, asking it to summarize the attached PDF. I see the Assistant notifying me that it's Loading and Processing the PDF. I keep getting either \"I can't access it\" or \"No file was attached\". What am I doing wrong? \n\nI just want to chat with a PDF file locally. I'm new to LM Studio and running local LLMs but am pretty sure the models I'm picking, the hardware I'm using, and the prompts I'm running are on the right track. \n\nAnyone have any easy tips to chat with a PDF locally?",
+      "body_full": null,
+      "timestamp": "2026-04-22T01:30:45Z",
+      "score": 2,
+      "metadata": {
+        "num_comments": 1,
+        "upvote_ratio": 0.75,
+        "link_flair_text": "Question | Help",
+        "comments": [
+          {
+            "author": "Relevant-Audience441",
+            "body": "something's def weird going on. I've used LMStudio for \\~1.5 years without much issue. Reach out to them on discord. They're really helpful! [https://discord.gg/lmstudio](https://discord.gg/lmstudio)",
+            "score": 1
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ss4z87/what_to_expect_from_qwen36_35b_a3b_q4_on_my_laptop/",
+      "author": "alynour",
+      "title": "What to expect from Qwen3.6 35B A3B Q4 on my laptop?",
+      "text": "Hi folks!  \n  \nSo I have a laptop with these specs:  \n  \nIntel Core i7-11370H  (4 cores)  3.3 GHz / up to 4.8 GHz   \n40 GB RAM DDR4 3200  \nNVIDIA GeForce RTX 3060 Mobile / Max-Q 6GB  \n  \nand I wanted to run an AI model for structured tasks (summairze small PDFs for exmaple) that aren't time sensitive (doesn't need to be fast, anywhere more than 10t/s is ok).  \nNow I know the specs are not up to much, but I thought it can still be useful for such non-demanding tasks.\n\nSo what to expects from running Qwen3.6 35B A3B Q4 for example or gemma-4-26B-A4B-it-UD-Q4\\_K\\_M ?\n\nwill they even run using llama.cpp (even if cpu only) and can I expect more than 10t/s?  \n  \nUnfortunately internet service is not good where I live, so I can't experiment easily and better ask before trying :)",
+      "body_full": null,
+      "timestamp": "2026-04-21T23:51:17Z",
+      "score": 6,
+      "metadata": {
+        "num_comments": 9,
+        "upvote_ratio": 0.87,
+        "link_flair_text": "Question | Help",
+        "comments": [
+          {
+            "author": "ea_man",
+            "body": "Hey why don't *you try that* as you are the one that has the hw and tell us?\n\nYou want us to guess? I say It will run great.",
+            "score": 5
+          },
+          {
+            "author": "MotokoAGI",
+            "body": "You will get more than 10t/s.  Have fun.",
+            "score": 2
+          },
+          {
+            "author": "CoolConfusion434",
+            "body": "It will run. Won't be breaking any speed records but it works for simple local hosted stuff while on a laptop. I've actually run the same Qwen3.6 35B using LM Studio/llama.cpp as host on a.... don't laugh... 4Gb VRAM, 32GB CPU RAM laptop. Yup :-) It drags its butt but that's not the point. T/s speed = it loads.\n\nFor summarization work, a smaller model can be more effective. I'm guessing Gemma 4 E4B would do fine and improve your token/s rate.",
+            "score": 1
+          },
+          {
+            "author": "Lost-Health-8675",
+            "body": "Go for it! It will run great, it is a moe structure. But in my opinion it will run a lot faster with llama.cpp",
+            "score": 1
+          },
+          {
+            "author": "guiopen",
+            "body": "That 40gb might be a problem, I'm assuming it's 1 stick with 32gb and another with 8? So from the 40gb, only 16 will run in dual channel, + 6gb of vram, 22 in total, if the model + context + overhead is bigger than 22, there will be a slowdown due to single channel memory usage, and that is assuming the OS is smart enough to prioritize putting the model on the dual channel rather than other processes\n\nBut I have a config very similar to yours but 16+16 memory and 3050 6gb, using iq4_nl I get 20 tokens per second in generation and 600 in prompt processing by increasing ubatch to 2048, otherwise it is 300. you will get similar generation speeds, but your prompt processing will be better due to stronger GPU",
+            "score": 1
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ss2lib/an_actual_example_of_if_you_dont_run_it_you_dont/",
+      "author": "ThisGonBHard",
+      "title": "An actual example of \"If you dont run it, you dont own it\" and Gemma 4 beats both Chat GPT and Gemini Chat",
+      "text": "A bit of an interesting story of model degradation and censorship.\n\nSo, one of my use cases for AI has been translating and reading an Chinese novel as it appears, chapter by chapter.\n\nDue to the way some characters have secret identities plot points, and the AI had to follow context clues for the translation + consistency reasons too, I had to prompt the AI to look for them, and chose the correct name when translating.\n\nWhen I originally started it, the main available models were GPT OOS 120B (slow), Qwen 3 max and the free Chat GPT 4o.\n\nTried GPT OSS 120B initially, it failed, mixed names and sometimes made new ones consistently.\n\nThen, I used Qwen 3 Max for it. Better, but still has an 20% fail rate. Then, it consistently started getting censorship filtered (despite no NSFW).\n\nThen tried the free Chat GPT version at the time, 4o, and it was by far the best. Names were correct all the time, and translation quality itself was top notch.\n\nSome times later, with the 5.2 updates, it starts failing on 20% of the queries. Then I see A-B testing, with one of the versions consistently failing the translations, choosing the wrong name.\n\nNow, with GPT 5.3, the A-B testing seems done, and they deployed the worse version for the users, to the point it is comparable to the old Qwen 3 Max.\n\nNow, this made me curious to retest the current state of the art local models for translation. And to my surprise, Gemma 4 31B wipes the floor with the closed models. Quality is very similar to peak GPT 4o.\n\nThis made me curious to retest the same prompt and chapter on some of the open and close models, results are positive for us:\n\n|Model|PASS/FAIL|INFO|\n|:-|:-|:-|\n|GPT OOS 120B|FAIL|Merges characters names|\n|Qwen 3 Max|FAIL (CENSORED)|Ok writing, but model got censored and autodeleted|\n|Qwen 3.6 Plus|FAIL (CENSORED)|Good writing, but model got censored and autodeleted|\n|Chat GPT 5.3|FAIL|Messes up correct character name, unnaturally feeling translation|\n|Gemma 4 31B|PASS|Good translation, feels natural, and is fast|\n|Qwen 3.5 27B|PARTIAL PASS|Similar to Gemma 4, a bit less natural sounding and messes character pronouns (calls a Lady a Lord)|\n|Gemini Chat|PARTIAL PASS|Surprisingly, worse than Gemma 4, a bit less natural sounding and messes character pronouns (calls a Lady a Lord)|\n\n\n\nHolly molly, I did the test AFTER I started writing this post. How the hell does Gemma 4 at Q4 beats both Gemini and GPT 5.3? Is the Gemini Google using really worse than Gemma wtf?!",
+      "body_full": null,
+      "timestamp": "2026-04-21T22:13:47Z",
+      "score": 133,
+      "metadata": {
+        "num_comments": 27,
+        "upvote_ratio": 0.96,
+        "link_flair_text": "Discussion",
+        "comments": [
+          {
+            "author": "Uncle___Marty",
+            "body": "Google did something with the language abilities of Gemma 4 which really puts it in a class of its own. I've seen SO many posts praising gemma 4 for this. I was a little disappointed with Gemma at first because it felt like Qwen 3.5 was better than it, but it turns out that they're both amazing little models which excel in different areas.\n\nAnd you know what? The really mind blowing part is people like us are just being handed these models for free. I have SO much love for the gemma team and alibaba.",
+            "score": 106
+          },
+          {
+            "author": "Potential-Gold5298",
+            "body": "You are not the only one who came to these conclusions:\n\n[https://dubesor.de/benchtable](https://dubesor.de/benchtable)\n\n[https://foodtruckbench.com/#leaderboard](https://foodtruckbench.com/#leaderboard)\n\nThe RP community has been stuck with Mistral Nemo and Mistral Small (both two years old) simply because there was nothing better of comparable size. Now, they finally have a decent model for RP/creative writing.\n\nGemma 4 is an incredible model with many talents.",
+            "score": 41
+          },
+          {
+            "author": "Ok-Measurement-1575",
+            "body": "There is something quite special about 3.6 35b. \n\n\nMaybe try it.",
+            "score": 17
+          },
+          {
+            "author": "sine120",
+            "body": "Gemini Flash has tanked recently.  I don't know if Google held back a larger Gemma, but if they released it, it'd definitely beat flash now.",
+            "score": 10
+          },
+          {
+            "author": "Sevenos",
+            "body": "I love Gemma 4 as a (German) chat bot as well, so good at formulating and structuring responses and very very few language mistakes.\n\nIt's the first one I actually use and not just toy around with. \n\nReally hope they release a larger version of it, but I already prefer it over Gemini in some cases so they probably hold it back.\n\nWeirdly enough Google / Deepmind seem to be pretty much at the top when it comes to ethics as well.",
+            "score": 8
+          }
+        ]
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ss0qit/built_an_android_app_that_exposes_gemma_4_as_an/",
+      "author": "angolo40",
+      "title": "Built an Android app that exposes Gemma 4 as an OpenAI-compatible endpoint on your LAN",
+      "text": "My old Samsung S10 was sitting in a drawer so I turned it into an always-on LLM endpoint. \n\nPocketPal is great for on-phone chat, but I wanted the phone itself to be an OpenAI-compatible endpoint for the rest of my network. Gets 13.76 tok/s on Gemma 4 E2B (GPU), enough for real chat.\n\nVicinoLLM is an Android app that runs Gemma 4 locally via Google's LiteRT-LM SDK and exposes an OpenAI-compatible server on :8080. Point any OpenAI client (Python SDK, OpenWebUI, Home Assistant) at [http://phone-ip:8080/v1](http://phone-ip:8080/v1) and it works.\n\nBundles a ChatGPT-style web UI on the same port. Apache 2.0, LAN-only, zero Firebase/analytics/Play Services.\n\n\n\nFeatures:\n\n\\- /v1/chat/completions with SSE streaming, multimodal content parts (text + images + audio + PDF)\n\n\\- Multi-model routing (load several, request picks)\n\n\\- Auto-restore after Samsung mem-killer nukes the service\n\n\\- Optional API key, web UI bypasses it so local access keeps working\n\n\n\nPerformance (warm decode):\n\n\\- S10 (Mali-G76) + E2B GPU: 13.76 tok/s\n\n\\- S24 Ultra (Adreno 750) + E2B GPU: 32.78 tok/s\n\n\n\nCaveats:\n\n\\- Gemma only. LiteRT-LM's pipeline is hardcoded. Use llama.cpp JNI / MLC-LLM for other families.\n\n\\- E4B (3.65 GB) OOMs on <12 GB RAM devices.\n\n\\- arm64-v8a only, no tool-calling yet.\n\n\\- Don't expose :8080 publicly. Use Tailscale/WireGuard for remote.\n\n\n\nRepo: [https://github.com/angolo40/vicino-llm](https://github.com/angolo40/vicino-llm)\n\n\n\nPerf numbers from other devices very welcome, I only have the two Samsungs.",
+      "body_full": null,
+      "timestamp": "2026-04-21T21:03:44Z",
+      "score": 1,
+      "metadata": {
+        "num_comments": 0,
+        "upvote_ratio": 0.6,
+        "link_flair_text": "Resources"
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 3310,
+  "fetched_at": "2026-04-22T06:21:28.820230Z"
+}

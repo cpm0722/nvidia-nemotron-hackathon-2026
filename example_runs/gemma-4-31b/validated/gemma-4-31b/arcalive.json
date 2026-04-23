@@ -1,0 +1,57 @@
+{
+  "source": "arcalive",
+  "ok": true,
+  "items": [
+    {
+      "source": "arcalive",
+      "source_detail": "arca.live/b/alpaca",
+      "url": "https://arca.live/b/alpaca/168108771",
+      "author": null,
+      "title": "gemma-4-31b-it vllm FP8+int4 3종 비교 (AutoRound, AWQ cyanwiki, AWQ QuantTrio)",
+      "text": "gemma-4-31b-it 가 마음에 들어서 계속 써보다 보니,\n그나마 괜찮은 양자화 모델을 써보고 싶어서 이것저것 받아 테스트 해봤습니다.\n테스트 모델\nRedHatAI/gemma-4-31B-it-FP8-block\nQuantTrio/gemma-4-31B-it-AWQ\nIntel/gemma-4-31B-it-int4-AutoRound\ncyankiwi/gemma-4-31B-it-AWQ-4bit\nFP8-block 은 per-channel이나 per-tensor scale을 사용하는 FP8-Dynamic과 달리 블록스케일을 사용합니다.\n기본 블록은 128x128이네요. 아무래도 FP8-Dynamic보다 품질이 좋을 것 같습니다.\n캘리브레이션이 필요없는 model free 양자화가 가능하고 int4보다 품질이 좋으니 무난하게 쓰기 좋습니다.\n대신 VRAM을 int4보다 많이 먹죠.\n더 자세한 정보는 아래를 참고하세요.\nhttps://docs.vllm.ai/projects/llm-compressor/en/latest/guides/compression_schemes/#fp8_dynamic\nQuantTrio랑 cyanwiki는 AWQ 양자화로 네임드고, AutoRound는 Intel이 자기꺼라 챙기더군요.\nRecovery 테스트\nlm-eval 로 gsm8k_platinum_cot_llama,hrm8k_gsm8k 두 개 태스크를 돌렸습니다. (오랜만에 lm-eval 돌렸네요.)\nmmlu 같이 무거운 건 돌리기 힘들어서 간단하게 2개만 돌렸어요.\n명령어는 RedHatAI의 명령을 참고했습니다.\nRedHat은 양자화 재현 코드와 recovery 벤치마크를 제공해서 좋습니다.\n다만, 요새는 FP8이랑 NVFP4만 올리고 AWQ나 GPTQ를 안올려줘서 아쉽네요.\n테스트는 2x3090으로 vllm 구동시켰습니다. vllm 구동옵션은\nhttps://arca.live/b/alpaca/167705779\n이걸 참고해주세요.\n(FP8은 --kv-cache-memory-bytes 5G로 줬습니다.)\nlm-eval 구동옵션\nOPENAI_API_KEY=$MY_APIKEY lm_eval --model local-chat-completions \\\n  --tasks gsm8k_platinum_cot_llama,hrm8k_gsm8k \\\n  --model_args \"model=<MODEL_NAME>,max_length=64000,num_concurrent=8,max_retries=3,tokenized_requests=False,tokenizer_backend=None,timeout=2400,base_url=\nhttp://0.0.0.0:8000/v1/chat/completions\n\" \\\n  --num_fewshot 5 \\\n  --apply_chat_template \\\n  --fewshot_as_multiturn \\\n  --seed 1234 \\\n  --gen_kwargs \"do_sample=True,temperature=1.0,top_p=0.95,top_k=64,max_gen_toks=32000,seed=1234\"\n테스트 결과\n| Model                             | gsm8k_platinum (flexible) | gsm8k_platinum (strict) |     hrm8k_gsm8k |\n| :-------------------------------- | ------------------------: | ----------------------: | --------------: |\n| **gemma-4-31B-it-FP8**            |           0.9760 ± 0.0044 |         0.9777 ± 0.0043 | 0.9174 ± 0.0076 |\n| **gemma-4-31B-it-AWQ**            |           0.9719 ± 0.0048 |         0.9727 ± 0.0047 | 0.9098 ± 0.0079 |\n| **gemma-4-31B-it-int4-AutoRound** |           0.9744 ± 0.0045 |         0.9744 ± 0.0045 | 0.9151 ± 0.0077 |\n| **gemma-4-31B-it-AWQ-4bit**       |           0.9744 ± 0.0045 |         0.9744 ± 0.0045 | 0.9052 ± 0.0081 |\n* AWQ : QuantTrio, AWQ-4bit: cyankiwi\n그냥 써봤을 때는 AutoRound가 AWQ보다 별로였던 것 같았는데, 벤치마크 점수는 높게 나왔네요.\nQuantTrio랑 cyankiwi는 gsm8k는 cyankiwi가 높앟고, hrm8k_gsm8k(한국어)는 QuantTrio가 높게 나왔습니다.\n생성속도 테스트\nllama-benchy를 이용하였습니다.\npp 2048, tg 1024로 concurrency 1 4 8, depth 0 5000 10000 별로 2회씩 테스트하였습니다.\n(여러번 돌리기엔 테스트 시간이ㅠㅠ)\nllama-benchy --base-url\nhttp://localhost:8000/v1\n--model <MODEL_NAME> --api-key $MY_APIKEY --tokenizer AI-45/Intel_gemma-4-31B-it-int4-AutoRound --pp 2048 --tg 1024 --runs 2 --concurrency 1 4 8 --depth 0 5000 10000\n(AI 시키긴 했는데, 실수가 없어보였습니다.)\ndecode쪽 그래프를 보면 중간에 혼자 느린 부분이 있는데, 아마 kv cache가 작아서 저런 게 아닐까 추측합니다.\n당연히 FP8가 속도가 느린데(3090은 fp8을 제대로 지원하지 못합니다.)\n의외로 AutoRound가 decode에서 AWQ보다 유의미하게 빨랐습니다.\nprefill은 FP8을 제외하곤 비슷한 속도였습니다. (AutoRound가 조금 더 빠르네요.) 아마 메모리 대역폭을 따라가지 않나 싶네요.\n결론?\n저는 주로 AWQ를 이용했는데 4bit 모델을 돌릴 때 AutoRound도 염두에 둬야겠습니다.\n개인적으로는 AutoRound 사용하다 AWQ에 없던 영어 섞임을 경험했었는데 그건 그냥 운일 수 있으니까요.\ngsm8k가 외국어 섞임을 판단하는 테스트가 아니지만 일단 벤치마크는 AutoRound가 좋았습니다.\n그리고 저는 cyankiwi를 더 선호했었는데, 예전에 cyankiwi가 AWQ를 더 빨리냈던 기억때문입니다.\n요새는 급하게 올리다 실수도 내고, QuantTrio가 더 낫다는 이야기도 있고 그러네요.\n둘 중에 먼저 올라온 거 쓰면 될 거 같습니다.\nVRAM이 충분하면 FP8도 괜찮을 거 같습니다. FP8을 지원하는 하드웨어라면 생성속도도 크게 느리지 않을 거 같네요.\n캘리브레이션이 필요없어서 llm-compressor로 금방 양자화 가능합니다.\n끝",
+      "body_full": null,
+      "timestamp": "2026-04-18T22:46:59Z",
+      "score": 17,
+      "metadata": {
+        "rank": 1,
+        "dislike": 0,
+        "num_comments": 5,
+        "comments": [
+          {
+            "user_nickname": "rlaflszld",
+            "comment_body": "오토라운드가 현재 가장 빠르고 품질저하도 없으며 압축도 잘되는 양자화 방식인거 같음.\n3비트,2비트 발전 가능성도 크고",
+            "replies": [
+              {
+                "user_nickname": "John",
+                "comment_body": "동감",
+                "replies": []
+              },
+              {
+                "user_nickname": "bedovyy",
+                "comment_body": "그런가봐요. 조금 다시보는 계기가 됐습니다.",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "user_nickname": "끼랑까랑",
+            "comment_body": "의외로 fp8이랑 awq랑 속도차이가 거의없네요?\n\nvram이 충분하면 fp8 블록돌리는게 좋은걸까요",
+            "replies": [
+              {
+                "user_nickname": "bedovyy",
+                "comment_body": "concurrency 높을 때 프리필 떨어지는 건 kv cache vram이 절반 잡혀서 그런 거 같고, c1은 프리필 차이도 없네요.\n\nfp8 제대로 지원하면 성능저하도 더 적을 거고, w8a8이니 kv cache fp8 줘도 성능 저하  없을거고요.",
+                "replies": []
+              }
+            ]
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.9,
+        "validator_reason": "detailed quantization test"
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 3424,
+  "fetched_at": "2026-04-22T06:21:28.934580Z"
+}

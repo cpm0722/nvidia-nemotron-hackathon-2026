@@ -1,0 +1,101 @@
+{
+  "source": "reddit",
+  "ok": true,
+  "items": [
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ssb61r/personal_eval_followup_gemma4_26b_moe_q8_vs/",
+      "author": "Lowkey_LokiSN",
+      "title": "Personal Eval follow-up: Gemma4 26B MoE (Q8) vs Qwen3.5 27B Dense vs Gemma4 31B Dense Compared",
+      "text": "This is a follow-up update to my [previous post comparing Qwen 3.6 35B vs Gemma 4 26B](https://www.reddit.com/r/LocalLLaMA/comments/1soc98n/qwen_36_35b_crushes_gemma_4_26b_on_my_tests/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button). \n\nI wanted to particularly follow-up with the following:\n1. Gemma 4 26B could've suffered the quantization tax and perform drastically better with an 8-bit quant. So I wanted to put that to the test with UD's Q8_K_XL this time\n2. A lot of people (including myself) were curious to see how the Qwen 3.5 27B dense would perform in these tests.\n3. Speaking of dense models, I also wanted to include the Gemma 4 31B to see how it performs. \n\nSharing results consolidated with previous run for a complete comparison\n\n---\n## 1. Test Results\n\n| Metric                  | Qwen3.6-35B Q4 | Gemma4-26B Q4 | Gemma4-26B Q8 | Qwen3.5-27B Q4 | **Gemma4-31B Q4** |\n| ----------------------- | -------------- | ------------- | ------------- | -------------- | ----------------- |\n| Baseline failures       | 37             | 37            | 37            | 37             | 37                |\n| **Tests fixed**         | 32 (86.5%)     | 28 (75.7%)    | 17 (45.9%)    | **37 (100%)**  | **37 (100%)**     |\n| **Regressions**         | **0**          | 8             | **0**         | **0**          | **0**             |\n| **Net score**           | 32             | 20            | 17            | **37**         | **37**            |\n| Still failing (of 37)   | 5              | 9             | 20            | **0**          | **0**             |\n| Post-run total failures | 5              | 17            | 20            | **0**          | **0**             |\n| Guardrail violations    | 0              | 0             | 0             | 0              | 0                 |\n\n---\n\n## 2. Token Usage\n\n| Metric | Qwen3.6 Q4 | Gemma4 26B Q4 | Gemma4 26B Q8 | Qwen3.5-27B Q4 | **Gemma4 31B Q4** |\n|---|---|---|---|---|---|\n| Input tokens | 634,965 | 1,005,964 | 703,732 | 553,137 | 1,115,666 |\n| Output tokens | 39,476 | 89,750 | 68,055 | 42,183 | 62,465 |\n| **Grand total (I+O)** | 674,441 | 1,095,714 | 771,787 | **595,320** | 1,178,131 |\n| Cache read tokens | 4,241,502 | 3,530,520 | 3,044,400 | **7,518,047** | 3,335,808 |\n| Output/Input ratio | 1:16 | 1:11 | 1:10 | 1:13 | 1:17 |\n| **Tokens per fix** | ~21K | ~39K | ~45K | **~16K** | ~32K |\n| **Tokens per net score point** | ~21K | ~55K | ~45K | **~16K** | ~32K |\n\n---\n\n## 3. Tool Calls\n\n| Tool | Qwen3.6 Q4 | Gemma4 26B Q4 | Gemma4 26B Q8 | Qwen3.5-27B Q4 | **Gemma4 31B Q4** |\n|---|---|---|---|---|---|\n| read | 46 | 39 | 25 | **91** (1 err) | 37 |\n| bash | **33** | 30 | 31 | 23 | 29 |\n| edit | 14 | 13 | 12 (1 err) | **31** | 21 |\n| grep | 16 | 10 | 6 | **33** | 6 |\n| write | 1 | 0 | 4 | 1 | 1 |\n| glob | 1 | 1 | 3 | 1 | 2 |\n| todowrite | 4 | 3 | 1 | 1 | 4 |\n| **Total** | 115 | 96 | 82 | **181** | 100 |\n| Successful | 115 (100%) | 96 (100%) | 81 (98.8%) | 180 (99.4%) | **100 (100%)** |\n| Failed | 0 | 0 | 1 | 1 | 0 |\n\n| Derived Metric | Qwen3.6 Q4 | Gemma4 26B Q4 | Gemma4 26B Q8 | Qwen3.5-27B Q4 | **Gemma4 31B Q4** |\n|---|---|---|---|---|---|\n| Unique files read | 18 | 27 | 19 | 23 | 27 |\n| Unique files edited | 7 | 13 | 9 | 9 | 12 |\n| Reads per unique file | 2.6 | 1.4 | 1.3 | **4.0** | 1.4 |\n| Tool calls per minute | **2.3** | 1.1 | 1.2 | 1.2 | 0.16 |\n| Edits per fix | 0.44 | 0.46 | 0.65 | 0.84 | 0.57 |\n| Bash (pytest) runs | **33** | 30 | 31 | 23 | 29 |\n\n---\n\n## 4. Timing & Efficiency\n\n| Metric                | Qwen3.6 Q4       | Gemma4 26B Q4 | Gemma4 26B Q8 | Qwen3.5-27B Q4 | **Gemma4 31B Q4** |\n| --------------------- | ---------------- | ------------- | ------------- | -------------- | ----------------- |\n| **Wall clock**        | **2,950s (49m)** | 5,129s (85m)  | 4,142s (69m)  | 8,698s (145m)  | 37,748s (629m)    |\n| Total steps           | 120              | 104           | 88            | 186            | 109               |\n| **Avg step duration** | **10.0s**        | 21.7s         | 24.0s         | 15.9s          | **82.2s**         |\n\n---\n\n## 5. Model & Server Configuration\n\n| Property          | Qwen3.6-35B Q4 | Gemma4-26B Q4 | Gemma4-26B Q8 | Qwen3.5-27B Q4 | **Gemma4-31B Q4** |\n| ----------------- | -------------- | ------------- | ------------- | -------------- | ----------------- |\n| Total parameters  | 35B            | 26B           | 26B           | 27B            | 31B               |\n| Active parameters | **3B**         | 4B            | 4B            | 27B            | 31B               |\n| Quantization      | Q4_K_XL        | Q4_K_XL       | Q8_K_XL       | Q4_K_XL        | Q4_K_XL           |\n| Context           | 100,000        | 100,000       | 100,000       | 100,000        | 100,000           |\n| temperature       | 0.6            | 1.0           | 1.0           | **0.6**        | 1.0               |\n| top_p             | 0.95           | 0.95          | 0.95          | 0.95           | 0.95              |\n| top_k             | 20             | 64            | 64            | **20**         | 64                |\n\n---\n## Key Observations\n\n- Gemma 4 26B's performance remains in the same ballpark even with Q8. It performed slightly worse than Q4 in this run but that variance is likely noise. I'll stick with my Q4_K_XL quant\n- Both Qwen 3.5 27B and Gemma 4 31B aced the test. The dense models are in a different league from the MoE ones. (Especially the Gemma 31B)\n- Gemma 4 31B is the most efficient when it comes to tool calling. It fixed all issues in 100 error-free tool calls\n- Qwen 3.5 27B is the most token-efficient expending an average of 16k tokens per fix.\n- Gemma 4 31B also exhibited extremely low inference speeds for some reason and ran ***for 10 hours and 29 minutes*** due to the abysmally slow speeds. DRAM also bloated upto 70GB even with -cram and -ctkcp flags. I'm not sure if this is expected.\n\nI'd say Gemma4 31B is objectively the most capable in my tests but it's also the slowest of the bunch with my setup. Qwen 3.5 27B follows up with comparable performance at a lot more tolerable speeds. Qwen 3.6 35B remains the speed-to-performance champ and will remain being my daily driver for the same reason.",
+      "body_full": null,
+      "timestamp": "2026-04-22T04:30:41Z",
+      "score": 42,
+      "metadata": {
+        "num_comments": 14,
+        "upvote_ratio": 0.96,
+        "link_flair_text": "Discussion",
+        "comments": [
+          {
+            "author": "Reactor-Licker",
+            "body": "What hardware are you using?",
+            "score": 4
+          },
+          {
+            "author": "onil_gova",
+            "body": "Did you, by any chance, ensure that `preserve_thinking` was on for the Qwen3.6 model?",
+            "score": 3
+          },
+          {
+            "author": "Worried-Squirrel2023",
+            "body": "the qwen 3.6 35B-A3B vs dense 31B comparison is the real signal here. if MoE 3B-active beats a dense 31B at coding tasks, the dense models below 70B are basically obsolete for local agents. throughput plus quality at the same vram budget.",
+            "score": 3
+          },
+          {
+            "author": "Sadman782",
+            "body": "Can you try gemma 4 26B with topk 20, topk 64 doesn't make sense for coding even if google recommended it specially for a quantized MoE model, I find it does significantly better with topk 20.",
+            "score": 2
+          },
+          {
+            "author": "Alternative_Win_6154",
+            "body": "Cloud you try the Q8 of the Qwen 3.6 35b? because the Q4 affects much more the moe models.",
+            "score": 2
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.95,
+        "validator_reason": "direct comparison of Gemma 4 31B"
+      }
+    },
+    {
+      "source": "reddit",
+      "source_detail": "r/LocalLLaMA",
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1ss2lib/an_actual_example_of_if_you_dont_run_it_you_dont/",
+      "author": "ThisGonBHard",
+      "title": "An actual example of \"If you dont run it, you dont own it\" and Gemma 4 beats both Chat GPT and Gemini Chat",
+      "text": "A bit of an interesting story of model degradation and censorship.\n\nSo, one of my use cases for AI has been translating and reading an Chinese novel as it appears, chapter by chapter.\n\nDue to the way some characters have secret identities plot points, and the AI had to follow context clues for the translation + consistency reasons too, I had to prompt the AI to look for them, and chose the correct name when translating.\n\nWhen I originally started it, the main available models were GPT OOS 120B (slow), Qwen 3 max and the free Chat GPT 4o.\n\nTried GPT OSS 120B initially, it failed, mixed names and sometimes made new ones consistently.\n\nThen, I used Qwen 3 Max for it. Better, but still has an 20% fail rate. Then, it consistently started getting censorship filtered (despite no NSFW).\n\nThen tried the free Chat GPT version at the time, 4o, and it was by far the best. Names were correct all the time, and translation quality itself was top notch.\n\nSome times later, with the 5.2 updates, it starts failing on 20% of the queries. Then I see A-B testing, with one of the versions consistently failing the translations, choosing the wrong name.\n\nNow, with GPT 5.3, the A-B testing seems done, and they deployed the worse version for the users, to the point it is comparable to the old Qwen 3 Max.\n\nNow, this made me curious to retest the current state of the art local models for translation. And to my surprise, Gemma 4 31B wipes the floor with the closed models. Quality is very similar to peak GPT 4o.\n\nThis made me curious to retest the same prompt and chapter on some of the open and close models, results are positive for us:\n\n|Model|PASS/FAIL|INFO|\n|:-|:-|:-|\n|GPT OOS 120B|FAIL|Merges characters names|\n|Qwen 3 Max|FAIL (CENSORED)|Ok writing, but model got censored and autodeleted|\n|Qwen 3.6 Plus|FAIL (CENSORED)|Good writing, but model got censored and autodeleted|\n|Chat GPT 5.3|FAIL|Messes up correct character name, unnaturally feeling translation|\n|Gemma 4 31B|PASS|Good translation, feels natural, and is fast|\n|Qwen 3.5 27B|PARTIAL PASS|Similar to Gemma 4, a bit less natural sounding and messes character pronouns (calls a Lady a Lord)|\n|Gemini Chat|PARTIAL PASS|Surprisingly, worse than Gemma 4, a bit less natural sounding and messes character pronouns (calls a Lady a Lord)|\n\n\n\nHolly molly, I did the test AFTER I started writing this post. How the hell does Gemma 4 at Q4 beats both Gemini and GPT 5.3? Is the Gemini Google using really worse than Gemma wtf?!",
+      "body_full": null,
+      "timestamp": "2026-04-21T22:13:47Z",
+      "score": 133,
+      "metadata": {
+        "num_comments": 27,
+        "upvote_ratio": 0.96,
+        "link_flair_text": "Discussion",
+        "comments": [
+          {
+            "author": "Uncle___Marty",
+            "body": "Google did something with the language abilities of Gemma 4 which really puts it in a class of its own. I've seen SO many posts praising gemma 4 for this. I was a little disappointed with Gemma at first because it felt like Qwen 3.5 was better than it, but it turns out that they're both amazing little models which excel in different areas.\n\nAnd you know what? The really mind blowing part is people like us are just being handed these models for free. I have SO much love for the gemma team and alibaba.",
+            "score": 106
+          },
+          {
+            "author": "Potential-Gold5298",
+            "body": "You are not the only one who came to these conclusions:\n\n[https://dubesor.de/benchtable](https://dubesor.de/benchtable)\n\n[https://foodtruckbench.com/#leaderboard](https://foodtruckbench.com/#leaderboard)\n\nThe RP community has been stuck with Mistral Nemo and Mistral Small (both two years old) simply because there was nothing better of comparable size. Now, they finally have a decent model for RP/creative writing.\n\nGemma 4 is an incredible model with many talents.",
+            "score": 41
+          },
+          {
+            "author": "Ok-Measurement-1575",
+            "body": "There is something quite special about 3.6 35b. \n\n\nMaybe try it.",
+            "score": 17
+          },
+          {
+            "author": "sine120",
+            "body": "Gemini Flash has tanked recently.  I don't know if Google held back a larger Gemma, but if they released it, it'd definitely beat flash now.",
+            "score": 10
+          },
+          {
+            "author": "Sevenos",
+            "body": "I love Gemma 4 as a (German) chat bot as well, so good at formulating and structuring responses and very very few language mistakes.\n\nIt's the first one I actually use and not just toy around with. \n\nReally hope they release a larger version of it, but I already prefer it over Gemini in some cases so they probably hold it back.\n\nWeirdly enough Google / Deepmind seem to be pretty much at the top when it comes to ethics as well.",
+            "score": 8
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.65,
+        "validator_reason": "discusses Gemma 4 performance vs ChatGPT"
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 3310,
+  "fetched_at": "2026-04-22T06:21:28.820230Z"
+}

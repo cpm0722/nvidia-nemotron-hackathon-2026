@@ -1,0 +1,273 @@
+{
+  "source": "benchmark",
+  "ok": true,
+  "items": [
+    {
+      "source": "huggingface",
+      "source_detail": "huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4",
+      "url": "https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4",
+      "author": null,
+      "title": "Gemma-4-31B-IT-NVFP4",
+      "text": "Gemma-4-31B-IT-NVFP4 benchmarks from HuggingFace model card: GPQA Diamond=75.71%, AIME 2025=66.25%, MMLU Pro=85.25%, LiveCodeBench (pass@1)=70.90%, Scicode subtask acc (pass@1)=33.61%, Terminal-Bench Hard (pass@1)=27.08%",
+      "body_full": "---\npipeline_tag: text-generation\nbase_model:\n- google/gemma-4-31B-it\nlicense: other\nlicense_name: apache-license-2.0 \nlicense_link: https://ai.google.dev/gemma/apache_2\nlibrary_name: Model Optimizer\ntags:\n- nvidia\n- ModelOpt\n- Gemma-4-31B-IT\n- lighthouse\n- quantized\n- NVFP4\n---\n# Model Overview\n\n## Description:\nGemma 4 31B IT is an open multimodal model built by Google DeepMind that handles text and image inputs, can process video as sequences of frames, and generates text output. It is designed to deliver frontier-level performance for reasoning, agentic workflows, coding, and multimodal understanding on consumer GPUs and workstations, with a 256K-token context window and support for over 140 languages. The model uses a hybrid attention mechanism that interleaves local sliding-window and full global attention, with unified Keys and Values in global layers and Proportional RoPE (p-RoPE) to support long-context performance. The NVIDIA Gemma 4 31B IT NVFP4 model is quantized with [NVIDIA Model Optimizer](https://github.com/NVIDIA/TensorRT-Model-Optimizer).\n\nThis model is ready for commercial/non-commercial use.  <br> \n\n# Third-Party Community Consideration\nThis model is not owned or developed by NVIDIA. This model has been developed and built to a third-party's requirements for this application and use case; see link to Non-NVIDIA [Gemma 4 31B IT Model Card](https://huggingface.co/google/gemma-4-31B-it)\n\n## License and Terms of Use:\n[Apache License 2.0  |  Gemma  |  Google AI for Developers](https://ai.google.dev/gemma/apache_2)\n\n## Deployment Geography:\nGlobal\n\n## Use Case:\n**Use Case:** Designed for text generation, chatbots and conversational AI, text summarization, image data extraction, reasoning, coding, multimodal understanding, function calling, and research or educational use.\n\n## Release Date:\nHugging Face [04/02/2026] via [link] (https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4)\n\n## Model Architecture:\n**Architecture Type:** Transformer <br>\n**Network Architecture:** Gemma 4<br>\n**Number of model parameters:** 30.7B\n**Vocabulary Size:** 262,144\n\n\n## Input:\n**Input Type(s):** Text, Image, Video <br>\n**Input Format(s):** String, Red, Green, Blue (RGB), Video (MP4/WebM) <br>\n**Input Parameters:** One-Dimensional (1D), Two-Dimensional (2D), Three-Dimensional (3D)<br>\n**Other Properties Related to Input:** Supports variable image aspect ratios and resolutions, configurable visual token budgets of 70, 140, 280, 560, and 1120, and video inputs up to 60 seconds at one frame per second. <br>\n**Input Context Length (ISL):** 256K\n\n\n## Output:\n**Output Type(s):** Text <br>\n**Output Format:** String <br>\n**Output Parameters:** 1D (One Dimensional): Sequences <br>\n**Other Properties Related to Output:** Generates text responses for chat, reasoning, coding, multimodal understanding, and function-calling workflows.\n\n__Our AI models are designed and/or optimized to run on NVIDIA GPU-accelerated systems. By leveraging NVIDIA's hardware (e.g. GPU cores) and software frameworks (e.g., CUDA libraries), the model achieves faster training and inference times compared to CPU-only solutions.__\n\n## Software Integration:\n**Supported Runtime Engine(s):** <br>\n* vLLM <br>\n\n**Supported Hardware Microarchitecture Compatibility:** <br>\nNVIDIA Blackwell <br>\n\n**Preferred Operating System(s):** <br>\n* Linux <br>\n\n## Model Version(s):\nThe model version is v1.0 which NVFP4 quantized with nvidia-modelopt **v0.42.0**  <br>\n\n## Training, Testing, and Evaluation Datasets:\n\nWe calibrated the model using the dataset noted below, and performed evaluation using the benchmarks noted under Evaluation Datasets.\nWe did not perform training or testing for this Model Optimizer release. The methods noted under Training and Testing Datasets below represent the data collection and labeling methods used by the third-party to train and test the underlying Gemma 4 31B IT model.<br>\n\n## Calibration Dataset:\n**Link:** [cnn_dailymail](https://huggingface.co/datasets/abisee/cnn_dailymail)<br>\n**Data Collection Method by dataset:** Automated. <br>\n**Labeling Method by dataset:** Automated. <br>\n**Properties:** The cnn_dailymail dataset is an English-language dataset containing just over 300k unique news articles as written by journalists at CNN and the Daily Mail.\n\n**Training Dataset**\n**Data Modality:** Text, Image, Audio, Other (Code)<br>\n**Training Data Collection:** Automated<br>\n**Training Labeling:** Undisclosed<br>\n**Training Properties:** Large-scale multimodal pre-training data spanning web documents, code, images, and audio, with a cutoff date of January 2025 and coverage in over 140 languages. Data was filtered for CSAM, sensitive data, quality, and safety.<br>\n\n**Testing Dataset**\n**Testing Data Collection:** Undisclosed<br>\n**Testing Labeling:** Undisclosed<br>\n**Testing Properties:** Undisclosed<br>\n\n## Evaluation Dataset:\n**Data Collection Method by dataset:** Hybrid: Human, Automated <br>\n**Labeling Method by dataset: Hybrid:** Human, Automated <br>\n**Properties:** We evaluated the model on benchmarks including GPQA, which is a dataset of 448 multiple-choice questions written by domain experts in biology, physics, and chemistry. <br>\n\n\n## Inference:\n**Engine:** vLLM <br>\n**Test Hardware:** NVIDIA Hopper H100 <br>\n\n## Post Training Quantization\nThis model was obtained by quantizing the weights and activations of Gemma-4-31B-IT-NVFP4 to NVFP4 data type, ready for inference with vLLM.  \n\n## Usage\n\nTo serve this checkpoint with [vLLM]( 0.17.2rc1.dev104+gae521202f.d20260319.cu128) and run the sample command below:\n\n```sh\nvllm serve /models/gemma-4-31b-it-nvfp4 --quantization modelopt --tensor-parallel-size 8\n```\n\n\n## Evaluation Results:\n\n| Benchmark | Baseline (BF16) | NVFP4 |\n|---|---|---|\n| GPQA Diamond | 75.71% | 75.46% |\n| AIME 2025 | 66.25% | 65.94% |\n| MMLU Pro | 85.25% | 84.94% |\n| LiveCodeBench (pass@1) | 70.90% | 70.63% |\n| Scicode subtask acc (pass@1) | 33.61% | 33.18% |\n| Terminal-Bench Hard (pass@1) | 27.08% | 27.08% |\n\n## Model Limitations:\nThe base model was trained on data that contains toxic language and societal biases originally crawled from the internet. Therefore, the model may amplify those biases and return toxic responses especially when prompted with toxic prompts. The model may generate answers that may be inaccurate, omit key information, or include irrelevant or redundant text producing socially unacceptable or undesirable text, even if the prompt itself does not include anything explicitly offensive.\n\n## Ethical Considerations\n\nNVIDIA believes Trustworthy AI is a shared responsibility and we have established policies and practices to enable development for a wide array of AI applications.  When downloaded or used in accordance with our terms of service, developers should work with their internal model team to ensure this model meets requirements for the relevant industry and use case and addresses unforeseen product misuse.\n\nPlease make sure you have proper rights and permissions for all input image and video content; if image or video includes people, personal health information, or intellectual property, the image or video generated will not blur or maintain proportions of image subjects included.\n\nPlease report model quality, risk, security vulnerabilities or NVIDIA AI Concerns [here](https://www.nvidia.com/en-us/support/submit-security-vulnerability/).\n",
+      "timestamp": null,
+      "score": null,
+      "metadata": {
+        "kind": "benchmark_scores",
+        "provider": "nvidia",
+        "model_id": "nvidia/Gemma-4-31B-IT-NVFP4",
+        "model_name": "Gemma-4-31B-IT-NVFP4",
+        "benchmarks": [
+          {
+            "name": "GPQA Diamond",
+            "score_str": "75.71%",
+            "score": 75.71
+          },
+          {
+            "name": "AIME 2025",
+            "score_str": "66.25%",
+            "score": 66.25
+          },
+          {
+            "name": "MMLU Pro",
+            "score_str": "85.25%",
+            "score": 85.25
+          },
+          {
+            "name": "LiveCodeBench (pass@1)",
+            "score_str": "70.90%",
+            "score": 70.9
+          },
+          {
+            "name": "Scicode subtask acc (pass@1)",
+            "score_str": "33.61%",
+            "score": 33.61
+          },
+          {
+            "name": "Terminal-Bench Hard (pass@1)",
+            "score_str": "27.08%",
+            "score": 27.08
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.95,
+        "validator_reason": "model card benchmarks"
+      }
+    },
+    {
+      "source": "huggingface",
+      "source_detail": "huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions",
+      "url": "https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions/9",
+      "author": "brayden-peterson",
+      "title": "Request: DOI",
+      "text": ".",
+      "body_full": null,
+      "timestamp": "2026-04-10T17:24:23.000Z",
+      "score": 1,
+      "metadata": {
+        "kind": "discussion",
+        "model_id": "nvidia/Gemma-4-31B-IT-NVFP4",
+        "discussion_num": 9,
+        "status": "closed",
+        "comments": [],
+        "validator_status": "ok",
+        "validator_score": 0.9,
+        "validator_reason": "discussion about model"
+      }
+    },
+    {
+      "source": "huggingface",
+      "source_detail": "huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions",
+      "url": "https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions/8",
+      "author": "yangus87",
+      "title": "This model wasn't trained with FP4 or NVFP4",
+      "text": "Obviously, this model wasn't trained with FP4 or NVFP4. Its size is half that of the original model, which has FP16 accuracy. If it had been trained or compressed with FP4, it shouldn't weigh more than 20GB. This appears to be FP8 compression, not NVFP4.",
+      "body_full": null,
+      "timestamp": "2026-04-10T02:43:00.000Z",
+      "score": 2,
+      "metadata": {
+        "kind": "discussion",
+        "model_id": "nvidia/Gemma-4-31B-IT-NVFP4",
+        "discussion_num": 8,
+        "status": "open",
+        "comments": [
+          {
+            "author": "LilaRest",
+            "text": "Exactly, that's why I further quantized it to 18.4 GB.\n\nHere is the model card of Gemma 4 31B Turbo ⚡️\nhttps://huggingface.co/LilaRest/gemma-4-31B-it-NVFP4-turbo",
+            "created_at": "2026-04-10T08:23:27.000Z"
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.9,
+        "validator_reason": "discussion about model"
+      }
+    },
+    {
+      "source": "huggingface",
+      "source_detail": "huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions",
+      "url": "https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions/7",
+      "author": "JeffreySheng",
+      "title": "1*H100 with vLLM 0.19.0 Failed",
+      "text": "The model card announce that：\r\nSoftware Integration:\r\nSupported Runtime Engine(s):\r\nvLLM\r\n\r\nSupported Hardware Microarchitecture Compatibility:\r\nNVIDIA Blackwell\r\n...\r\nPreferred Operating System(s):\r\nLinux\r\nModel Version(s):\r\nThe model version is v1.0 which NVFP4 quantized with nvidia-modelopt v0.42.0\r\n...\r\nInference:\r\nEngine: vLLM\r\nTest Hardware: NVIDIA Hopper H100\r\n\r\nI`m very confused that you said supported hardware must based on NVIDIA Blackwell, but you inference the evaluation on NVIDIA Hopper H100 with vLLM?\r\nThat`s not make sense.\r\nAnd I run this with vLLM on 1*H100 is failed.\r\nIs this an official mistaken announcement or something?",
+      "body_full": null,
+      "timestamp": "2026-04-10T02:25:48.000Z",
+      "score": 1,
+      "metadata": {
+        "kind": "discussion",
+        "model_id": "nvidia/Gemma-4-31B-IT-NVFP4",
+        "discussion_num": 7,
+        "status": "open",
+        "comments": [],
+        "validator_status": "ok",
+        "validator_score": 0.9,
+        "validator_reason": "discussion about model"
+      }
+    },
+    {
+      "source": "huggingface",
+      "source_detail": "huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions",
+      "url": "https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions/6",
+      "author": "Shaoqing",
+      "title": "Question about q_scale / KV cache scale fallback in vLLM for Gemma-4-31B-IT-NVFP4: expected accuracy impact?",
+      "text": "Hi NVIDIA team,\r\n\r\nI am testing nvidia/Gemma-4-31B-IT-NVFP4 with vLLM on an RTX PRO 6000, and I would like to ask whether the following warnings indicate a known compatibility / metadata issue, and how much accuracy degradation we should expect if vLLM falls back in this path.\r\n\r\nEnvironment\r\nGPU: RTX PRO 6000\r\nQuantization: modelopt_fp4\r\nServing backend: vLLM\r\nCommand:\r\nHF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=0 \\\r\nvllm serve /root/autodl-tmp/models/nvidia__Gemma-4-31B-IT-NVFP4 \\\r\n  --host 0.0.0.0 \\\r\n  --port 6006 \\\r\n  --served-model-name nvfp4-models \\\r\n  --trust-remote-code \\\r\n  --tensor-parallel-size 1 \\\r\n  --gpu-memory-utilization 0.90 \\\r\n  --max-model-len 131072 \\\r\n  --max-num-batched-tokens 16384 \\\r\n  --max-num-seqs 8 \\\r\n  --enable-prefix-caching \\\r\n  --enable-chunked-prefill \\\r\n  --reasoning-parser gemma4 \\\r\n  --tool-call-parser gemma4 \\\r\n  --quantization modelopt_fp4 \\\r\n  --default-chat-template-kwargs '{\"enable_thinking\": false}'\r\n\r\nRelevant startup logs\r\nWARNING [kv_cache.py:94] Checkpoint does not provide a q scaling factor. Setting it to k_scale. This only matters for FP8 Attention backends (flash-attn or flashinfer).\r\n\r\nWARNING [kv_cache.py:108] Using KV cache scaling factor 1.0 for fp8_e4m3. If this is unintended, verify that k/v_scale scaling factors are properly set in the checkpoint.\r\n\r\nOther parts of startup appear normal:\r\n\r\nmodel loads successfully\r\ntorch.compile cache is used\r\nCUDA graph capture succeeds\r\nAPI server starts successfully\r\nruntime throughput also looks normal enough\r\n\r\nSo this does not look like a hard failure. However, I am concerned that vLLM may be entering a fallback / degraded scale path for attention / KV cache.\r\n\r\nMy questions\r\nIs this expected for this model when served through vLLM + modelopt_fp4?\r\nOr does it indicate that some quantization metadata is missing / not being loaded correctly?\r\nDoes the checkpoint intentionally omit q_scale and/or KV cache k/v_scale, with vLLM expected to fall back?\r\nOr should these scales normally be present for the NVFP4 release?\r\n\r\nIf vLLM falls back to\r\n\r\nq_scale := k_scale\r\nKV cache scale := 1.0\r\n\r\nthen approximately how much accuracy loss should we expect in practice?\r\n\r\nIs the impact usually:\r\nnegligible for short-context chat,\r\nsmall but noticeable on long-context tasks,\r\nor potentially significant for retrieval / long-context reasoning / tool use?\r\nDo you recommend any validation benchmark or A/B test to quantify the quality drop for this fallback path?\r\nWhat I want to confirm\r\n\r\nI am mainly trying to determine whether this is:\r\n\r\na benign warning with little real-world impact, or\r\na real degradation path that could cause measurable quality loss, especially at long context lengths.\r\n\r\nIf this is a known issue, I would also appreciate guidance on whether the preferred fix is:\r\n\r\nusing a newer model export,\r\nusing a different vLLM version,\r\nor checking specific quantization metadata inside the checkpoint.\r\n\r\nThanks a lot.",
+      "body_full": null,
+      "timestamp": "2026-04-09T02:42:53.000Z",
+      "score": 1,
+      "metadata": {
+        "kind": "discussion",
+        "model_id": "nvidia/Gemma-4-31B-IT-NVFP4",
+        "discussion_num": 6,
+        "status": "open",
+        "comments": [],
+        "validator_status": "ok",
+        "validator_score": 0.9,
+        "validator_reason": "discussion about model"
+      }
+    },
+    {
+      "source": "huggingface",
+      "source_detail": "huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions",
+      "url": "https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions/5",
+      "author": "BeetSoup",
+      "title": "Why not quantize the MATRICES of Wq, Wk, Wv, Wo?",
+      "text": "The weights \\model.language_model.layers.\\d+.self_attn.[qkvo]_proj.weight\\ make up 28.08% of the model's parameters. However, by keeping them in bf16, u make the model achieves about 8bpw in avg.",
+      "body_full": null,
+      "timestamp": "2026-04-04T07:19:49.000Z",
+      "score": 2,
+      "metadata": {
+        "kind": "discussion",
+        "model_id": "nvidia/Gemma-4-31B-IT-NVFP4",
+        "discussion_num": 5,
+        "status": "open",
+        "comments": [
+          {
+            "author": "ayghri",
+            "text": "I think because quantizing them would significantly degrade the model performance.",
+            "created_at": "2026-04-21T17:27:03.000Z"
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.9,
+        "validator_reason": "discussion about model"
+      }
+    },
+    {
+      "source": "huggingface",
+      "source_detail": "huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions",
+      "url": "https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions/4",
+      "author": "iwaitu",
+      "title": "这个版本对于5090单卡来说还是太大了",
+      "text": "nvfp4版本32gb对于5090单卡来说，还是太大了，能不能将更多的网络转为nvfp4实现5090单卡推理？",
+      "body_full": null,
+      "timestamp": "2026-04-03T07:44:44.000Z",
+      "score": 11,
+      "metadata": {
+        "kind": "discussion",
+        "model_id": "nvidia/Gemma-4-31B-IT-NVFP4",
+        "discussion_num": 4,
+        "status": "open",
+        "comments": [
+          {
+            "author": "alexcardo",
+            "text": "> nvfp4版本32gb对于5090单卡来说，还是太大了，能不能将更多的网络转为nvfp4实现5090单卡推理？\n\nSame question )",
+            "created_at": "2026-04-03T08:32:43.000Z"
+          },
+          {
+            "author": "AlexR7",
+            "text": "Same, its barely as large as fp8, what s the point of this nvfp4 quantization? \n确实，这个版本差不多和fp8量化版本一样大了，nvidia在搞什么？ 只准备给RTX Pro 6000用吗？",
+            "created_at": "2026-04-03T11:38:36.000Z"
+          },
+          {
+            "author": "windane",
+            "text": "![image](https://cdn-uploads.huggingface.co/production/uploads/641516fd95fb6f824b222306/_Zu6ZtqhSZfGgXQLIfTkH.png)\n\n![image](https://cdn-uploads.huggingface.co/production/uploads/641516fd95fb6f824b222306/pS4LsUVCyItFFzS8rnBEY.png)\n\nI thought I could defy the odds, but I failed after all.",
+            "created_at": "2026-04-04T01:45:57.000Z"
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.9,
+        "validator_reason": "discussion about model"
+      }
+    },
+    {
+      "source": "huggingface",
+      "source_detail": "huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions",
+      "url": "https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions/3",
+      "author": "alexcardo",
+      "title": "Why is this 4bit version has a 32.7 GB size?",
+      "text": "I've been expecting its size around ~ 20GB to fit into 1 x RTX5090\r\n\r\nThe size is closer to 8bit btw.",
+      "body_full": null,
+      "timestamp": "2026-04-03T07:17:13.000Z",
+      "score": 21,
+      "metadata": {
+        "kind": "discussion",
+        "model_id": "nvidia/Gemma-4-31B-IT-NVFP4",
+        "discussion_num": 3,
+        "status": "open",
+        "comments": [
+          {
+            "author": "KZHNB",
+            "text": "Tensor type\nBF16 F8_E4M3 U8\n\nlol...",
+            "created_at": "2026-04-03T08:30:17.000Z"
+          },
+          {
+            "author": "alexcardo",
+            "text": "> Tensor type\n> BF16 F8_E4M3 U8\n> \n> lol...\n\nNo matter... we want it smaller to fit in consumer-grade video cards )",
+            "created_at": "2026-04-03T08:31:46.000Z"
+          },
+          {
+            "author": "tradespider",
+            "text": "This 32.7GB build isn't a standard 4-bit quant; it’s a Compound AI Architecture optimized for the M5/RTX 6000 era. By leveraging Mixed-Precision Tensors, we maintain logic-critical layers in BF16, while offloading heavy computation to F8_E4M3 for a 4.5x throughput boost. The inclusion of U8-indexed KV Caching and speculative decoding allows for a staggering 400 t/s without the typical perplexity degradation of legacy INT4. When wrapped in a RAG + Validation Gates pipeline, this local engine effectively bridges the gap to frontier cloud models. High-density engineering for devs who prioritize local privacy without sacrificing 'GPT-5.2' class reasoning.",
+            "created_at": "2026-04-03T22:49:40.000Z"
+          }
+        ],
+        "validator_status": "ok",
+        "validator_score": 0.9,
+        "validator_reason": "discussion about model"
+      }
+    },
+    {
+      "source": "huggingface",
+      "source_detail": "huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions",
+      "url": "https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4/discussions/2",
+      "author": "SyferO",
+      "title": "Inference on single RTX5090?",
+      "text": "Thx a lot for official quantization❤️ Since 31B+NVFP4 looks like a sweet-spot for single RTX5090 deployment, has anyone successfully done it so far? And it will be sooo nice if there're some recipes for it.",
+      "body_full": null,
+      "timestamp": "2026-04-03T06:21:32.000Z",
+      "score": 1,
+      "metadata": {
+        "kind": "discussion",
+        "model_id": "nvidia/Gemma-4-31B-IT-NVFP4",
+        "discussion_num": 2,
+        "status": "closed",
+        "comments": [],
+        "validator_status": "ok",
+        "validator_score": 0.9,
+        "validator_reason": "discussion about model"
+      }
+    }
+  ],
+  "error": null,
+  "latency_ms": 3850,
+  "fetched_at": "2026-04-22T06:21:29.358908Z"
+}
